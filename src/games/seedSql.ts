@@ -28,7 +28,13 @@ function sqlValue(value: unknown): string {
 
 const gameIdSql = (slug: string) => `(select id from public.games where slug = ${sqlText(slug)})`;
 
-export interface GameSeed { game: GameDef; type: 'free' | 'paid' | 'earning'; status: string; }
+export interface GameSeed {
+  game: GameDef;
+  type: 'free' | 'paid' | 'earning';
+  status: string;
+  /** Enroll every existing profile (new profiles are enrolled by the signup trigger). */
+  autoEnroll?: boolean;
+}
 
 export function buildSeedSql(games: GameSeed[], plans: PlanSeed[] = PLANS): string {
   const out: string[] = [
@@ -45,7 +51,7 @@ export function buildSeedSql(games: GameSeed[], plans: PlanSeed[] = PLANS): stri
     }
   }
 
-  for (const { game, type, status } of games) {
+  for (const { game, type, status, autoEnroll } of games) {
     const { quests, achievements, ...rest } = game;
     out.push('', `-- Game ${game.id}: ${game.title}`);
     out.push(`insert into public.games (slug, title, type, status, config) values (${sqlText(game.id)}, ${sqlText(game.title)}, ${sqlText(type)}, ${sqlText(status)}, ${sqlJson(rest)}) on conflict (slug) do nothing;`);
@@ -57,6 +63,10 @@ export function buildSeedSql(games: GameSeed[], plans: PlanSeed[] = PLANS): stri
     for (const a of achievements) {
       const vals = [sqlText(a.id), gameIdSql(game.id), sqlText(a.name), sqlText(a.scope), sqlValue(a.hidden), sqlJson(a.rule), sqlValue(a.decoration ?? null)];
       out.push(`insert into public.achievements (key, game_id, name, scope, hidden, rule, decoration) values (${vals.join(', ')}) on conflict (key) do nothing;`);
+    }
+    if (autoEnroll) {
+      out.push(`-- Backfill: profiles created before this game existed.`);
+      out.push(`insert into public.enrollments (user_id, game_id, state, started_at) select p.id, ${gameIdSql(game.id)}, 'active', p.joined_at from public.profiles p on conflict (user_id, game_id) do nothing;`);
     }
   }
   out.push('', 'commit;', '');

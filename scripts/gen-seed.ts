@@ -15,5 +15,5 @@ if (!check.ok) {
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const target = resolve(root, 'supabase/seed.sql');
 mkdirSync(dirname(target), { recursive: true });
-writeFileSync(target, buildSeedSql([{ game: game1, type: 'free', status: 'active' }]));
+writeFileSync(target, buildSeedSql([{ game: game1, type: 'free', status: 'active', autoEnroll: true }]));
 console.log(`Wrote ${target}`);

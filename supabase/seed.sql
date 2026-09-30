@@ -39,5 +39,7 @@ insert into public.achievements (key, game_id, name, scope, hidden, rule, decora
 insert into public.achievements (key, game_id, name, scope, hidden, rule, decoration) values ('unstoppable', (select id from public.games where slug = 'g1'), 'Unstoppable', 'all', false, '{"kind":"count_events","event":"perfect_week","atLeast":12}'::jsonb, null) on conflict (key) do nothing;
 insert into public.achievements (key, game_id, name, scope, hidden, rule, decoration) values ('night_owl_reformed', (select id from public.games where slug = 'g1'), 'Night Owl Reformed', 'physical', true, '{"kind":"after_misses","questId":"g1.dawn","misses":10}'::jsonb, null) on conflict (key) do nothing;
 insert into public.achievements (key, game_id, name, scope, hidden, rule, decoration) values ('comeback', (select id from public.games where slug = 'g1'), 'Comeback', 'all', true, '{"kind":"comeback","daysAway":14}'::jsonb, null) on conflict (key) do nothing;
+-- Backfill: profiles created before this game existed.
+insert into public.enrollments (user_id, game_id, state, started_at) select p.id, (select id from public.games where slug = 'g1'), 'active', p.joined_at from public.profiles p on conflict (user_id, game_id) do nothing;
 
 commit;
