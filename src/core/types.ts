@@ -129,6 +129,21 @@ export interface WeeklyBonusXp {
   perfectWeek: number;
 }
 
+/** How a game tracks books (SPEC §6.4): pages from a quest's payload feed the current book. */
+export interface BookRule {
+  questId: string;
+  /** Numeric payload field holding pages read. */
+  pagesField: string;
+  /** Payload field holding the book id. */
+  bookIdField: string;
+  finishedXp: number;
+}
+
+/** Events that can award a decoration each time they happen. */
+export type DecorationEvent = 'perfect_week' | 'balanced_week' | 'book_finished';
+
+export interface WorldDef { name: string; description: string; }
+
 /** A game is data. The engine runs any game from this shape. */
 export interface GameDef {
   id: string;
@@ -138,6 +153,10 @@ export interface GameDef {
   ramp: RampStage[];
   achievements: AchievementDef[];
   bonusXp?: Partial<WeeklyBonusXp>;
+  worlds?: Partial<Record<World, WorldDef>>;
+  books?: BookRule;
+  /** Decoration added every time the event happens (e.g. perfect_week → gold_vein). */
+  eventDecorations?: Partial<Record<DecorationEvent, string>>;
 }
 
 export type XpSource =

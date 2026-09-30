@@ -13,3 +13,5 @@ export * from './achievements';
 export * from './proof';
 export * from './ledger';
 export * from './events';
+export * from './books';
+export * from './validate';

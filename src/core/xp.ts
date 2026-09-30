@@ -64,8 +64,8 @@ export function questXpEvent(userId: string, completionId: string, amount: numbe
   return xpEvent(userId, 'quest', completionId, amount, xpKeys.quest(completionId));
 }
 
-export function bookFinishedXpEvent(userId: string, bookId: string): XpEvent {
-  return xpEvent(userId, 'book_finished', bookId, BOOK_FINISHED_XP, xpKeys.bookFinished(bookId));
+export function bookFinishedXpEvent(userId: string, bookId: string, amount = BOOK_FINISHED_XP): XpEvent {
+  return xpEvent(userId, 'book_finished', bookId, amount, xpKeys.bookFinished(bookId));
 }
 
 export function achievementXpEvent(userId: string, achievementId: string, amount: number): XpEvent {
