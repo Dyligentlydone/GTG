@@ -7,3 +7,4 @@ export * from './revealOrder';
 export * from './cracks';
 export * from './render';
 export * from './statueProvider';
+export * from './symbols';

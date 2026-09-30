@@ -9,6 +9,7 @@ import { revealOrder } from './revealOrder';
 import { clampPieces, crackIntensity, cracksPerShard, onDeckShards, shardCrackLines } from './cracks';
 import { ANCHORS, CANVAS, DEFAULT_ARCHETYPE, PALETTE, STATUE_BBOX, placeholderStatueSvg, figureSilhouettePaths, type Archetype } from './placeholderStatue';
 import { rngFor } from './rng';
+import { PILLAR_ORDER, PILLAR_SYMBOLS as SYMBOLS } from './symbols';
 import { STATUE_PIECES } from '../core/chisel';
 
 export interface SculptureModel { seed: number; rock: Rock; shards: Shard[]; order: number[]; }
@@ -135,18 +136,6 @@ function crackStrokes(lines: Point[][], dark: string, width: number, opacity: nu
 }
 
 // ---------- decorations ----------
-
-const PILLAR_ORDER = ['mental', 'physical', 'emotional', 'spiritual', 'financial', 'social', 'environmental', 'recreational'] as const;
-const SYMBOLS: Record<(typeof PILLAR_ORDER)[number], string> = {
-  mental: 'M-7 -4 Q-3.5 -6 0 -4 Q3.5 -6 7 -4 L7 5 Q3.5 3 0 5 Q-3.5 3 -7 5 Z M0 -4 L0 5',
-  physical: 'M2 -7 L-4 1 L0 1 L-2 7 L4 -1 L0 -1 Z',
-  emotional: 'M0 6 C-8 0 -7 -6 -3.5 -6 C-1.5 -6 0 -4.5 0 -3 C0 -4.5 1.5 -6 3.5 -6 C7 -6 8 0 0 6 Z',
-  spiritual: 'M0 -3 A3 3 0 1 1 0 3 A3 3 0 1 1 0 -3 M0 -7 L0 -5 M0 5 L0 7 M-7 0 L-5 0 M5 0 L7 0 M-5 -5 L-3.6 -3.6 M5 5 L3.6 3.6 M5 -5 L3.6 -3.6 M-5 5 L-3.6 3.6',
-  financial: 'M0 -6 A6 6 0 1 1 0 6 A6 6 0 1 1 0 -6 M0 -3.5 L0 3.5 M-2.5 -1.5 L2.5 -1.5 M-2.5 1.5 L2.5 1.5',
-  social: 'M-2.5 -3.5 A3.5 3.5 0 1 1 -2.5 3.5 A3.5 3.5 0 1 1 -2.5 -3.5 M2.5 -3.5 A3.5 3.5 0 1 1 2.5 3.5 A3.5 3.5 0 1 1 2.5 -3.5',
-  environmental: 'M-6 5 C-6 -3 0 -7 6 -6 C6 1 1 6 -6 5 Z M-6 5 L3 -3',
-  recreational: 'M-4 6 L4 6 M-4 6 C-7 0 -6 -5 -3 -7 M4 6 C7 0 6 -5 3 -7 M-2 -3 L-2 5 M0 -3 L0 5 M2 -3 L2 5 M-4 -3 L4 -3',
-};
 
 function meander(x0: number, x1: number, y: number, h: number): string {
   // Greek key: repeating hooked units of width h.
