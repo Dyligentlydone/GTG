@@ -3,6 +3,7 @@
 // only journal items that were ticked), and runs free text through the public-card filter.
 import type { AchievementScope, LocalDate, PillarId } from '../core/types';
 import type { Archetype } from '../sculpture/placeholderStatue';
+import type { DecorationInput } from '../sculpture/render';
 import { checkPublicText } from './filter';
 import { isMilestoneKind, isShareScope, type MilestoneKind, type ShareScope } from './scopes';
 
@@ -29,7 +30,7 @@ export type ShareItem =
   | { type: 'achievement'; id: string; name: string; scope: AchievementScope; rarity: Rarity; rarityPct?: number }
   | {
     type: 'milestone'; id: string; kind: MilestoneKind; piecesRevealed: number; seed: number;
-    piecesThisWeek?: number; bookTitle?: string; archetype?: Archetype; decorations?: string[];
+    piecesThisWeek?: number; bookTitle?: string; archetype?: Archetype; decorations?: DecorationInput[];
   };
 
 export type ShareItemType = ShareItem['type'];

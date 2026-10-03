@@ -10,21 +10,24 @@ Last updated: 2026-09-29. Source of truth: `SPEC.md`. Decisions: `DECISIONS.md`.
 | M3 Database (`supabase/migrations`, `supabase/tests`) | Done | `bash scripts/test-db.sh`: 7/7 pass on Postgres 16 |
 | M4 Sculpture (`src/sculpture`, `previews/`) | Done | 127 tests pass; previews reviewed |
 | M5 Share cards (`src/share`, `previews/cards/`) | Done | 144 tests pass; card previews for all 7 scopes in light + dark |
-| M6 Next.js app layer (`src/app`, `src/lib`, `src/components`) | Not started | — |
+| M6 Next.js app layer (`src/app`, `src/lib`, `src/components`) | Done | `tsc --noEmit` clean, 144 tests pass, `next build` succeeds (22 routes + middleware) |
 
-## How to resume
+## What's next
 
-Open this folder in Claude Code and say:
+All six spec milestones are done. The remaining work is operational:
 
-> Read SPEC.md, DECISIONS.md and PROGRESS.md. Build milestone M6 (SPEC §10). Verify before finishing and update PROGRESS.md.
+- Run the app end-to-end against a real Supabase project (migrations + `npm run gen:seed`, `faces` bucket, env vars — see README).
+- The 3D photoreal statue pipeline below (per-player GLB behind the `StatueProvider` seam) replaces the SVG placeholder art when built.
 
 ## Checks (after `npm install`)
 
 ```
+npm run typecheck        # whole app incl. src/app, src/lib
 npm run typecheck:core   # tsc -p tsconfig.core.json
 npm test                 # tsx --test "src/**/*.test.ts"
 npm run test:db          # needs Postgres installed (PG_BIN or pg_config on PATH)
 npm run previews         # renders previews/*.png
+npm run build            # next build
 ```
 
 ## Notes for M6 (app layer)

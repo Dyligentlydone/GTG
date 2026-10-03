@@ -147,4 +147,4 @@ for (const { scope, ids, name } of cardSelections) {
   }
 }
 
-await browser?.close();
+await (browser as Browser | null)?.close();
