@@ -5,7 +5,6 @@ import { PILLAR_SYMBOLS } from '../sculpture/symbols';
 import type { PillarId } from '../core/types';
 
 const NAV = [
-  { href: '/world', label: 'Agora' },
   { href: '/games/g1', label: 'Board' },
   { href: '/profile', label: 'Profile' },
   { href: '/books', label: 'Books' },
@@ -44,6 +43,10 @@ export function TempleHeader({ litPillars = [], handle }: { litPillars?: PillarI
             </Link>
           ))}
           {handle && <span className="text-gold">@{handle}</span>}
+          <Link href="/world"
+            className="font-display tracking-[0.18em] text-marble hover:text-gold">
+            AGORA
+          </Link>
         </nav>
       </div>
     </header>
