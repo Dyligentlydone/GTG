@@ -60,7 +60,7 @@ function useTerrain() {
 
 /** A copse of trees painted on canvas — cypress spikes or leafy canopy —
  *  billbboarded on the far slopes so the forest reads real at distance. */
-function treeClusterTexture(kind: 'cypress' | 'leafy' | 'pine' | 'fir', seed: number): THREE.CanvasTexture {
+function treeClusterTexture(kind: 'cypress' | 'leafy' | 'pine' | 'fir' | 'palm', seed: number): THREE.CanvasTexture {
   const r = mulberry32(seed);
   const c = document.createElement('canvas');
   c.width = 256; c.height = 256;
@@ -117,6 +117,32 @@ function treeClusterTexture(kind: 'cypress' | 'leafy' | 'pine' | 'fir', seed: nu
           : `rgba(${30 + r.int(0, 12)},${48 + r.int(0, 12)},${26 + r.int(0, 8)},0.95)`;
         g.beginPath(); g.arc(cx, cy, cr, 0, Math.PI * 2); g.fill();
       }
+    } else if (kind === 'palm') {
+      // palm: leaning trunk + drooping fronds fanning from the crown
+      const lean = r.signed() * 26;
+      const crownX = t.x + lean;
+      const crownY = BASE - t.h;
+      g.strokeStyle = '#5c4530';
+      g.lineWidth = Math.max(3, t.w * 0.24);
+      g.beginPath();
+      g.moveTo(t.x, BASE);
+      g.quadraticCurveTo(t.x + lean * 0.3, BASE - t.h * 0.55, crownX, crownY);
+      g.stroke();
+      const fronds = 8 + Math.floor(r.next() * 3);
+      for (let j = 0; j < fronds; j++) {
+        const fa = Math.PI * (1.05 + (j / (fronds - 1)) * 0.9); // fan left→right over the top
+        const fl = t.h * r.range(0.28, 0.4);
+        const dx = Math.cos(fa), dy = Math.sin(fa);
+        g.strokeStyle = `rgba(${36 + r.int(0, 16)},${84 + r.int(0, 20)},${44 + r.int(0, 14)},0.95)`;
+        g.lineWidth = r.range(2.5, 4.5);
+        g.beginPath();
+        g.moveTo(crownX, crownY);
+        g.quadraticCurveTo(
+          crownX + dx * fl * 0.7, crownY + dy * fl * 0.35 - fl * 0.25,
+          crownX + dx * fl, crownY + dy * fl * 0.4 + fl * 0.35,
+        );
+        g.stroke();
+      }
     } else if (kind === 'fir') {
       // tiered conifer: scalloped layers narrowing to a point
       const layers = 7;
@@ -157,7 +183,13 @@ function treeClusterTexture(kind: 'cypress' | 'leafy' | 'pine' | 'fir', seed: nu
   return tex;
 }
 
-function Forest({ kind, count, seed, maxY = 62 }: { kind: 'cypress' | 'leafy' | 'pine' | 'fir'; count: number; seed: number; maxY?: number }) {
+function Forest({ kind, count, seed, maxY = 62, coastal = false }: {
+  kind: 'cypress' | 'leafy' | 'pine' | 'fir' | 'palm';
+  count: number;
+  seed: number;
+  maxY?: number;
+  coastal?: boolean;
+}) {
   const texA = useMemo(() => treeClusterTexture(kind, seed), [kind, seed]);
   const texB = useMemo(() => treeClusterTexture(kind, seed + 1000), [kind, seed]);
   const spots = useMemo(() => {
@@ -165,14 +197,16 @@ function Forest({ kind, count, seed, maxY = 62 }: { kind: 'cypress' | 'leafy' | 
     const out: { x: number; y: number; z: number; s: number; v: number }[] = [];
     // groves: pick grove centers on the slopes, then pack trees around them —
     // real hillsides are patchy, not evenly sprinkled
+    const GOLDEN = 2.39996; // golden-angle spread → even cover all the way around
     let guard = 0;
     while (out.length < count && guard++ < 400) {
-      const ga = r.next() * Math.PI * 2;
-      const grad = 180 + Math.pow(r.next(), 1.4) * 520;
+      const ga = (guard * GOLDEN) % (Math.PI * 2);
+      const grad = 240 + Math.pow(r.next(), 1.3) * 500;
       const gx = Math.cos(ga) * grad;
       const gz = Math.sin(ga) * grad;
       const gy = terrainHeight(gx, gz);
       if (gy < -22 || gy > maxY) continue;
+      if (coastal && gz < 140) continue; // palms hug the southern shore
       const size = 4 + Math.floor(r.next() * 8);
       for (let i = 0; i < size && out.length < count; i++) {
         const x = gx + r.signed() * 26;
@@ -237,6 +271,7 @@ export function Courtyard({ destinations, onDoorChange }: {
       <Forest kind="leafy" count={240} seed={77} maxY={55} />
       <Forest kind="pine" count={130} seed={113} maxY={58} />
       <Forest kind="fir" count={170} seed={149} maxY={105} />
+      <Forest kind="palm" count={110} seed={199} maxY={28} coastal />
       <Clouds />
       {/* inlay ring around the statue */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
