@@ -106,3 +106,11 @@ Decisions made where SPEC.md was silent. Newest at the bottom.
 
 - **Only the founding protocol carves the marble.** `GameDef.feedsSculpture` (persisted in `games.config`) marks whose week-close may emit `chisel_events`, store `week_results.pieces > 0`, and write `sculpture_decorations` (check-in achievements, book-finish laurels). `game1` sets it; other games never touch the statue even if enrolled. The sculpture stays account-level — it just answers to one game.
 - `/sculpture` on-deck cracks use only sculpture-feeding games' current week; week cards and `piecesChiseled` report 0 for non-feeding games so share cards can't imply a game chiseled when it didn't.
+
+## Lobby experience pass (owner request — "make home an experience")
+
+- **3D museum hero on `/home`.** `src/lib/three/sculptureScene.ts` ports the docs/chisel-3d-demo prototype to modern three (ESM addons, physical light units, CapsuleGeometry), seeded by `sculptures.seed` so the rock matches the account. Loaded client-only via `next/dynamic` — three.js stays out of the server graph and first-load JS; the flat `StatueSvg` renders underneath as the loading/no-WebGL fallback (WebGL-context failure degrades silently).
+- **Chisel Day replays live.** If the newest `chisel_events` row is <36h old, the hero mounts at `pieces_revealed - n` and animates those n chunks falling after a short delay — coming back Monday, you watch your week land.
+- **Ambient layer is zero-dep DOM/CSS:** drifting dust motes (2D canvas, 42 particles, pauses when hidden), film grain (SVG turbulence + steps()), `Reveal` (IntersectionObserver rise-in), `TiltCard` (pointer-driven perspective + gold sheen), `CountUp` (ease-out counters), `text-shimmer` heading, `.fill-bar` week bars that fill when scrolled into view. No GSAP/Lenis — the lobby needs atmosphere, not scrollytelling; those stay on the table for the landing page.
+- **`prefers-reduced-motion` honored everywhere:** no auto-rotate, dust, grain jitter, reveals, tilt, or count animation; the chisel replay places instantly.
+- **`/preview` is a dev-only mock of the lobby** (404s in production, middleware-public) so the experience is reviewable without Supabase.

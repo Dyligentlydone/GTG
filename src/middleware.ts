@@ -3,7 +3,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from './lib/supabase/middleware';
 
-const PUBLIC_PATHS = ['/', '/login', '/onboarding'];
+const PUBLIC_PATHS = ['/', '/login', '/onboarding', '/preview']; // /preview is dev-only — the page 404s in production
 const PUBLIC_PREFIXES = ['/s/', '/api/share/', '/api/stripe/', '/api/cron/', '/auth/', '/_next/', '/favicon'];
 
 export async function middleware(request: NextRequest) {

@@ -12,6 +12,7 @@ Last updated: 2026-09-29. Source of truth: `SPEC.md`. Decisions: `DECISIONS.md`.
 | M5 Share cards (`src/share`, `previews/cards/`) | Done | 144 tests pass; card previews for all 7 scopes in light + dark |
 | M6 Next.js app layer (`src/app`, `src/lib`, `src/components`) | Done | `tsc --noEmit` clean, 144 tests pass, `next build` succeeds |
 | M6 rework: multi-game app shell | Done | lobby `/home` + `/games/[slug]` area; enroll API; cron iterates all games; typecheck/build clean |
+| Lobby experience pass | Done | 3D museum-stage hero (three.js port of the demo), live Chisel-Day replay, dust + grain, reveal/tilt/count-up layer; `/preview` dev mock |
 
 ## What's next
 
