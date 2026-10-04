@@ -397,50 +397,71 @@ export function Courtyard({ destinations, onDoorChange }: {
   );
 }
 
-/** Stylized flat-bottom cumulus, painted once on canvas and billboarded. */
-function cloudTexture(): THREE.CanvasTexture {
+/** Stylized flat-bottom cumulus, painted on canvas per-seed and billboarded. */
+function cloudTexture(seed: number): THREE.CanvasTexture {
+  const r = mulberry32(seed);
   const c = document.createElement('canvas');
   c.width = 256; c.height = 128;
   const g = c.getContext('2d')!;
-  const lobes: [number, number, number, number][] = [
-    [58, 92, 30, 18], [95, 74, 40, 26], [140, 62, 46, 32], [185, 78, 34, 22], [215, 92, 22, 15],
-  ];
+  const baseY = 94 + r.range(-4, 8);
+  // lobe cluster along the base line + one taller "tower" for cumulus shape
+  const lobes: [number, number, number, number][] = [];
+  const n = Math.floor(r.range(6, 10));
+  for (let i = 0; i < n; i++) {
+    const rx = r.range(16, 46), ry = r.range(12, 28);
+    lobes.push([r.range(34, 224), baseY - ry * r.range(0.3, 0.85), rx, ry]);
+  }
+  lobes.push([r.range(95, 160), baseY - r.range(38, 52), r.range(30, 44), r.range(24, 34)]);
+
   for (const [x, y, rx, ry] of lobes) {
-    const grad = g.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry) * 1.05);
+    const rad = Math.max(rx, ry) * 1.06;
+    const grad = g.createRadialGradient(x, y, 0, x, y, rad);
     grad.addColorStop(0, 'rgba(255,253,250,0.98)');
     grad.addColorStop(0.72, 'rgba(255,250,245,0.85)');
     grad.addColorStop(1, 'rgba(255,248,242,0)');
     g.fillStyle = grad;
     g.save();
-    g.translate(x, y); g.scale(rx / Math.max(rx, ry), ry / Math.max(rx, ry)); g.translate(-x, -y);
-    g.beginPath(); g.arc(x, y, Math.max(rx, ry) * 1.05, 0, Math.PI * 2); g.fill();
+    g.translate(x, y); g.scale(rx / rad, ry / rad); g.translate(-x, -y);
+    g.beginPath(); g.arc(x, y, rad, 0, Math.PI * 2); g.fill();
     g.restore();
   }
-  // flat-bottom shading band — the classic cumulus underside
-  const shade = g.createLinearGradient(0, 78, 0, 116);
+  // everything below is clipped to the painted silhouette — no box edges
+  g.globalCompositeOperation = 'source-atop';
+  // flat-bottom shading — the classic cumulus underside
+  const shade = g.createLinearGradient(0, baseY - 30, 0, baseY + 4);
   shade.addColorStop(0, 'rgba(148,168,196,0)');
-  shade.addColorStop(0.8, 'rgba(148,168,196,0.4)');
-  shade.addColorStop(1, 'rgba(148,168,196,0)');
+  shade.addColorStop(1, 'rgba(138,158,190,0.5)');
   g.fillStyle = shade;
-  g.fillRect(0, 78, 256, 38);
+  g.fillRect(0, 0, 256, 128);
+  // sunlit crown
+  const hi = g.createLinearGradient(0, 10, 0, 66);
+  hi.addColorStop(0, 'rgba(255,255,255,0.45)');
+  hi.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = hi;
+  g.fillRect(0, 0, 256, 80);
+  g.globalCompositeOperation = 'source-over';
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
 
 function Clouds() {
-  const tex = useMemo(cloudTexture, []);
+  const texs = useMemo(() => [55, 71, 89, 103, 121].map(cloudTexture), []);
   const group = useRef<THREE.Group>(null);
   const clouds = useMemo(() => {
-    const r = mulberry32(55);
-    return Array.from({ length: 20 }, () => ({
+    const r = mulberry32(31);
+    return Array.from({ length: 26 }, (_, i) => ({
       x: r.range(-1200, 1200),
       y: r.range(120, 300),
       z: r.range(-1200, 1200),
       s: r.range(110, 300),
       v: r.range(1.5, 4), // drift speed
+      t: i % texs.length,
+      flip: r.next() > 0.5 ? -1 : 1,
+      o: r.range(0.8, 0.97),
+      sy: r.range(0.38, 0.52),
     }));
-  }, []);
+  }, [texs.length]);
   useFrame((_, dt) => {
     const g = group.current;
     if (!g) return;
@@ -452,8 +473,8 @@ function Clouds() {
   return (
     <group ref={group}>
       {clouds.map((c, i) => (
-        <sprite key={i} position={[c.x, c.y, c.z]} scale={[c.s, c.s * 0.45, 1]} userData={{ v: c.v }}>
-          <spriteMaterial map={tex} transparent depthWrite={false} opacity={0.95} />
+        <sprite key={i} position={[c.x, c.y, c.z]} scale={[c.s * c.flip, c.s * c.sy, 1]} userData={{ v: c.v }}>
+          <spriteMaterial map={texs[c.t]!} transparent depthWrite={false} opacity={c.o} />
         </sprite>
       ))}
     </group>
