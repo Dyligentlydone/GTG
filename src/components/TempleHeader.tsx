@@ -45,7 +45,7 @@ export function TempleHeader({ litPillars = [], handle }: { litPillars?: PillarI
           {handle && <span className="text-gold">@{handle}</span>}
           <Link href="/world"
             className="font-display tracking-[0.18em] text-marble hover:text-gold">
-            AGORA
+            ENTER THE AGORA
           </Link>
         </nav>
       </div>
