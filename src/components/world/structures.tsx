@@ -1,10 +1,9 @@
 'use client';
 // Parametric Greek structures for the agora: columns, temples, braziers.
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { RigidBody, CuboidCollider, CylinderCollider } from '@react-three/rapier';
-import { Html } from '@react-three/drei';
 import { marbleMaterial } from '../../lib/three/materials';
 import { HallBoard } from './HallBoard';
 import type { DoorDestination, QuestTarget } from './types';
@@ -94,6 +93,33 @@ export function Brazier({ position }: { position: [number, number, number] }) {
   );
 }
 
+/** Temple name painted on canvas — carved-stone look, and no extra React
+ *  root (drei <Html> sync-unmounts warn under React 19). */
+function namePlateTexture(name: string): THREE.CanvasTexture {
+  const w = 1024, h = 160;
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d')!;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  try { (ctx as unknown as { letterSpacing: string }).letterSpacing = '8px'; } catch { /* older canvas impls */ }
+  let size = 72;
+  const label = name.toUpperCase();
+  ctx.font = `600 ${size}px Cinzel, Georgia, serif`;
+  while (ctx.measureText(label).width > w - 70 && size > 24) {
+    size -= 4;
+    ctx.font = `600 ${size}px Cinzel, Georgia, serif`;
+  }
+  ctx.fillStyle = 'rgba(15, 12, 9, 0.6)';
+  ctx.fillText(label, w / 2 + 3, h / 2 + 4);
+  ctx.fillStyle = '#efe9dc';
+  ctx.fillText(label, w / 2, h / 2);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
 const TRI = (() => {
   const s = new THREE.Shape();
   s.moveTo(-1, 0); s.lineTo(1, 0); s.lineTo(0, 1); s.closePath();
@@ -110,6 +136,10 @@ export function Temple({ destination, position, rotationY, onDoorChange, onQuest
 }) {
   const W = 12, D = 13, COL_H = 5.0, FLOOR = 0.75;
   const marble = useMemo(() => marbleMaterial([226, 219, 205], [148, 140, 128], 5, 0.52), []);
+  const [fontReady, setFontReady] = useState(false);
+  useEffect(() => { document.fonts?.ready.then(() => setFontReady(true)); }, []);
+  const nameTex = useMemo(() => namePlateTexture(destination.name), [destination.name, fontReady]);
+  useEffect(() => () => nameTex.dispose(), [nameTex]);
 
   const glowMat = useMemo(() => new THREE.MeshStandardMaterial({
     color: 0x000000, emissive: new THREE.Color(destination.accent), emissiveIntensity: 1.6,
@@ -234,9 +264,11 @@ export function Temple({ destination, position, rotationY, onDoorChange, onQuest
           onQuest={onQuest} version={boardVersion} />
       )}
 
-      <Html position={[0, FLOOR + COL_H + 2.8, -D / 2 + 1.1]} center distanceFactor={26} zIndexRange={[10, 0]}>
-        <div className="world-name">{destination.name}</div>
-      </Html>
+      {/* temple name — carved onto the pediment face */}
+      <mesh position={[0, FLOOR + COL_H + 1.5, -D / 2 + 0.38]} rotation={[0, Math.PI, 0]}>
+        <planeGeometry args={[4.6, 0.72]} />
+        <meshBasicMaterial map={nameTex} transparent depthWrite={false} />
+      </mesh>
     </group>
   );
 }
