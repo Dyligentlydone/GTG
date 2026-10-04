@@ -39,11 +39,11 @@ export function PillarGlyph({ pillar, size = 18, lit = true }: { pillar: PillarI
   );
 }
 
-export function StreakChip({ days }: { days: number }) {
+export function StreakChip({ days, unit = 'day' }: { days: number; unit?: 'day' | 'week' }) {
   if (days <= 0) return null;
   return (
     <span className="rounded-full border border-gold/50 px-2 py-0.5 text-xs font-semibold text-gold">
-      {days}d
+      {days}{unit === 'week' ? 'w' : 'd'}
     </span>
   );
 }

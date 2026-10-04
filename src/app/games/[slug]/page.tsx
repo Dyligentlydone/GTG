@@ -75,7 +75,7 @@ export default async function GamePage({ params }: { params: Promise<{ slug: str
           <section className="card p-5">
             <div className="mt-1 space-y-2">
               {dueToday.length === 0 && <p className="py-6 text-center text-shadow">Nothing due today. The marble waits.</p>}
-              {dueToday.map(({ quest, dueToday: due, doneToday, weekDone, weekDue, streak }) => (
+              {dueToday.map(({ quest, dueToday: due, doneToday, weekDone, weekDue, streak, streakUnit }) => (
                 <Link key={quest.id} href={`/games/${slug}/quest/${quest.id}`}
                   className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${doneToday ? 'border-gold/40 bg-gold/5' : due ? 'border-line hover:border-stone' : 'border-line/50 opacity-60'}`}>
                   <PillarGlyph pillar={quest.pillar} lit={doneToday || due} />
@@ -84,7 +84,7 @@ export default async function GamePage({ params }: { params: Promise<{ slug: str
                     <p className="text-xs text-shadow">+{quest.xp} XP · {quest.schedule.kind === 'daily' ? 'daily' : `${quest.schedule.perWeek}/week`}</p>
                   </div>
                   <Pips done={Math.min(weekDone, weekDue)} due={weekDue} />
-                  <StreakChip days={streak} />
+                  <StreakChip days={streak} unit={streakUnit} />
                 </Link>
               ))}
             </div>

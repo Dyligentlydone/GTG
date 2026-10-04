@@ -3,7 +3,7 @@
 // a daily quest is due on each active day; a weekly-quota quest is due on an active
 // day while its weekly quota is still open.
 import {
-  activeDays, computeStreak, countedCompletions, dueCount, localDate, weekStart,
+  activeDays, boardStreak, countedCompletions, dueCount, localDate, weekStart,
   type Completion, type EngineEnv, type LocalDate, type QuestDef,
 } from '../core';
 
@@ -14,6 +14,7 @@ export interface BoardLine {
   weekDone: number;
   weekDue: number;
   streak: number;
+  streakUnit: 'day' | 'week';
 }
 
 export function dailyBoard(env: EngineEnv, date: LocalDate, completions: readonly Completion[]): BoardLine[] {
@@ -27,12 +28,13 @@ export function dailyBoard(env: EngineEnv, date: LocalDate, completions: readonl
       ? weekDone < weekDue
       : completions.filter((c) => c.questId === quest.id && !c.isRepair && c.localDate >= week && c.localDate < date).length < weekDue;
     const doneToday = completions.some((c) => c.questId === quest.id && c.localDate === date);
+    const { value: streak, unit: streakUnit } = boardStreak(env, quest, completions, date);
     return {
       quest,
       dueToday: active && quotaOpen && !doneToday,
       doneToday,
       weekDone, weekDue,
-      streak: computeStreak(env, quest.id, completions, date).current,
+      streak, streakUnit,
     };
   });
 }

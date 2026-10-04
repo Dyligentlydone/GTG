@@ -1,7 +1,8 @@
 // Streaks (SPEC §4.7). Recomputed from history, so results are deterministic and rebuildable.
 import type { Completion, EngineEnv, LocalDate, QuestDef } from './types';
-import { addDays, daysBetween, monthOf } from './time';
-import { joinDate, unlockDate } from './ramp';
+import { addDays, daysBetween, monthOf, weekStart } from './time';
+import { joinDate, unlockDate, weekIndexOf, weekStartOfIndex } from './ramp';
+import { countedCompletions, dueCount } from './schedule';
 import type { WeekResult } from './weekly';
 
 export const FREEZES_PER_MONTH = 2;
@@ -136,6 +137,30 @@ export function computeStreak(env: EngineEnv, questId: string, completions: read
   const r = computeStreaks(env, completions, today).streaks[questId];
   if (!r) throw new Error(`No daily quest ${questId} in game ${env.game.id}`);
   return r;
+}
+
+/**
+ * Weekly-quota streak: consecutive closed weeks (before the current one) where the
+ * quest met its quota. A skipped week (due = 0, e.g. before unlock) neither counts
+ * nor breaks the run — same gap rule as perfectWeekStreak.
+ */
+export function questWeekStreak(env: EngineEnv, quest: QuestDef, completions: readonly Completion[], today: LocalDate): number {
+  let streak = 0;
+  for (let i = weekIndexOf(weekStart(today), env.ctx) - 1; i >= 0; i--) {
+    const w = weekStartOfIndex(i, env.ctx);
+    const due = dueCount(quest, w, env);
+    if (due === 0) continue;
+    if (countedCompletions(quest, w, completions, due) < due) break;
+    streak += 1;
+  }
+  return streak;
+}
+
+/** Streak for the board chip: days for daily quests, weeks for weekly quotas. */
+export function boardStreak(env: EngineEnv, quest: QuestDef, completions: readonly Completion[], today: LocalDate): { value: number; unit: 'day' | 'week' } {
+  return quest.schedule.kind === 'daily'
+    ? { value: computeStreak(env, quest.id, completions, today).current, unit: 'day' }
+    : { value: questWeekStreak(env, quest, completions, today), unit: 'week' };
 }
 
 /**

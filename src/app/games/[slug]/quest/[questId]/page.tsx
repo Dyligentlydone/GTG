@@ -1,7 +1,7 @@
 // /games/[slug]/quest/[questId] — quest detail + the check-in form (SPEC §10.1).
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { computeStreak, effectiveQuest, localDate, stageForDate, weekStart, activeDays, dueCount, countedCompletions } from '../../../../../core';
+import { boardStreak, effectiveQuest, localDate, stageForDate, weekStart, activeDays, dueCount, countedCompletions } from '../../../../../core';
 import { requireViewer } from '../../../../../lib/viewer';
 import { loadEngineState } from '../../../../../lib/context';
 import { TempleHeader } from '../../../../../components/TempleHeader';
@@ -26,7 +26,7 @@ export default async function QuestPage({ params }: { params: Promise<{ slug: st
   const weekDone = countedCompletions(quest, week, state.completions, weekDue);
   const activeToday = activeDays(quest, week, env).includes(today);
   const doneToday = state.completions.some((c) => c.questId === quest.id && c.localDate === today);
-  const streak = computeStreak(env, quest.id, state.completions, today);
+  const streak = boardStreak(env, quest, state.completions, today);
   const books = state.books.filter((b) => b.finishedAt === null).map((b) => ({ id: b.id, title: b.title }));
 
   const proof = effective.proof;
@@ -45,7 +45,7 @@ export default async function QuestPage({ params }: { params: Promise<{ slug: st
               {' '}· stage: {stage.id.replace(/_/g, ' ')}
             </p>
           </div>
-          <StreakChip days={streak.current} />
+          <StreakChip days={streak.value} unit={streak.unit} />
         </div>
 
         <div className="card flex items-center justify-between p-4 text-sm">
