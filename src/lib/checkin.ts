@@ -81,8 +81,14 @@ export async function acceptCheckIn(db: Db, input: CheckinInput): Promise<Checki
   const questUuidByKey = new Map([...state.game.questKeyByUuid].map(([uuid, key]) => [key, uuid]));
   const questUuid = questUuidByKey.get(quest.id)!;
   const isRepair = state.completions.some((c) => c.questId === quest.id && c.localDate === date);
-  // Journal text never lands in completions.payload — it is encrypted into journal_entries.
-  const storedPayload = quest.proof.type === 'journal' ? { ...input.payload, text: undefined } : input.payload;
+  // Journal content never lands in completions.payload — text is encrypted into
+  // journal_entries, scans are referenced by scan_path there.
+  const storedPayload = quest.proof.type === 'journal' ? { ...input.payload, text: undefined, scanPath: undefined } : input.payload;
+  // A scanned page must live under this user's own storage folder.
+  const scanPath = typeof input.payload.scanPath === 'string' ? input.payload.scanPath : undefined;
+  if (scanPath && !scanPath.startsWith(`${input.userId}/`)) {
+    return { ok: false, reason: 'The scanned page could not be found — retake it and try again.' };
+  }
 
   const { data: inserted, error } = await db.from('completions').insert({
     user_id: input.userId, quest_id: questUuid, local_date: date,
@@ -125,6 +131,12 @@ export async function acceptCheckIn(db: Db, input: CheckinInput): Promise<Checki
       const { error: e } = await db.from('journal_entries').insert({
         user_id: input.userId, completion_id: completion.id,
         ciphertext: `\\x${enc.ciphertext}`, nonce: `\\x${enc.nonce}`,
+      });
+      if (e && !isDuplicate(e)) throw e;
+    }
+    if (quest.proof.type === 'journal' && typeof input.payload.scanPath === 'string') {
+      const { error: e } = await db.from('journal_entries').insert({
+        user_id: input.userId, completion_id: completion.id, scan_path: input.payload.scanPath,
       });
       if (e && !isDuplicate(e)) throw e;
     }

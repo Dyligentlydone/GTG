@@ -14,11 +14,17 @@ export const dynamic = 'force-dynamic';
 export default async function JournalPage() {
   const { supabase, user, profile } = await requireViewer('/journal');
   const rows = await loadJournalEntries(supabase, user.id);
-  const entries: { id: string; date: string; text: string }[] = [];
+  const entries: { id: string; date: string; text?: string; scanUrl?: string; scanPath?: string }[] = [];
   for (const r of rows) {
     try {
-      entries.push({ id: r.id, date: localDate(r.created_at, profile.time_zone), text: await decryptJournal(r.ciphertext, r.nonce) });
-    } catch { /* undecryptable entry — skip rather than crash the page */ }
+      const date = localDate(r.created_at, profile.time_zone);
+      if (r.scan_path) {
+        const { data: signed } = await supabase.storage.from('journal-scans').createSignedUrl(r.scan_path, 3600);
+        if (signed) entries.push({ id: r.id, date, scanUrl: signed.signedUrl, scanPath: r.scan_path });
+      } else if (r.ciphertext && r.nonce) {
+        entries.push({ id: r.id, date, text: await decryptJournal(r.ciphertext, r.nonce) });
+      }
+    } catch { /* undecryptable/missing entry — skip rather than crash the page */ }
   }
   return (
     <div className="min-h-screen">
@@ -28,7 +34,9 @@ export default async function JournalPage() {
         <p className="mb-6 text-sm text-shadow">Encrypted at rest. Only you can read these.</p>
         <div className="space-y-3">
           {entries.length === 0 && <EmptyState title="Nothing written yet" hint="Journal check-ins land here, encrypted." />}
-          {entries.map((e) => <JournalEntryCard key={e.id} id={e.id} date={e.date} text={e.text} />)}
+          {entries.map((e) => (
+            <JournalEntryCard key={e.id} id={e.id} date={e.date} text={e.text} scanUrl={e.scanUrl} scanPath={e.scanPath} />
+          ))}
         </div>
       </main>
     </div>

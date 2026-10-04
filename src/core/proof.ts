@@ -81,10 +81,16 @@ export function validateProof(spec: ProofSpec, payload: Record<string, unknown>,
       return checkOneLine(str(payload, 'intention'), 'an intention for the day', 3, 140);
     }
     case 'journal': {
+      // A scanned handwritten page counts too — ownership is verified server-side.
+      const scanPath = str(payload, 'scanPath');
+      if (scanPath !== undefined) {
+        if (!/^[0-9a-f-]{36}\/[\w.-]+$/.test(scanPath)) return fail('The scanned page could not be found — retake it and try again.');
+        return ok;
+      }
       const text = str(payload, 'text') ?? '';
       const min = spec.minWords ?? DEFAULT_JOURNAL_WORDS;
       const words = wordCount(text);
-      if (words < min) return fail(`Write at least ${min} words (you have ${words}).`);
+      if (words < min) return fail(`Write at least ${min} words (you have ${words}), or scan a handwritten page.`);
       return ok;
     }
     case 'timer': {

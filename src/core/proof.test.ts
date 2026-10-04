@@ -35,10 +35,13 @@ test('duration', () => {
   bad(validateProof(spec, { minutes: 45, activity: '  ' }));
 });
 
-test('journal needs ≥ 50 words', () => {
+test('journal needs ≥ 50 words or a scanned page', () => {
   const spec = { type: 'journal', minWords: 50 } as const;
   good(validateProof(spec, { text: words(50) }));
   bad(validateProof(spec, { text: words(49) }));
+  good(validateProof(spec, { scanPath: '01234567-89ab-cdef-0123-456789abcdef/1700000000000.jpg' }));
+  bad(validateProof(spec, { scanPath: '../escape.jpg' }));
+  bad(validateProof(spec, { scanPath: 'not-a-path' }));
   assert.equal(wordCount('  one\ttwo\n three  '), 3);
 });
 

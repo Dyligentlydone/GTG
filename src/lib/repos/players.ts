@@ -58,11 +58,11 @@ export async function loadEarnedAchievementIds(db: Db, userId: string): Promise<
 
 export async function loadJournalEntries(db: Db, userId: string) {
   const { data, error } = await db.from('journal_entries')
-    .select('id, completion_id, ciphertext, nonce, created_at')
+    .select('id, completion_id, ciphertext, nonce, scan_path, created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return (data ?? []) as { id: string; completion_id: string; ciphertext: string; nonce: string; created_at: string }[];
+  return (data ?? []) as { id: string; completion_id: string; ciphertext: string | null; nonce: string | null; scan_path: string | null; created_at: string }[];
 }
 
 /** The player's active (non-complete) sculpture, or the latest completed one when none is active. */
