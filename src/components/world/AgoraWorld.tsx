@@ -38,10 +38,10 @@ export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }
       <Canvas
         shadows
         dpr={[1, 1.75]}
-        camera={{ fov: 72, near: 0.1, far: 260, position: [0, 1.8, 24] }}
+        camera={{ fov: 72, near: 0.1, far: 3200, position: [0, 1.8, 24] }}
         gl={{ antialias: true }}
       >
-        <fog attach="fog" args={['#1d161b', 48, 190]} />
+        <fog attach="fog" args={['#8d8490', 70, 1500]} />
         <Sky distance={45000} sunPosition={[-32, 14, -40]} turbidity={7} rayleigh={1.4} inclination={0.55} />
         <hemisphereLight args={['#4a5578', '#1c1610', 0.9]} />
         <directionalLight
