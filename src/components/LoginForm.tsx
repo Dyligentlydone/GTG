@@ -14,15 +14,20 @@ export function LoginForm({ next, error }: { next?: string; error?: string }) {
     e.preventDefault();
     setBusy(true);
     setMsg(null);
-    const supabase = createClient();
-    const redirect = `${window.location.origin}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ''}`;
-    const { error: err } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: redirect },
-    });
-    setBusy(false);
-    if (err) setMsg(err.message);
-    else setSent(true);
+    try {
+      const supabase = createClient();
+      const redirect = `${window.location.origin}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ''}`;
+      const { error: err } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: redirect },
+      });
+      if (err) setMsg(err.message);
+      else setSent(true);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : 'Something went wrong — try again.');
+    } finally {
+      setBusy(false);
+    }
   }
 
   if (sent) {
