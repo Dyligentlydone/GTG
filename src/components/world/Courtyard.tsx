@@ -397,38 +397,52 @@ export function Courtyard({ destinations, onDoorChange }: {
   );
 }
 
-/** Detailed illustrative cumulus: hierarchical lobes, 4 tones, rim-lit silhouette. */
+/** Puffy illustrative cumulus: 3-tier scallops, 4 tones, interior contour curves. */
 function cloudTexture(seed: number): THREE.CanvasTexture {
   const r = mulberry32(seed);
-  const W = 512, H = 256;
+  const W = 512, H = 288;
   const c = document.createElement('canvas');
   c.width = W; c.height = H;
   const g = c.getContext('2d')!;
-  const baseY = 192 + r.range(-6, 10);
+  const baseY = 214 + r.range(-8, 10);
   type L = [number, number, number, number];
 
-  // main lobes along the base + a taller tower + scallop sub-lobes on their tops
+  // three tiers: mains → scallop subs on their tops → tiny minis on the subs
   const mains: L[] = [];
   const subs: L[] = [];
-  const n = Math.floor(r.range(7, 10));
+  const minis: L[] = [];
+  const n = Math.floor(r.range(8, 12));
   for (let i = 0; i < n; i++) {
-    const rx = r.range(28, 72), ry = r.range(18, 44);
-    mains.push([r.range(55, 455), baseY - ry * r.range(0.35, 0.8), rx, ry]);
+    const rx = r.range(26, 74), ry = r.range(22, 50);
+    mains.push([r.range(120, 390), baseY - ry * r.range(0.3, 0.75), rx, ry]);
   }
-  mains.push([r.range(190, 330), baseY - r.range(62, 88), r.range(48, 70), r.range(40, 56)]);
+  const towers = 1 + (r.next() < 0.6 ? 1 : 0);
+  for (let t = 0; t < towers; t++) {
+    mains.push([r.range(170, 350), baseY - r.range(70, 100), r.range(46, 68), r.range(42, 60)]);
+  }
   for (const [x, y, rx, ry] of mains) {
-    const k = 2 + Math.floor(r.range(0, 3));
+    const k = 3 + Math.floor(r.range(0, 3));
     for (let i = 0; i < k; i++) {
-      const a = r.range(Math.PI * 1.1, Math.PI * 1.9);
-      subs.push([
+      const a = r.range(Math.PI * 1.05, Math.PI * 1.95);
+      const s: L = [
         x + Math.cos(a) * rx * r.range(0.55, 0.85),
         y + Math.sin(a) * ry * r.range(0.55, 0.85),
-        rx * r.range(0.32, 0.52),
-        ry * r.range(0.3, 0.48),
-      ]);
+        rx * r.range(0.3, 0.5),
+        ry * r.range(0.28, 0.46),
+      ];
+      subs.push(s);
+      if (r.next() < 0.6) {
+        const b = r.range(Math.PI * 1.15, Math.PI * 1.85);
+        minis.push([
+          s[0] + Math.cos(b) * s[2] * r.range(0.5, 0.8),
+          s[1] + Math.sin(b) * s[3] * r.range(0.5, 0.8),
+          s[2] * r.range(0.4, 0.6),
+          s[3] * r.range(0.4, 0.6),
+        ]);
+      }
     }
   }
-  const all = [...mains, ...subs];
+  const all = [...mains, ...subs, ...minis];
 
   const ell = (x: number, y: number, rx: number, ry: number, col: string) => {
     g.fillStyle = col;
@@ -436,13 +450,20 @@ function cloudTexture(seed: number): THREE.CanvasTexture {
     g.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
     g.fill();
   };
+  const arc = (x: number, y: number, rx: number, ry: number, a0: number, a1: number, col: string, lw: number) => {
+    g.strokeStyle = col;
+    g.lineWidth = lw;
+    g.beginPath();
+    g.ellipse(x, y, rx, ry, 0, a0, a1);
+    g.stroke();
+  };
 
-  // 1) mid-tone body — the grey-blue silhouette
+  // 1) mid-tone body
   for (const [x, y, rx, ry] of all) ell(x, y, rx, ry, '#9cb4ce');
-  // 2) underbellies — medium then deep, stacked toward the bottom of each lobe
+  // 2) underbellies — medium then deep scoops
   for (const [x, y, rx, ry] of all) ell(x + rx * 0.16, y + ry * 0.4, rx * 0.66, ry * 0.42, '#87a0be');
   for (const [x, y, rx, ry] of all) ell(x + rx * 0.24, y + ry * 0.6, rx * 0.5, ry * 0.3, '#6f87a8');
-  // 3) white caps — several small overlapping caps per main lobe → scalloped lit top
+  // 3) white caps — scalloped multi-caps on mains, single caps on subs/minis
   for (const [x, y, rx, ry] of mains) {
     const k = 2 + Math.floor(r.range(0, 3));
     for (let i = 0; i < k; i++) {
@@ -455,16 +476,24 @@ function cloudTexture(seed: number): THREE.CanvasTexture {
       );
     }
   }
-  for (const [x, y, rx, ry] of subs) ell(x - rx * 0.1, y - ry * 0.22, rx * 0.75, ry * 0.65, '#f5f8fc');
-  // 4) rim arcs — bright top edge on the outer scallops + tower
-  g.strokeStyle = 'rgba(255,255,255,0.85)';
-  for (const [x, y, rx, ry] of [...subs, mains[mains.length - 1]!]) {
-    g.lineWidth = Math.max(2, ry * 0.16);
-    g.beginPath();
-    g.ellipse(x, y, rx * 0.92, ry * 0.92, 0, Math.PI * 1.08, Math.PI * 1.92);
-    g.stroke();
+  for (const [x, y, rx, ry] of [...subs, ...minis]) {
+    ell(x - rx * 0.1, y - ry * 0.22, rx * 0.75, ry * 0.65, '#f5f8fc');
   }
-  // 5) flat base
+  // 4) interior contour curves — the etched lines where puffs meet shade
+  for (const [x, y, rx, ry] of all) {
+    arc(x + rx * 0.16, y + ry * 0.4, rx * 0.66, ry * 0.42,
+      Math.PI * 1.1, Math.PI * 1.9, 'rgba(110,135,168,0.5)', Math.max(1.5, ry * 0.05));
+  }
+  for (const [x, y, rx, ry] of [...subs, ...minis]) {
+    arc(x - rx * 0.1, y - ry * 0.22, rx * 0.75, ry * 0.65,
+      Math.PI * 0.1, Math.PI * 0.9, 'rgba(190,205,228,0.7)', Math.max(1.5, ry * 0.06));
+  }
+  // 5) bright rims along the outer tops
+  for (const [x, y, rx, ry] of [...subs, ...minis]) {
+    arc(x, y, rx * 0.92, ry * 0.92,
+      Math.PI * 1.08, Math.PI * 1.92, 'rgba(255,255,255,0.85)', Math.max(2, ry * 0.14));
+  }
+  // 6) flat base
   g.globalCompositeOperation = 'destination-out';
   g.fillRect(0, baseY, W, H - baseY);
   g.globalCompositeOperation = 'source-over';
