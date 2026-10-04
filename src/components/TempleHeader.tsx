@@ -35,7 +35,11 @@ export function TempleHeader({ litPillars = [], handle, minimal = false, level }
   return (
     <header className="border-b border-line">
       <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-3">
-        <Link href="/" className="font-display text-sm tracking-[0.3em] text-gold">GAMIFYING THE GRIND</Link>
+        <Link href="/" className="flex items-center gap-2.5 font-display text-sm tracking-[0.3em] text-gold">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="GTG" className="h-8 w-8 object-contain" />
+          GAMIFYING THE GRIND
+        </Link>
         <div className="mx-2 hidden items-end gap-1 sm:flex" title="Pillars on target this week">
           {pillars.map((p) => <Column key={p} pillar={p} lit={lit.has(p)} />)}
         </div>
