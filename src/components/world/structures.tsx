@@ -118,20 +118,12 @@ export function Temple({ destination, position, rotationY, onDoorChange }: {
   }, []);
   const doorZ = -D / 2 + 0.25; // front wall (local -z faces plaza after rotation)
   const colXs = [-W / 2 + 0.9, -W / 6, W / 6, W / 2 - 0.9];
-  // Access ramp to the platform top (0.75): mesh and collider describe the
-  // same slope, so the walk surface is what you see.
-  const RAMP = { w: 5, z0: -10.6, z1: -7.0, rise: FLOOR };
-  const run = RAMP.z1 - RAMP.z0;
-  const theta = Math.atan2(RAMP.rise, run);
-  const slopeLen = Math.hypot(run, RAMP.rise);
-  const rampGeo = useMemo(() => {
-    const s = new THREE.Shape();
-    s.moveTo(0, 0); s.lineTo(3.6, 0); s.lineTo(3.6, 0.75); s.closePath();
-    const g = new THREE.ExtrudeGeometry(s, { depth: 5, bevelEnabled: false });
-    g.rotateY(-Math.PI / 2);   // profile x → +z, extrusion z → -x
-    g.translate(2.5, 0, -10.6); // width centered on x, low edge at z0
-    return g;
-  }, []);
+  // Front staircase: 5 marble steps from plaza floor to the platform top.
+  // Visual slabs and colliders are the same boxes — you climb real stairs.
+  const STAIR = { w: 7, z0: -10.0, z1: -6.5, rise: FLOOR, steps: 5 };
+  const run = STAIR.z1 - STAIR.z0;
+  const stepRise = STAIR.rise / STAIR.steps;
+  const stepRun = run / STAIR.steps;
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
       <RigidBody type="fixed" colliders={false}>
@@ -141,13 +133,24 @@ export function Temple({ destination, position, rotationY, onDoorChange }: {
             <boxGeometry args={[W + 2.6 - i * 0.7, 0.24, D + 2.6 - i * 0.7]} />
           </mesh>
         ))}
-        {/* ramp — cuboid aligned with the wedge slope; low edge meets the
-            plaza floor, high edge meets the platform top */}
-        <CuboidCollider
-          args={[RAMP.w / 2, 0.2, slopeLen / 2]}
-          position={[0, RAMP.rise / 2 - 0.2 * Math.cos(theta), (RAMP.z0 + RAMP.z1) / 2 + 0.2 * Math.sin(theta)]}
-          rotation={[-theta, 0, 0]}
-        />
+        {/* stair steps — colliders match the visual slabs exactly */}
+        {Array.from({ length: STAIR.steps }, (_, i) => (
+          <CuboidCollider key={i}
+            args={[STAIR.w / 2, (stepRise * (i + 1)) / 2, (STAIR.z1 - (STAIR.z0 + i * stepRun)) / 2]}
+            position={[0, (stepRise * (i + 1)) / 2, (STAIR.z0 + i * stepRun + STAIR.z1) / 2]}
+          />
+        ))}
+        {/* krepis tiers — colliders notched around the stair corridor */}
+        {[0, 1, 2].map(i => {
+          const halfW = (W + 2.6 - i * 0.7) / 2;
+          const segW = halfW - STAIR.w / 2 - 0.05;
+          return [-1, 1].map(s => (
+            <CuboidCollider key={`${i}-${s}`}
+              args={[segW / 2, 0.12, (D + 2.6 - i * 0.7) / 2]}
+              position={[s * (STAIR.w / 2 + 0.05 + segW / 2), 0.12 + i * 0.25, -1.1]}
+            />
+          ));
+        })}
         {/* platform */}
         <CuboidCollider args={[W / 2 + 0.6, 0.38, D / 2 + 0.6]} position={[0, 0.37, 0]} />
         {/* cella walls: back, sides, front split around door */}
@@ -163,8 +166,17 @@ export function Temple({ destination, position, rotationY, onDoorChange }: {
         ))}
       </RigidBody>
 
-      {/* access ramp — visual wedge matching the collider */}
-      <mesh geometry={rampGeo} material={marble} castShadow receiveShadow />
+      {/* front staircase — solid stacked slabs, each a tread-and-riser */}
+      {Array.from({ length: STAIR.steps }, (_, i) => {
+        const top = stepRise * (i + 1);
+        return (
+          <mesh key={i} material={marble}
+            position={[0, top / 2, (STAIR.z0 + i * stepRun + STAIR.z1) / 2]}
+            castShadow receiveShadow>
+            <boxGeometry args={[STAIR.w, top, STAIR.z1 - (STAIR.z0 + i * stepRun)]} />
+          </mesh>
+        );
+      })}
 
       {/* cella walls — visual */}
       <mesh material={marble} position={[0, FLOOR + 2.3, D / 2 - 0.25]} castShadow receiveShadow>
