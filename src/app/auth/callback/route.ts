@@ -18,6 +18,6 @@ export async function GET(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   const profile = user ? await loadProfile(supabase, user.id) : null;
-  const dest = profile?.handle ? (next && next.startsWith('/') ? next : '/home') : `/onboarding${next ? `?next=${encodeURIComponent(next)}` : ''}`;
+  const dest = profile?.handle ? (next && next.startsWith('/') ? next : '/') : `/onboarding${next ? `?next=${encodeURIComponent(next)}` : ''}`;
   return NextResponse.redirect(new URL(dest, url.origin));
 }

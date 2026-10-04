@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const viewer = await requireViewer('/admin');
-  if (viewer.profile.role !== 'admin') redirect('/home');
+  if (viewer.profile.role !== 'admin') redirect('/');
 
   const games = await loadGames(viewer.supabase, { includeDrafts: true });
   if (games.length === 0) return <main className="p-10 text-center text-shadow">No games seeded yet.</main>;

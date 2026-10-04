@@ -5,7 +5,7 @@ import { PILLAR_SYMBOLS } from '../sculpture/symbols';
 import type { PillarId } from '../core/types';
 
 const NAV = [
-  { href: '/home', label: 'Home' },
+  { href: '/', label: 'Home' },
   { href: '/books', label: 'Books' },
   { href: '/journal', label: 'Journal' },
   { href: '/sculpture', label: 'Sculpture' },
@@ -30,12 +30,12 @@ export function TempleHeader({ litPillars = [], handle }: { litPillars?: PillarI
   return (
     <header className="border-b border-line">
       <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-3">
-        <Link href="/home" className="font-display text-sm tracking-[0.3em] text-gold">GAMIFY THE GRIND</Link>
+        <Link href="/" className="font-display text-sm tracking-[0.3em] text-gold">GAMIFY THE GRIND</Link>
         <div className="mx-2 hidden items-end gap-1 sm:flex" title="Pillars on target this week">
           {pillars.map((p) => <Column key={p} pillar={p} lit={lit.has(p)} />)}
         </div>
         <nav className="ml-auto flex items-center gap-3 text-sm text-shadow">
-          {NAV.filter((n) => n.href !== '/home').map((n) => (
+          {NAV.filter((n) => n.href !== '/').map((n) => (
             <Link key={n.href} href={n.href} className="hover:text-marble">{n.label}</Link>
           ))}
           {handle && <span className="text-gold">@{handle}</span>}

@@ -15,7 +15,7 @@ async function Inner({ ref }: { ref?: string }) {
     redirect(`/login?next=${encodeURIComponent(next)}`);
   }
   const profile = await loadProfile(supabase, user.id);
-  if (profile?.handle) redirect('/home'); // already onboarded
+  if (profile?.handle) redirect('/'); // already onboarded
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || profile?.time_zone || 'UTC';
   return <OnboardingForm timeZone={tz} />;
 }

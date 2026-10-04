@@ -21,7 +21,7 @@ const ARCHETYPE_COPY: Record<Archetype, string> = {
 export function OnboardingForm({ timeZone }: { timeZone: string }) {
   const router = useRouter();
   const search = useSearchParams();
-  const next = search.get('next') ?? '/home';
+  const next = search.get('next') ?? '/';
   const supabase = useMemo(() => createClient(), []);
 
   const [step, setStep] = useState(0);

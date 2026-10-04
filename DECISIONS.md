@@ -114,3 +114,10 @@ Decisions made where SPEC.md was silent. Newest at the bottom.
 - **Ambient layer is zero-dep DOM/CSS:** drifting dust motes (2D canvas, 42 particles, pauses when hidden), film grain (SVG turbulence + steps()), `Reveal` (IntersectionObserver rise-in), `TiltCard` (pointer-driven perspective + gold sheen), `CountUp` (ease-out counters), `text-shimmer` heading, `.fill-bar` week bars that fill when scrolled into view. No GSAP/Lenis — the lobby needs atmosphere, not scrollytelling; those stay on the table for the landing page.
 - **`prefers-reduced-motion` honored everywhere:** no auto-rotate, dust, grain jitter, reveals, tilt, or count animation; the chisel replay places instantly.
 - **`/preview` is a dev-only mock of the lobby** (404s in production, middleware-public) so the experience is reviewable without Supabase.
+
+## `/` is the home page for everyone (owner request)
+
+- **No login gate on the front door.** `/` renders the lobby experience publicly: visitors get the 3D museum stage with a demo marble (seed 7, feet emerging), the "Your marble is waiting" CTA, and the world-readable games catalog with sign-in CTAs. Signed-in players get the same page personalized — their sculpture, Chisel-Day replay, XP strip, enrolled/discovered games.
+- **`LobbyView` (`src/components/LobbyView.tsx`)** is the shared presentational component; `optionalViewer` in `src/lib/viewer.ts` returns the viewer or null without redirecting (also null when Supabase env is absent).
+- **`/home` redirects to `/`** and stays in PUBLIC_PATHS so the redirect runs without a session; all internal `/home` links point at `/`.
+- `ChiselCountdown.timeZone` is optional — visitors' clocks use their browser zone.

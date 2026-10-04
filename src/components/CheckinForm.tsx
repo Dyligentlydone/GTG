@@ -71,7 +71,7 @@ export function CheckinForm({ gameSlug, questKey, proof, books = [], minSeconds 
         {result.achievements && result.achievements.length > 0 && (
           <p className="mt-2 text-marble">Unlocked: {result.achievements.join(', ')}</p>
         )}
-        <a href="/home" className="btn btn-primary mt-6">Back to the board</a>
+        <a href="/" className="btn btn-primary mt-6">Back to the board</a>
       </div>
     );
   }

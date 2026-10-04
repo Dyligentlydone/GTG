@@ -38,10 +38,10 @@ function zonedMidnightUtc(date: string, timeZone: string): number {
   return guess;
 }
 
-export function ChiselCountdown({ timeZone }: { timeZone: string }) {
+export function ChiselCountdown({ timeZone }: { timeZone?: string }) {
   const [left, setLeft] = useState<number | null>(null);
   useEffect(() => {
-    const target = nextChiselUtc(timeZone);
+    const target = nextChiselUtc(timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone);
     const tick = () => setLeft(Math.max(0, target - Date.now()));
     tick();
     const id = setInterval(tick, 30_000);
