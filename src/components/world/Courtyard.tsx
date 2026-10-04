@@ -397,49 +397,70 @@ export function Courtyard({ destinations, onDoorChange }: {
   );
 }
 
-/** Stylized flat-bottom cumulus, painted on canvas per-seed and billboarded. */
+/** Painterly cumulus: shade base + lit lobes + scalloped edge dabs, clipped shading. */
 function cloudTexture(seed: number): THREE.CanvasTexture {
   const r = mulberry32(seed);
   const c = document.createElement('canvas');
-  c.width = 256; c.height = 128;
+  c.width = 320; c.height = 170;
   const g = c.getContext('2d')!;
-  const baseY = 94 + r.range(-4, 8);
-  // lobe cluster along the base line + one taller "tower" for cumulus shape
-  const lobes: [number, number, number, number][] = [];
-  const n = Math.floor(r.range(6, 10));
-  for (let i = 0; i < n; i++) {
-    const rx = r.range(16, 46), ry = r.range(12, 28);
-    lobes.push([r.range(34, 224), baseY - ry * r.range(0.3, 0.85), rx, ry]);
-  }
-  lobes.push([r.range(95, 160), baseY - r.range(38, 52), r.range(30, 44), r.range(24, 34)]);
+  const baseY = 118 + r.range(-4, 8);
 
-  for (const [x, y, rx, ry] of lobes) {
-    const rad = Math.max(rx, ry) * 1.06;
+  // silhouette: lobe cluster along the base line + a taller tower lobe
+  const lobes: [number, number, number, number][] = [];
+  const n = Math.floor(r.range(7, 11));
+  for (let i = 0; i < n; i++) {
+    const rx = r.range(20, 56), ry = r.range(14, 34);
+    lobes.push([r.range(40, 280), baseY - ry * r.range(0.3, 0.85), rx, ry]);
+  }
+  lobes.push([r.range(120, 200), baseY - r.range(46, 64), r.range(36, 54), r.range(30, 42)]);
+
+  const dab = (x: number, y: number, rad: number, col: string) => {
     const grad = g.createRadialGradient(x, y, 0, x, y, rad);
-    grad.addColorStop(0, 'rgba(255,253,250,0.98)');
-    grad.addColorStop(0.72, 'rgba(255,250,245,0.85)');
-    grad.addColorStop(1, 'rgba(255,248,242,0)');
+    grad.addColorStop(0, col);
+    grad.addColorStop(0.65, col.replace(/[\d.]+\)$/, '0.55)'));
+    grad.addColorStop(1, col.replace(/[\d.]+\)$/, '0)'));
     g.fillStyle = grad;
+    g.beginPath(); g.arc(x, y, rad, 0, Math.PI * 2); g.fill();
+  };
+  const blob = (x: number, y: number, rx: number, ry: number, col: string) => {
+    const rad = Math.max(rx, ry) * 1.06;
     g.save();
     g.translate(x, y); g.scale(rx / rad, ry / rad); g.translate(-x, -y);
-    g.beginPath(); g.arc(x, y, rad, 0, Math.PI * 2); g.fill();
+    dab(x, y, rad, col);
     g.restore();
+  };
+
+  // 1) shade body — cool grey base so lit areas read as sunlit later
+  for (const [x, y, rx, ry] of lobes) blob(x, y, rx * 1.02, ry * 1.02, 'rgba(196,206,222,0.95)');
+  // 2) lit lobes — warm white, shifted up-left (sun side), nested inside the shade
+  for (const [x, y, rx, ry] of lobes) blob(x - rx * 0.16, y - ry * 0.24, rx * 0.78, ry * 0.72, 'rgba(255,253,248,0.95)');
+  // 3) scalloped edge — small dabs around each lobe rim: cauliflower texture
+  for (const [x, y, rx, ry] of lobes) {
+    const k = Math.floor(14 + rx * 0.55);
+    for (let i = 0; i < k; i++) {
+      const a = r.range(0, Math.PI * 2);
+      const j = r.range(0.82, 1.12);
+      const px = x + Math.cos(a) * rx * j;
+      const py = y + Math.sin(a) * ry * j;
+      const lit = py < y - ry * 0.1 || px < x - rx * 0.3;
+      dab(px, py, r.range(2.5, 7), lit ? 'rgba(255,253,246,0.85)' : 'rgba(178,190,210,0.8)');
+    }
   }
-  // everything below is clipped to the painted silhouette — no box edges
+
+  // clipped shading — never outside the silhouette, so no box edges
   g.globalCompositeOperation = 'source-atop';
-  // flat-bottom shading — the classic cumulus underside
-  const shade = g.createLinearGradient(0, baseY - 30, 0, baseY + 4);
-  shade.addColorStop(0, 'rgba(148,168,196,0)');
-  shade.addColorStop(1, 'rgba(138,158,190,0.5)');
+  const shade = g.createLinearGradient(0, baseY - 36, 0, baseY + 4);
+  shade.addColorStop(0, 'rgba(150,168,196,0)');
+  shade.addColorStop(1, 'rgba(128,148,180,0.55)');
   g.fillStyle = shade;
-  g.fillRect(0, 0, 256, 128);
-  // sunlit crown
-  const hi = g.createLinearGradient(0, 10, 0, 66);
-  hi.addColorStop(0, 'rgba(255,255,255,0.45)');
-  hi.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillRect(0, 0, 320, 170);
+  const hi = g.createLinearGradient(0, 8, 0, 78);
+  hi.addColorStop(0, 'rgba(255,244,224,0.5)');
+  hi.addColorStop(1, 'rgba(255,244,224,0)');
   g.fillStyle = hi;
-  g.fillRect(0, 0, 256, 80);
+  g.fillRect(0, 0, 320, 90);
   g.globalCompositeOperation = 'source-over';
+
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
