@@ -60,7 +60,7 @@ function useTerrain() {
 
 /** A copse of trees painted on canvas — cypress spikes or leafy canopy —
  *  billbboarded on the far slopes so the forest reads real at distance. */
-function treeClusterTexture(kind: 'cypress' | 'leafy', seed: number): THREE.CanvasTexture {
+function treeClusterTexture(kind: 'cypress' | 'leafy' | 'pine' | 'fir', seed: number): THREE.CanvasTexture {
   const r = mulberry32(seed);
   const c = document.createElement('canvas');
   c.width = 256; c.height = 256;
@@ -96,6 +96,42 @@ function treeClusterTexture(kind: 'cypress' | 'leafy', seed: number): THREE.Canv
       g.moveTo(t.x - t.w * 0.28, top + 18);
       g.quadraticCurveTo(t.x - t.w, BASE - t.h * 0.45, t.x - t.w * 0.4, BASE);
       g.stroke();
+    } else if (kind === 'pine') {
+      // umbrella stone pine: tall bare trunk, wide flat canopy
+      const canopyY = BASE - t.h * 0.62;
+      g.strokeStyle = '#4a3524';
+      g.lineWidth = Math.max(2.5, t.w * 0.22);
+      g.beginPath();
+      g.moveTo(t.x, BASE);
+      g.quadraticCurveTo(t.x + t.w * 0.3, (BASE + canopyY) / 2, t.x + r.range(-4, 4), canopyY);
+      g.stroke();
+      const crx = t.w * 3.4, cry = t.h * 0.15;
+      for (let j = 0; j < 16; j++) {
+        const a = r.next() * Math.PI * 2;
+        const cx = t.x + Math.cos(a) * crx * r.next();
+        const cy = canopyY - cry * 0.5 + Math.sin(a) * cry * r.next();
+        const cr = r.range(8, 18);
+        const lit = cy < canopyY - cry * 0.4;
+        g.fillStyle = lit
+          ? `rgba(${72 + r.int(0, 18)},${96 + r.int(0, 18)},${48 + r.int(0, 12)},0.95)`
+          : `rgba(${30 + r.int(0, 12)},${48 + r.int(0, 12)},${26 + r.int(0, 8)},0.95)`;
+        g.beginPath(); g.arc(cx, cy, cr, 0, Math.PI * 2); g.fill();
+      }
+    } else if (kind === 'fir') {
+      // tiered conifer: scalloped layers narrowing to a point
+      const layers = 7;
+      for (let j = 0; j < layers; j++) {
+        const f = j / (layers - 1);
+        const ly = BASE - t.h * 0.12 - f * t.h * 0.85;
+        const lw = t.w * 2.6 * (1 - f * 0.8);
+        g.fillStyle = `rgba(${26 + r.int(0, 10)},${44 + r.int(0, 12)},${40 + r.int(0, 10)},0.95)`;
+        g.beginPath();
+        g.moveTo(t.x - lw, ly + 10);
+        g.quadraticCurveTo(t.x, ly - 14, t.x + lw, ly + 10);
+        g.quadraticCurveTo(t.x + lw * 0.4, ly + 16, t.x, ly + 14);
+        g.quadraticCurveTo(t.x - lw * 0.4, ly + 16, t.x - lw, ly + 10);
+        g.fill();
+      }
     } else {
       // trunk
       g.strokeStyle = '#3a2e20';
@@ -121,7 +157,7 @@ function treeClusterTexture(kind: 'cypress' | 'leafy', seed: number): THREE.Canv
   return tex;
 }
 
-function Forest({ kind, count, seed }: { kind: 'cypress' | 'leafy'; count: number; seed: number }) {
+function Forest({ kind, count, seed, maxY = 62 }: { kind: 'cypress' | 'leafy' | 'pine' | 'fir'; count: number; seed: number; maxY?: number }) {
   const texA = useMemo(() => treeClusterTexture(kind, seed), [kind, seed]);
   const texB = useMemo(() => treeClusterTexture(kind, seed + 1000), [kind, seed]);
   const spots = useMemo(() => {
@@ -136,18 +172,18 @@ function Forest({ kind, count, seed }: { kind: 'cypress' | 'leafy'; count: numbe
       const gx = Math.cos(ga) * grad;
       const gz = Math.sin(ga) * grad;
       const gy = terrainHeight(gx, gz);
-      if (gy < -22 || gy > 62) continue;
+      if (gy < -22 || gy > maxY) continue;
       const size = 4 + Math.floor(r.next() * 8);
       for (let i = 0; i < size && out.length < count; i++) {
         const x = gx + r.signed() * 26;
         const z = gz + r.signed() * 26;
         const y = terrainHeight(x, z);
-        if (y < -22 || y > 70) continue;
+        if (y < -22 || y > maxY + 8) continue;
         out.push({ x, y, z, s: r.range(22, 48), v: r.next() < 0.5 ? 0 : 1 });
       }
     }
     return out;
-  }, [count, seed]);
+  }, [count, seed, maxY]);
   return (
     <group>
       {spots.map((t, i) => (
@@ -197,8 +233,10 @@ export function Courtyard({ destinations, onDoorChange }: {
         <planeGeometry args={[2400, 1100]} />
         <meshStandardMaterial color={0x4a7ba6} roughness={0.1} metalness={0.4} />
       </mesh>
-      <Forest kind="cypress" count={160} seed={31} />
-      <Forest kind="leafy" count={240} seed={77} />
+      <Forest kind="cypress" count={160} seed={31} maxY={62} />
+      <Forest kind="leafy" count={240} seed={77} maxY={55} />
+      <Forest kind="pine" count={130} seed={113} maxY={58} />
+      <Forest kind="fir" count={170} seed={149} maxY={105} />
       <Clouds />
       {/* inlay ring around the statue */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
