@@ -6,9 +6,9 @@ export const metadata: Metadata = { title: 'The Agora — Gamify the Grind' };
 
 // Doorway → destination map. Order = north / east / west around the plaza.
 const DESTINATIONS: DoorDestination[] = [
-  { slug: 'self-development', name: 'Hall of Self-Development', href: '/hall/self-development', accent: 0xd9a84e },
-  { slug: 'library', name: 'The Library', href: '/hall/library', accent: 0x7d9fd1 },
-  { slug: 'gallery', name: 'The Gallery', href: '/hall/gallery', accent: 0xa878d9 },
+  { slug: 'self-development', name: 'Hall of Self-Development', href: '/games/g1', accent: 0xd9a84e },
+  { slug: 'library', name: 'The Library', href: '/books', accent: 0x7d9fd1 },
+  { slug: 'gallery', name: 'The Gallery', href: '/sculpture', accent: 0xa878d9 },
 ];
 
 export default function WorldPage() {
