@@ -5,6 +5,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { mulberry32 } from '../../sculpture/rng';
+import { marbleTexture } from './materials';
+import { buildStatue } from './statue';
 
 export interface SculptureSceneOptions {
   seed: number;
@@ -108,128 +110,12 @@ export class SculptureScene {
     floor.receiveShadow = true;
     this.scene.add(floor);
 
-    // ---------- procedural marble ----------
-    const marbleTexture = (base: number[], vein: number[], seed: number): THREE.CanvasTexture => {
-      const r = mulberry32(seed).next;
-      const S = 512;
-      const c = document.createElement('canvas');
-      c.width = c.height = S;
-      const g = c.getContext('2d')!;
-      const img = g.createImageData(S, S);
-      const grid = 64;
-      const pts: number[] = [];
-      for (let i = 0; i < grid * grid; i++) pts.push(r());
-      const smooth = (t: number) => t * t * (3 - 2 * t);
-      const vn = (x: number, y: number) => {
-        const xi = Math.floor(x) & 63;
-        const yi = Math.floor(y) & 63;
-        const xf = smooth(x - Math.floor(x));
-        const yf = smooth(y - Math.floor(y));
-        const a = pts[yi * grid + xi]!;
-        const b = pts[yi * grid + ((xi + 1) & 63)]!;
-        const c2 = pts[((yi + 1) & 63) * grid + xi]!;
-        const d = pts[((yi + 1) & 63) * grid + ((xi + 1) & 63)]!;
-        return a + (b - a) * xf + (c2 - a) * yf + (a - b - c2 + d) * xf * yf;
-      };
-      for (let y = 0; y < S; y++) {
-        for (let x = 0; x < S; x++) {
-          const u = (x / S) * 8;
-          const v = (y / S) * 8;
-          let n = 0;
-          let amp = 1;
-          let f = 1;
-          for (let o = 0; o < 5; o++) { n += vn(u * f, v * f) * amp; amp *= 0.5; f *= 2; }
-          const veinV = Math.abs(Math.sin((u * 0.9 + v * 0.35 + n * 2.6) * Math.PI));
-          const t = Math.pow(1 - veinV, 14) * 0.55 + (n - 0.9) * 0.06;
-          const i = (y * S + x) * 4;
-          img.data[i] = base[0]! - (base[0]! - vein[0]!) * t;
-          img.data[i + 1] = base[1]! - (base[1]! - vein[1]!) * t;
-          img.data[i + 2] = base[2]! - (base[2]! - vein[2]!) * t;
-          img.data[i + 3] = 255;
-        }
-      }
-      g.putImageData(img, 0, 0);
-      const tex = new THREE.CanvasTexture(c);
-      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-      tex.colorSpace = THREE.SRGBColorSpace;
-      return tex;
-    };
+    // ---------- procedural marble + statue (shared with the agora world) ----------
     const statueMat = new THREE.MeshStandardMaterial({ map: marbleTexture([238, 234, 226], [150, 146, 140], 11), roughness: 0.42 });
     const rockTex = marbleTexture([212, 208, 200], [120, 116, 110], 23);
     rockTex.repeat.set(1.5, 1.5);
     const plinthMat = new THREE.MeshStandardMaterial({ color: 0x1c1c21, roughness: 0.55 });
-
-    // ---------- stand-in statue (draped philosopher) ----------
-    const statue = new THREE.Group();
-    const add = (geo: THREE.BufferGeometry, pos?: number[], rot?: number[], scl?: number[]) => {
-      const m = new THREE.Mesh(geo, statueMat);
-      if (pos) m.position.set(pos[0]!, pos[1]!, pos[2]!);
-      if (rot) m.rotation.set(rot[0]!, rot[1]!, rot[2]!);
-      if (scl) m.scale.set(scl[0]!, scl[1]!, scl[2]!);
-      m.castShadow = true;
-      m.receiveShadow = true;
-      statue.add(m);
-      return m;
-    };
-    const limb = (a: number[], b: number[], r: number) => {
-      const va = new THREE.Vector3(a[0]!, a[1]!, a[2]!);
-      const vb = new THREE.Vector3(b[0]!, b[1]!, b[2]!);
-      const m = add(new THREE.CapsuleGeometry(r, va.distanceTo(vb), 8, 20));
-      m.position.copy(va).add(vb).multiplyScalar(0.5);
-      m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), vb.clone().sub(va).normalize());
-      return m;
-    };
-    // robe with folds
-    const robeGeo = new THREE.LatheGeometry(
-      [[0.56, 0.5], [0.55, 0.62], [0.5, 1.2], [0.44, 1.8], [0.38, 2.25], [0.4, 2.55]].map(([x, y]) => new THREE.Vector2(x!, y!)),
-      96,
-    );
-    const rp = robeGeo.attributes.position as THREE.BufferAttribute;
-    for (let i = 0; i < rp.count; i++) {
-      const x = rp.getX(i);
-      const y = rp.getY(i);
-      const z = rp.getZ(i);
-      const ang = Math.atan2(z, x);
-      const rad = Math.hypot(x, z);
-      const fold = 0.035 * Math.sin(ang * 13 + y * 1.4) * (1.2 - y / 2.6) + 0.015 * Math.sin(ang * 29);
-      const nr = rad + fold;
-      rp.setXYZ(i, Math.cos(ang) * nr, y, Math.sin(ang) * nr * 0.82);
-    }
-    robeGeo.computeVertexNormals();
-    add(robeGeo);
-    // chest and shoulders
-    const chestGeo = new THREE.LatheGeometry(
-      [[0.4, 2.5], [0.44, 2.72], [0.42, 2.9], [0.3, 3.02], [0.12, 3.08]].map(([x, y]) => new THREE.Vector2(x!, y!)),
-      48,
-    );
-    add(chestGeo, undefined, undefined, [1, 1, 0.72]);
-    limb([-0.44, 2.94, 0], [0.44, 2.94, 0], 0.13);
-    limb([-0.5, 2.9, 0], [-0.56, 2.25, 0.02], 0.1);
-    limb([-0.56, 2.25, 0.02], [-0.5, 1.72, 0.12], 0.085);
-    limb([0.5, 2.9, 0], [0.52, 2.32, 0.08], 0.1);
-    limb([0.52, 2.32, 0.08], [0.14, 2.52, 0.36], 0.085);
-    add(new THREE.SphereGeometry(0.075, 16, 12), [0.12, 2.53, 0.4]);
-    add(new THREE.CylinderGeometry(0.05, 0.05, 0.42, 20), [0.05, 2.56, 0.42], [0, 0, Math.PI / 2 - 0.25]);
-    const sash = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-0.5, 3.0, -0.05), new THREE.Vector3(-0.2, 2.72, 0.32), new THREE.Vector3(0.2, 2.35, 0.36),
-      new THREE.Vector3(0.44, 2.0, 0.24), new THREE.Vector3(0.5, 1.4, 0.18), new THREE.Vector3(0.48, 0.8, 0.2),
-    ]);
-    add(new THREE.TubeGeometry(sash, 64, 0.09, 12, false), undefined, undefined, [1, 1, 0.9]);
-    add(new THREE.CylinderGeometry(0.1, 0.12, 0.26, 20), [0, 3.17, 0.01]);
-    add(new THREE.SphereGeometry(0.2, 32, 24), [0, 3.45, 0.02], undefined, [0.9, 1.08, 0.98]);
-    const hairGeo = new THREE.IcosahedronGeometry(0.215, 3);
-    const hp = hairGeo.attributes.position as THREE.BufferAttribute;
-    for (let i = 0; i < hp.count; i++) {
-      const v = new THREE.Vector3(hp.getX(i), hp.getY(i), hp.getZ(i));
-      v.multiplyScalar(1 + 0.06 * Math.sin(v.x * 70) * Math.sin(v.y * 70) * Math.sin(v.z * 70));
-      hp.setXYZ(i, v.x, v.y, v.z);
-    }
-    hairGeo.computeVertexNormals();
-    add(hairGeo, [0, 3.52, -0.04], undefined, [0.95, 0.9, 1.0]);
-    add(new THREE.SphereGeometry(0.12, 24, 16), [0, 3.3, 0.1], undefined, [1.1, 1.15, 0.85]);
-    add(new THREE.ConeGeometry(0.03, 0.08, 12), [0, 3.43, 0.2], [Math.PI / 2 + 0.3, 0, 0]);
-    limb([-0.14, 0.52, 0.42], [-0.16, 0.52, 0.56], 0.055);
-    limb([0.15, 0.52, 0.42], [0.18, 0.52, 0.55], 0.055);
+    const statue = buildStatue(statueMat);
     this.scene.add(statue);
 
     const plinth = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.42, 1.2), plinthMat);

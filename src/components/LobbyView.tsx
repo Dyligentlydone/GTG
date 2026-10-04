@@ -107,8 +107,11 @@ export function LobbyView({
             <div className="text-right">
               <p className="label mb-1">Chisel Day in</p>
               <ChiselCountdown timeZone={timeZone} />
-              <div className="mt-2">
-                <Link href={hallHref} className="pointer-events-auto text-xs text-gold hover:underline">
+              <div className="mt-2 flex flex-col items-end gap-1">
+                <Link href="/world" className="pointer-events-auto text-xs text-gold hover:underline">
+                  walk the agora →
+                </Link>
+                <Link href={hallHref} className="pointer-events-auto text-xs text-stone hover:underline">
                   {hallLabel}
                 </Link>
               </div>

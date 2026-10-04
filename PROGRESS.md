@@ -61,3 +61,24 @@ The owner rejected the hand-drawn SVG statue look. Keep all M4 logic (120 pieces
 - Share cards default to a bust / waist-up crop; the full statue is viewable in the app. X may mark full-figure posts as sensitive.
 - Future native apps: app-store rules on nudity in user content may require draped as the default there.
 - Generate once at signup; limited re-rolls. Compress GLBs (Draco, ~50k triangles) for phones. Keep `StatueProvider` as the seam; the SVG placeholder stays only as a fallback while generation runs.
+
+## The Agora — walkable world prototype (/world)
+
+The lobby vision made real: a first-person Greek courtyard you can walk.
+React Three Fiber + Rapier physics (capsule body, gravity, sprint, jump),
+PointerLockControls mouse-look, and sensor doorways that route into Next.js
+pages — same session, no engine bridging.
+
+- `src/components/world/` — AgoraWorld (canvas + HUD + veil), Player (Rapier
+  FPS controller), Courtyard (plaza, colonnade, cypress ring, statue plinth),
+  structures (parametric Temple/Column/Brazier, door sensors, glowing doors).
+- `src/lib/three/materials.ts` + `statue.ts` — marble texture + the draped
+  philosopher extracted from sculptureScene so both scenes share them.
+- `/world` is public (middleware) — anonymous visitors can walk the agora.
+- `/hall/[slug]` — placeholder interiors; three temples (Hall of
+  Self-Development, Library, Gallery) sit around the plaza facing the statue.
+- Lobby hero gains a "walk the agora →" link; lobby, auth, and routing are
+  otherwise untouched. Chrome desktop target; WASD/Shift/Space/E.
+
+Verified by real playtest: lock → walk → doorway prompt → E → route.
+Typecheck clean, 144/144 tests pass.
