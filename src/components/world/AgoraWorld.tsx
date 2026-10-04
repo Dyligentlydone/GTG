@@ -83,7 +83,7 @@ export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }
             <span>Enter {door.name}</span>
           </div>
         )}
-        <div className="world-exit"><Link href="/">← the lobby</Link></div>
+        <div className="world-exit"><Link href="/profile">← your profile</Link></div>
       </div>
 
       {/* start / pause overlay */}
@@ -104,7 +104,7 @@ export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }
               <span><b>Space</b> jump</span>
               <span><b>E</b> enter a doorway</span>
             </div>
-            <Link href="/" className="world-back">back to the lobby</Link>
+            <Link href="/profile" className="world-back">back to your profile</Link>
           </div>
         </div>
       )}

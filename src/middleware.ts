@@ -3,7 +3,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from './lib/supabase/middleware';
 
-const PUBLIC_PATHS = ['/', '/home', '/login', '/onboarding', '/preview', '/world']; // /home redirects to /; /preview is dev-only (404s in prod)
+const PUBLIC_PATHS = ['/', '/home', '/login', '/onboarding', '/preview']; // /home redirects to /; /preview is dev-only (404s in prod)
 const PUBLIC_PREFIXES = ['/s/', '/api/share/', '/api/stripe/', '/api/cron/', '/auth/', '/_next/', '/favicon', '/hall/'];
 
 export async function middleware(request: NextRequest) {
@@ -22,7 +22,7 @@ export async function middleware(request: NextRequest) {
   }
   if (user && pathname === '/login') {
     const home = request.nextUrl.clone();
-    home.pathname = '/';
+    home.pathname = '/world';
     home.search = '';
     return NextResponse.redirect(home);
   }

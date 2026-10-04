@@ -82,3 +82,18 @@ pages — same session, no engine bridging.
 
 Verified by real playtest: lock → walk → doorway prompt → E → route.
 Typecheck clean, 144/144 tests pass.
+
+## Agora-first routing restructure
+
+- `/` is now the landing gate: the live agora orbits slowly behind the
+  magic-link form (`LandingWorld` — no player, no doors; `LandingScreen`
+  overlay with a lighter `landing-veil`). Signed-in users hitting `/` are
+  redirected to `/world`.
+- `/world` is now login-gated (removed from PUBLIC_PATHS) — the agora is
+  the post-login hub. Auth callback, onboarding completion, and the
+  logged-in `/login` bounce all default to `/world`.
+- `/profile` — the former lobby (sculpture, enrolled games, rank, week
+  stats) moved here; `/home` aliases to it.
+- Header nav: Agora · Board · Profile · Books · Journal · Sculpture ·
+  Honors · Share · Settings. Check-in "back to board" now targets
+  `/games/[slug]`; world veil/HUD links point at `/profile`.

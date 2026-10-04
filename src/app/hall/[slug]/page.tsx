@@ -35,7 +35,7 @@ export default async function HallPage({ params }: { params: Promise<{ slug: str
         <p className="hall-desc">{hall.desc}</p>
         <div className="hall-actions">
           <Link href="/world" className="btn btn-primary">Return to the Agora</Link>
-          <Link href="/" className="btn">Back to the lobby</Link>
+          <Link href="/profile" className="btn">Back to your profile</Link>
         </div>
       </main>
     </>

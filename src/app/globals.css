@@ -214,6 +214,12 @@ body {
   background: rgba(18, 15, 13, 0.82); backdrop-filter: blur(10px);
 }
 .world-sub { color: var(--color-stone); font-size: 14px; line-height: 1.6; }
+/* Landing gate: same veil pattern but the world stays visible — the vista is the point. */
+.landing-veil {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at center, rgba(12, 10, 9, 0.18) 0%, rgba(12, 10, 9, 0.5) 100%);
+}
+.landing-veil .world-veil-card { background: rgba(18, 15, 13, 0.78); }
 .world-enter { margin-top: 6px; }
 .world-controls {
   display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px;
