@@ -37,7 +37,10 @@ export function TempleHeader({ litPillars = [], handle }: { litPillars?: PillarI
         </div>
         <nav className="ml-auto flex items-center gap-3 text-sm text-shadow">
           {NAV.filter((n) => n.href !== '/').map((n) => (
-            <Link key={n.href} href={n.href} className="hover:text-marble">{n.label}</Link>
+            <Link key={n.href} href={n.href}
+              className={n.href === '/games/g1' ? 'font-bold text-gold hover:text-marble' : 'hover:text-marble'}>
+              {n.label}
+            </Link>
           ))}
           {handle && <span className="text-gold">@{handle}</span>}
         </nav>
