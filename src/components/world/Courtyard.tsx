@@ -298,23 +298,33 @@ export function Courtyard({ destinations, onDoorChange }: {
 
       {/* perimeter colonnade — behind the temples and along the south edge */}
       {Array.from({ length: 9 }, (_, i) => -26 + i * 6.5).flatMap(v => [
-        <Column key={`e${v}`} position={[HALF - 1.5, 0, v]} height={5} radius={0.36} material={colMat} />,
-        <Column key={`w${v}`} position={[-(HALF - 1.5), 0, v]} height={5} radius={0.36} material={colMat} />,
+        <Column key={`e${v}`} position={[HALF - 1.5, 0, v]} height={7.2} radius={0.55} material={colMat} base />,
+        <Column key={`w${v}`} position={[-(HALF - 1.5), 0, v]} height={7.2} radius={0.55} material={colMat} base />,
       ])}
       {Array.from({ length: 9 }, (_, i) => -26 + i * 6.5).flatMap(v => [
-        <Column key={`n${v}`} position={[v, 0, -(HALF - 1.5)]} height={5} radius={0.36} material={colMat} />,
-        <Column key={`s${v}`} position={[v, 0, HALF - 1.5]} height={5} radius={0.36} material={colMat} />,
+        <Column key={`n${v}`} position={[v, 0, -(HALF - 1.5)]} height={7.2} radius={0.55} material={colMat} base />,
+        <Column key={`s${v}`} position={[v, 0, HALF - 1.5]} height={7.2} radius={0.55} material={colMat} base />,
       ])}
-      {/* entablature beams over the colonnade */}
+      {/* entablature: architrave band + overhanging cornice */}
       {[[0, -(HALF - 1.5), 0], [0, HALF - 1.5, 0]].map(([x, z]) => (
-        <mesh key={`beam-z${z}`} material={marbleTrim} position={[x!, 5.35, z!]} castShadow>
-          <boxGeometry args={[HALF * 2 - 2, 0.5, 1.0]} />
-        </mesh>
+        <group key={`ent-z${z}`}>
+          <mesh material={marbleTrim} position={[x!, 7.95, z!]} castShadow>
+            <boxGeometry args={[HALF * 2 - 2, 0.6, 1.3]} />
+          </mesh>
+          <mesh material={marbleTrim} position={[x!, 8.4, z!]} castShadow>
+            <boxGeometry args={[HALF * 2 - 1, 0.28, 1.7]} />
+          </mesh>
+        </group>
       ))}
       {[[-(HALF - 1.5), 0], [HALF - 1.5, 0]].map(([x]) => (
-        <mesh key={`beam-x${x}`} material={marbleTrim} position={[x!, 5.35, 0]} castShadow>
-          <boxGeometry args={[1.0, 0.5, HALF * 2 - 2]} />
-        </mesh>
+        <group key={`ent-x${x}`}>
+          <mesh material={marbleTrim} position={[x!, 7.95, 0]} castShadow>
+            <boxGeometry args={[1.3, 0.6, HALF * 2 - 2]} />
+          </mesh>
+          <mesh material={marbleTrim} position={[x!, 8.4, 0]} castShadow>
+            <boxGeometry args={[1.7, 0.28, HALF * 2 - 1]} />
+          </mesh>
+        </group>
       ))}
 
       {/* boundary walls (invisible) + low parapet (visual) */}
@@ -327,14 +337,44 @@ export function Courtyard({ destinations, onDoorChange }: {
         ))}
       </RigidBody>
       {[[0, -HALF, 0], [0, HALF, 0]].map(([x, z]) => (
-        <mesh key={`p${z}`} material={marbleTrim} position={[x!, 0.55, z!]} receiveShadow castShadow>
-          <boxGeometry args={[HALF * 2 + 1.6, 1.1, 0.6]} />
-        </mesh>
+        <group key={`p${z}`}>
+          <mesh material={marbleTrim} position={[x!, 0.68, z!]} receiveShadow castShadow>
+            <boxGeometry args={[HALF * 2 + 1.6, 1.35, 0.9]} />
+          </mesh>
+          <mesh material={marbleTrim} position={[x!, 1.5, z!]} receiveShadow castShadow>
+            <boxGeometry args={[HALF * 2 + 2.0, 0.3, 1.15]} />
+          </mesh>
+          {Array.from({ length: 8 }, (_, i) => -22.75 + i * 6.5).map(v => (
+            <group key={`pr${v}`}>
+              <mesh material={marbleTrim} position={[v, 1.0, z!]} castShadow receiveShadow>
+                <boxGeometry args={[1.15, 2.0, 1.3]} />
+              </mesh>
+              <mesh material={marbleTrim} position={[v, 2.15, z!]} castShadow>
+                <boxGeometry args={[1.45, 0.3, 1.6]} />
+              </mesh>
+            </group>
+          ))}
+        </group>
       ))}
       {[[-HALF, 0], [HALF, 0]].map(([x]) => (
-        <mesh key={`p${x}`} material={marbleTrim} position={[x!, 0.55, 0]} receiveShadow castShadow>
-          <boxGeometry args={[0.6, 1.1, HALF * 2 + 1.6]} />
-        </mesh>
+        <group key={`p${x}`}>
+          <mesh material={marbleTrim} position={[x!, 0.68, 0]} receiveShadow castShadow>
+            <boxGeometry args={[0.9, 1.35, HALF * 2 + 1.6]} />
+          </mesh>
+          <mesh material={marbleTrim} position={[x!, 1.5, 0]} receiveShadow castShadow>
+            <boxGeometry args={[1.15, 0.3, HALF * 2 + 2.0]} />
+          </mesh>
+          {Array.from({ length: 8 }, (_, i) => -22.75 + i * 6.5).map(v => (
+            <group key={`pr${v}`}>
+              <mesh material={marbleTrim} position={[x!, 1.0, v]} castShadow receiveShadow>
+                <boxGeometry args={[1.3, 2.0, 1.15]} />
+              </mesh>
+              <mesh material={marbleTrim} position={[x!, 2.15, v]} castShadow>
+                <boxGeometry args={[1.6, 0.3, 1.45]} />
+              </mesh>
+            </group>
+          ))}
+        </group>
       ))}
 
       {/* braziers flanking each temple front + the south gate */}

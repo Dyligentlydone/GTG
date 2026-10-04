@@ -35,22 +35,32 @@ export function useColumnGeometry(height: number, radius: number) {
   }, [height, radius]);
 }
 
-export function Column({ position, height = 4.4, radius = 0.34, material, collider = true }: {
+export function Column({ position, height = 4.4, radius = 0.34, material, collider = true, base = false }: {
   position: [number, number, number];
   height?: number;
   radius?: number;
   material: THREE.Material;
   collider?: boolean;
+  base?: boolean;
 }) {
   const geo = useColumnGeometry(height, radius);
+  const colY = position[1] + (base ? 0.48 : 0);
   const mesh = (
-    <mesh geometry={geo} material={material} position={position} castShadow receiveShadow />
+    <group>
+      {base && (
+        <mesh material={material} position={[position[0], position[1] + 0.24, position[2]]} castShadow receiveShadow>
+          <boxGeometry args={[radius * 3.2, 0.48, radius * 3.2]} />
+        </mesh>
+      )}
+      <mesh geometry={geo} material={material} position={[position[0], colY, position[2]]} castShadow receiveShadow />
+    </group>
   );
   if (!collider) return mesh;
   return (
     <RigidBody type="fixed" colliders={false}>
       {mesh}
-      <CylinderCollider args={[height / 2, radius * 0.9]} position={[position[0], position[1] + height / 2, position[2]]} />
+      <CylinderCollider args={[height / 2, radius * 0.9]} position={[position[0], colY + height / 2, position[2]]} />
+      {base && <CuboidCollider args={[radius * 1.6, 0.24, radius * 1.6]} position={[position[0], position[1] + 0.24, position[2]]} />}
     </RigidBody>
   );
 }
@@ -95,7 +105,7 @@ export function Temple({ destination, position, rotationY, onDoorChange }: {
   rotationY: number;
   onDoorChange: (d: DoorDestination | null) => void;
 }) {
-  const W = 12, D = 13, COL_H = 4.4, FLOOR = 0.75;
+  const W = 12, D = 13, COL_H = 5.0, FLOOR = 0.75;
   const marble = useMemo(() => marbleMaterial([226, 219, 205], [148, 140, 128], 5, 0.52), []);
   const darkStone = useMemo(() => new THREE.MeshStandardMaterial({ color: 0x2e2a24, roughness: 0.9 }), []);
   const glowMat = useMemo(() => new THREE.MeshStandardMaterial({
@@ -141,15 +151,15 @@ export function Temple({ destination, position, rotationY, onDoorChange }: {
         {/* platform */}
         <CuboidCollider args={[W / 2 + 0.6, 0.38, D / 2 + 0.6]} position={[0, 0.37, 0]} />
         {/* cella walls: back, sides, front split around door */}
-        <CuboidCollider args={[W / 2 - 1.5, 1.9, 0.25]} position={[0, FLOOR + 1.9, D / 2 - 0.25]} />
-        <CuboidCollider args={[0.25, 1.9, D / 2 - 0.5]} position={[-W / 2 + 1.75, FLOOR + 1.9, 0]} />
-        <CuboidCollider args={[0.25, 1.9, D / 2 - 0.5]} position={[W / 2 - 1.75, FLOOR + 1.9, 0]} />
-        <CuboidCollider args={[(W / 2 - 1.5 - 0.9) / 2, 1.9, 0.25]} position={[-(0.9 + (W / 2 - 1.5 - 0.9) / 2), FLOOR + 1.9, doorZ]} />
-        <CuboidCollider args={[(W / 2 - 1.5 - 0.9) / 2, 1.9, 0.25]} position={[(0.9 + (W / 2 - 1.5 - 0.9) / 2), FLOOR + 1.9, doorZ]} />
+        <CuboidCollider args={[W / 2 - 1.5, 2.3, 0.25]} position={[0, FLOOR + 2.3, D / 2 - 0.25]} />
+        <CuboidCollider args={[0.25, 2.3, D / 2 - 0.5]} position={[-W / 2 + 1.75, FLOOR + 2.3, 0]} />
+        <CuboidCollider args={[0.25, 2.3, D / 2 - 0.5]} position={[W / 2 - 1.75, FLOOR + 2.3, 0]} />
+        <CuboidCollider args={[(W / 2 - 1.5 - 0.9) / 2, 2.3, 0.25]} position={[-(0.9 + (W / 2 - 1.5 - 0.9) / 2), FLOOR + 2.3, doorZ]} />
+        <CuboidCollider args={[(W / 2 - 1.5 - 0.9) / 2, 2.3, 0.25]} position={[(0.9 + (W / 2 - 1.5 - 0.9) / 2), FLOOR + 2.3, doorZ]} />
         <CuboidCollider args={[0.95, 0.55, 0.25]} position={[0, FLOOR + 3.35, doorZ]} />
         {/* portico columns */}
         {colXs.map(x => (
-          <CylinderCollider key={x} args={[COL_H / 2, 0.31]} position={[x, FLOOR + COL_H / 2, -D / 2 + 1.1]} />
+          <CylinderCollider key={x} args={[COL_H / 2, 0.4]} position={[x, FLOOR + COL_H / 2, -D / 2 + 1.1]} />
         ))}
       </RigidBody>
 
@@ -157,18 +167,18 @@ export function Temple({ destination, position, rotationY, onDoorChange }: {
       <mesh geometry={rampGeo} material={marble} castShadow receiveShadow />
 
       {/* cella walls — visual */}
-      <mesh material={darkStone} position={[0, FLOOR + 1.9, D / 2 - 0.25]} castShadow receiveShadow>
-        <boxGeometry args={[W - 3, 3.8, 0.5]} />
+      <mesh material={darkStone} position={[0, FLOOR + 2.3, D / 2 - 0.25]} castShadow receiveShadow>
+        <boxGeometry args={[W - 3, 4.6, 0.5]} />
       </mesh>
-      <mesh material={darkStone} position={[-W / 2 + 1.75, FLOOR + 1.9, 0]} castShadow receiveShadow>
-        <boxGeometry args={[0.5, 3.8, D - 1]} />
+      <mesh material={darkStone} position={[-W / 2 + 1.75, FLOOR + 2.3, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.5, 4.6, D - 1]} />
       </mesh>
-      <mesh material={darkStone} position={[W / 2 - 1.75, FLOOR + 1.9, 0]} castShadow receiveShadow>
-        <boxGeometry args={[0.5, 3.8, D - 1]} />
+      <mesh material={darkStone} position={[W / 2 - 1.75, FLOOR + 2.3, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.5, 4.6, D - 1]} />
       </mesh>
       {[-1, 1].map(s => (
-        <mesh key={s} material={darkStone} position={[s * (0.9 + (W / 2 - 1.5 - 0.9) / 2), FLOOR + 1.9, doorZ]} castShadow receiveShadow>
-          <boxGeometry args={[W / 2 - 1.5 - 0.9, 3.8, 0.5]} />
+        <mesh key={s} material={darkStone} position={[s * (0.9 + (W / 2 - 1.5 - 0.9) / 2), FLOOR + 2.3, doorZ]} castShadow receiveShadow>
+          <boxGeometry args={[W / 2 - 1.5 - 0.9, 4.6, 0.5]} />
         </mesh>
       ))}
       <mesh material={darkStone} position={[0, FLOOR + 3.35, doorZ]} castShadow>
@@ -181,7 +191,7 @@ export function Temple({ destination, position, rotationY, onDoorChange }: {
       <pointLight position={[0, FLOOR + 2.2, doorZ - 1.5]} color={destination.accent} intensity={14} distance={12} decay={2} />
 
       {/* portico columns — visual */}
-      {colXs.map(x => <Column key={x} position={[x, FLOOR, -D / 2 + 1.1]} height={COL_H} radius={0.34} material={marble} collider={false} />)}
+      {colXs.map(x => <Column key={x} position={[x, FLOOR, -D / 2 + 1.1]} height={COL_H} radius={0.44} material={marble} collider={false} />)}
       {/* architrave + pediment */}
       <mesh material={marble} position={[0, FLOOR + COL_H + 0.3, -D / 2 + 1.1]} castShadow>
         <boxGeometry args={[W + 0.6, 0.6, 1.1]} />
