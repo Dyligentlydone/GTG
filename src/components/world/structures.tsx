@@ -7,7 +7,7 @@ import { RigidBody, CuboidCollider, CylinderCollider } from '@react-three/rapier
 import { Html } from '@react-three/drei';
 import { marbleMaterial } from '../../lib/three/materials';
 import { HallBoard } from './HallBoard';
-import type { DoorDestination } from './types';
+import type { DoorDestination, QuestTarget } from './types';
 
 /** Fluted column geometry (shared): lathe profile + sinusoidal fluting. */
 export function useColumnGeometry(height: number, radius: number) {
@@ -100,11 +100,13 @@ const TRI = (() => {
   return s;
 })();
 
-export function Temple({ destination, position, rotationY, onDoorChange }: {
+export function Temple({ destination, position, rotationY, onDoorChange, onQuest, boardVersion }: {
   destination: DoorDestination;
   position: [number, number, number];
   rotationY: number;
   onDoorChange: (d: DoorDestination | null) => void;
+  onQuest: (q: QuestTarget) => void;
+  boardVersion: number;
 }) {
   const W = 12, D = 13, COL_H = 5.0, FLOOR = 0.75;
   const marble = useMemo(() => marbleMaterial([226, 219, 205], [148, 140, 128], 5, 0.52), []);
@@ -228,7 +230,8 @@ export function Temple({ destination, position, rotationY, onDoorChange }: {
 
       {/* interior — game halls render their live board as shrines */}
       {destination.gameSlug && (
-        <HallBoard gameSlug={destination.gameSlug} destination={destination} onDoorChange={onDoorChange} />
+        <HallBoard gameSlug={destination.gameSlug} destination={destination} onDoorChange={onDoorChange}
+          onQuest={onQuest} version={boardVersion} />
       )}
 
       <Html position={[0, FLOOR + COL_H + 2.8, -D / 2 + 1.1]} center distanceFactor={26} zIndexRange={[10, 0]}>

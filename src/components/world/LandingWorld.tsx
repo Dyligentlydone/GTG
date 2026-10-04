@@ -46,7 +46,7 @@ export function LandingWorld() {
       <directionalLight position={[-15, 30, 60]} intensity={0.45} color={0xcfe0f5} />
       <Suspense fallback={null}>
         <Physics gravity={[0, -22, 0]}>
-          <Courtyard destinations={noDestinations} onDoorChange={() => {}} />
+          <Courtyard destinations={noDestinations} onDoorChange={() => {}} onQuest={() => {}} boardVersion={0} />
         </Physics>
       </Suspense>
       <OrbitCamera />

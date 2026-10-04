@@ -1,29 +1,39 @@
 'use client';
-// Hall interior for a game: the live quest board rendered as marble shrines.
-// Each shrine is a pedestal with a floating canvas panel (glyph, title, week
-// pips, streak, state) and a proximity sensor that retargets the E prompt to
-// that quest's check-in page. A frieze on the back wall shows the week total
-// and the eight pillars. Data comes from /api/board/[slug].
+// Hall interior for a game: the live quest board rendered as wall shrines.
+// The side walls split like the wheel — the LEFT wall (from the door) holds
+// the external pillars (money, connect, reset, play), the RIGHT wall the
+// internal ones (read, exercise, journal, stillness). Each panel is a canvas
+// slab (glyph, title, XP, week pips, streak, state) that is clickable while
+// pointer-locked — aim the crosshair, click or press E, and the check-in
+// opens in-world. A frieze on the back wall shows the week + pillars.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
 import { marbleMaterial } from '../../lib/three/materials';
 import { PILLAR_ORDER, PILLAR_SYMBOLS } from '../../sculpture/symbols';
-import type { PillarId } from '../../core/types';
-import type { DoorDestination } from './types';
+import type { PillarId, ProofSpec } from '../../core/types';
+import type { DoorDestination, QuestTarget } from './types';
 
 interface QuestPanel {
   id: string; title: string; pillar: PillarId; xp: number; cadence: string;
   state: 'done' | 'due' | 'locked' | 'weekDone' | 'rest';
+  activeToday: boolean; proof: ProofSpec;
   weekDone: number; weekDue: number; streak: number; streakUnit: 'day' | 'week';
 }
 
 interface BoardData {
   title: string; dayLabel: string; weekDone: number; weekDue: number;
-  litPillars: PillarId[]; quests: QuestPanel[];
+  litPillars: PillarId[]; books: { id: string; title: string }[]; quests: QuestPanel[];
 }
 
 const FLOOR = 0.75;
+// Cella side walls sit at |x| = 4.25 with their inner face at 4.0 — panels
+// float just off the face. Walking in (+z), the player's LEFT is local +x.
+const WALL_X = 3.95;
+const PANEL_Y = FLOOR + 1.8;
+const PANEL_ZS = [-3.6, -1.2, 1.2, 3.6];
+const INTERNAL = new Set<PillarId>(['mental', 'physical', 'emotional', 'spiritual']);
+
 const STATE_COLOR: Record<QuestPanel['state'], string> = {
   due: '#C9A227', done: '#7da87d', weekDone: '#8a8578', rest: '#6e6a63', locked: '#55504a',
 };
@@ -134,9 +144,12 @@ function friezeTexture(d: BoardData): THREE.CanvasTexture {
     ctx.stroke(new Path2D(PILLAR_SYMBOLS[p]));
     ctx.restore();
   });
-  ctx.font = '14px Inter, Georgia, serif';
+  ctx.font = '15px Inter, Georgia, serif';
+  ctx.fillStyle = '#8a8578';
+  ctx.fillText('inner world →', w / 2 - 330, 264);
+  ctx.fillText('← outer world', w / 2 + 330, 264);
   ctx.fillStyle = '#6e6a63';
-  ctx.fillText('walk to a shrine · press E to check in', w / 2, 264);
+  ctx.fillText('aim at a panel · click or press E to check in', w / 2, 264);
 
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -144,13 +157,67 @@ function friezeTexture(d: BoardData): THREE.CanvasTexture {
   return tex;
 }
 
-const SHRINE_XS = [-3.3, -1.1, 1.1, 3.3];
-const SHRINE_ZS = [-1.0, 2.3];
+function WallShrine({ q, target, side, z, tex, marble, onOpen, onDoorChange, destination }: {
+  q: QuestPanel;
+  target: QuestTarget;
+  side: 1 | -1;          // +1 → local +x wall (player's left), -1 → -x wall
+  z: number;
+  tex?: THREE.CanvasTexture;
+  marble: THREE.Material;
+  onOpen: () => void;
+  onDoorChange: (d: DoorDestination | null) => void;
+  destination: DoorDestination;
+}) {
+  const [hovered, setHovered] = useState(false);
+  // plane normal must face the room: +x wall looks -x, -x wall looks +x
+  const rotY = side > 0 ? -Math.PI / 2 : Math.PI / 2;
+  return (
+    <group position={[side * WALL_X, 0, z]}>
+      {/* marble backing slab — the panel is set into the wall */}
+      <mesh material={marble} position={[side * 0.09, PANEL_Y, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.14, 1.4, 1.86]} />
+      </mesh>
+      {/* hover glow behind the panel edge */}
+      {hovered && (
+        <mesh position={[side * 0.03, PANEL_Y, 0]} rotation={[0, rotY, 0]}>
+          <planeGeometry args={[1.62, 1.18]} />
+          <meshBasicMaterial color={0xC9A227} transparent opacity={0.45} depthWrite={false} />
+        </mesh>
+      )}
+      {tex && (
+        <mesh
+          position={[0, PANEL_Y, 0]} rotation={[0, rotY, 0]}
+          onClick={(e) => { e.stopPropagation(); onOpen(); }}
+          onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
+          onPointerOut={() => setHovered(false)}
+        >
+          <planeGeometry args={[1.5, 1.05]} />
+          <meshBasicMaterial map={tex} />
+        </mesh>
+      )}
+      {/* standing-in-front sensor → E prompt targets this quest */}
+      <RigidBody type="fixed" colliders={false}>
+        <CuboidCollider
+          sensor
+          args={[0.75, 1.6, 0.95]}
+          position={[-side * 0.62, PANEL_Y, 0]}
+          onIntersectionEnter={() => onDoorChange({
+            slug: q.id, name: q.title, href: `/games/${destination.gameSlug}/quest/${q.id}`,
+            accent: destination.accent, prompt: `Check in — ${q.title}`, quest: target,
+          })}
+          onIntersectionExit={() => onDoorChange(destination)}
+        />
+      </RigidBody>
+    </group>
+  );
+}
 
-export function HallBoard({ gameSlug, destination, onDoorChange }: {
+export function HallBoard({ gameSlug, destination, onDoorChange, onQuest, version }: {
   gameSlug: string;
   destination: DoorDestination;
   onDoorChange: (d: DoorDestination | null) => void;
+  onQuest: (q: QuestTarget) => void;
+  version: number;
 }) {
   const [board, setBoard] = useState<BoardData | null>(null);
   const [fontReady, setFontReady] = useState(false);
@@ -170,7 +237,7 @@ export function HallBoard({ gameSlug, destination, onDoorChange }: {
     document.addEventListener('visibilitychange', onFocus);
     document.fonts?.ready.then(() => setFontReady(true));
     return () => document.removeEventListener('visibilitychange', onFocus);
-  }, [load]);
+  }, [load, version]);
 
   const questTex = useMemo(() => board?.quests.map(questTexture) ?? [], [board, fontReady]);
   const friezeTex = useMemo(() => (board ? friezeTexture(board) : null), [board, fontReady]);
@@ -178,6 +245,21 @@ export function HallBoard({ gameSlug, destination, onDoorChange }: {
     questTex.forEach((t) => t.dispose());
     friezeTex?.dispose();
   }, [questTex, friezeTex]);
+
+  const toTarget = useCallback((q: QuestPanel): QuestTarget => ({
+    gameSlug, questKey: q.id, title: q.title, xp: q.xp, pillar: q.pillar,
+    proof: q.proof, books: board?.books ?? [],
+    blocked: q.state === 'done' ? 'done' : q.state === 'locked' ? 'locked' : !q.activeToday ? 'rest' : undefined,
+  }), [gameSlug, board]);
+
+  // walking in (+z), the player's left wall is local +x → external pillars;
+  // right wall is local -x → internal pillars
+  const walls = useMemo(() => {
+    const left: { q: QuestPanel; i: number }[] = [];
+    const right: { q: QuestPanel; i: number }[] = [];
+    board?.quests.forEach((q, i) => (INTERNAL.has(q.pillar) ? right : left).push({ q, i }));
+    return { left, right };
+  }, [board]);
 
   return (
     <group>
@@ -189,36 +271,18 @@ export function HallBoard({ gameSlug, destination, onDoorChange }: {
         </mesh>
       )}
 
-      {board?.quests.map((q, i) => {
-        const x = SHRINE_XS[i % 4]!;
-        const z = SHRINE_ZS[Math.floor(i / 4)]!;
+      {walls.left.map(({ q, i }, slot) => {
+        const target = toTarget(q);
         return (
-          <group key={q.id} position={[x, 0, z]}>
-            {/* pedestal — solid */}
-            <mesh material={marble} position={[0, FLOOR + 0.3, 0]} castShadow receiveShadow>
-              <boxGeometry args={[0.62, 0.6, 0.62]} />
-            </mesh>
-            <mesh material={marble} position={[0, FLOOR + 0.66, 0]} castShadow>
-              <boxGeometry args={[0.5, 0.14, 0.5]} />
-            </mesh>
-            {/* floating panel — unlit canvas so it reads inside the cella */}
-            {questTex[i] && (
-              <mesh position={[0, FLOOR + 1.62, 0]} rotation={[0, Math.PI, 0]}>
-                <planeGeometry args={[1.3, 0.92]} />
-                <meshBasicMaterial map={questTex[i]} />
-              </mesh>
-            )}
-            <RigidBody type="fixed" colliders={false}>
-              <CuboidCollider args={[0.31, 0.45, 0.31]} position={[0, FLOOR + 0.45, 0]} />
-              <CuboidCollider
-                sensor
-                args={[0.85, 1.7, 0.85]}
-                position={[0, FLOOR + 1.5, 0]}
-                onIntersectionEnter={() => onDoorChange({ slug: q.id, name: q.title, href: `/games/${gameSlug}/quest/${q.id}`, accent: destination.accent })}
-                onIntersectionExit={() => onDoorChange(destination)}
-              />
-            </RigidBody>
-          </group>
+          <WallShrine key={q.id} q={q} target={target} side={1} z={PANEL_ZS[slot] ?? 0} tex={questTex[i]} marble={marble}
+            onOpen={() => onQuest(target)} onDoorChange={onDoorChange} destination={destination} />
+        );
+      })}
+      {walls.right.map(({ q, i }, slot) => {
+        const target = toTarget(q);
+        return (
+          <WallShrine key={q.id} q={q} target={target} side={-1} z={PANEL_ZS[slot] ?? 0} tex={questTex[i]} marble={marble}
+            onOpen={() => onQuest(target)} onDoorChange={onDoorChange} destination={destination} />
         );
       })}
     </group>

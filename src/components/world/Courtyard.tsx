@@ -11,7 +11,7 @@ import { marbleMaterial } from '../../lib/three/materials';
 import { GlbStatue } from './GlbStatue';
 import { mulberry32 } from '../../sculpture/rng';
 import { Column, Brazier, Temple } from './structures';
-import type { DoorDestination } from './types';
+import type { DoorDestination, QuestTarget } from './types';
 
 const HALF = 30; // plaza half-size
 
@@ -229,9 +229,11 @@ function Forest({ kind, count, seed, maxY = 62, coastal = false }: {
   );
 }
 
-export function Courtyard({ destinations, onDoorChange }: {
+export function Courtyard({ destinations, onDoorChange, onQuest, boardVersion }: {
   destinations: DoorDestination[];
   onDoorChange: (d: DoorDestination | null) => void;
+  onQuest: (q: QuestTarget) => void;
+  boardVersion: number;
 }) {
   const marble = useMemo(() => {
     const m = marbleMaterial([222, 215, 200], [146, 138, 126], 7, 0.55);
@@ -293,7 +295,8 @@ export function Courtyard({ destinations, onDoorChange }: {
 
       {/* temples */}
       {destinations.map((d, i) => (
-        <Temple key={d.slug} destination={d} position={placements[i]!.pos} rotationY={placements[i]!.rotY} onDoorChange={onDoorChange} />
+        <Temple key={d.slug} destination={d} position={placements[i]!.pos} rotationY={placements[i]!.rotY}
+          onDoorChange={onDoorChange} onQuest={onQuest} boardVersion={boardVersion} />
       ))}
 
       {/* perimeter colonnade — behind the temples and along the south edge */}

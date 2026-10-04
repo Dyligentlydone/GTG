@@ -10,7 +10,14 @@ import { PointerLockControls, Sky } from '@react-three/drei';
 import { Suspense } from 'react';
 import { Courtyard } from './Courtyard';
 import { Player } from './Player';
-import type { DoorDestination } from './types';
+import { CheckinForm } from '../CheckinForm';
+import type { DoorDestination, QuestTarget } from './types';
+
+const BLOCKED_MSG: Record<NonNullable<QuestTarget['blocked']>, string> = {
+  done: 'Already chiseled today.',
+  rest: 'Not an active day for this quest.',
+  locked: 'This shrine is still sealed.',
+};
 
 export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }) {
   const router = useRouter();
@@ -20,13 +27,27 @@ export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }
   const [door, setDoor] = useState<DoorDestination | null>(null);
   const doorRef = useRef<DoorDestination | null>(null);
   doorRef.current = door;
+  const [quest, setQuest] = useState<QuestTarget | null>(null);
+  const [boardV, setBoardV] = useState(0);
+
+  const openQuest = (q: QuestTarget) => {
+    document.exitPointerLock?.();
+    setQuest(q);
+  };
+  const closeQuest = () => {
+    setQuest(null);
+    setBoardV((v) => v + 1); // re-pull the board so panels reflect the check-in
+  };
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if ((e.code === 'KeyE') && doorRef.current) {
         const d = doorRef.current;
-        document.exitPointerLock?.();
-        router.push(d.href);
+        if (d.quest) openQuest(d.quest);
+        else {
+          document.exitPointerLock?.();
+          router.push(d.href);
+        }
       }
     };
     window.addEventListener('keydown', h);
@@ -64,7 +85,7 @@ export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }
         <Suspense fallback={null}>
           <Physics gravity={[0, -22, 0]}>
             <Player />
-            <Courtyard destinations={destinations} onDoorChange={setDoor} />
+            <Courtyard destinations={destinations} onDoorChange={setDoor} onQuest={openQuest} boardVersion={boardV} />
           </Physics>
         </Suspense>
         <PointerLockControls
@@ -80,11 +101,46 @@ export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }
         {locked && door && (
           <div className="world-prompt">
             <span className="world-key">E</span>
-            <span>Enter {door.name}</span>
+            <span>{door.prompt ?? `Enter ${door.name}`}</span>
+            {door.quest && <span className="text-shadow">· or click</span>}
           </div>
         )}
         <div className="world-exit"><Link href="/profile">← your profile</Link></div>
       </div>
+
+      {/* in-world quest check-in — the same form as the quest page */}
+      {quest && (
+        <div className="world-modal" onClick={closeQuest}>
+          <div className="world-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <p className="label text-gold">{quest.pillar} · +{quest.xp} XP</p>
+                <h2 className="font-display text-2xl text-marble">{quest.title}</h2>
+              </div>
+              <button onClick={closeQuest} className="btn px-3 py-1 text-sm" aria-label="Close">✕</button>
+            </div>
+            {quest.blocked ? (
+              <div className="card p-6 text-center">
+                <p className="font-display text-xl text-gold">{BLOCKED_MSG[quest.blocked]}</p>
+                <p className="mt-2 text-sm text-shadow">Come back when it's due — the board keeps your streak either way.</p>
+              </div>
+            ) : (
+              <CheckinForm
+                gameSlug={quest.gameSlug}
+                questKey={quest.questKey}
+                proof={quest.proof}
+                books={quest.books}
+                minSeconds={quest.proof.type === 'timer' ? quest.proof.minSeconds : undefined}
+              />
+            )}
+            <p className="mt-3 text-center">
+              <a href={`/games/${quest.gameSlug}/quest/${quest.questKey}`} className="text-xs text-shadow underline">
+                open the full quest page
+              </a>
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* start / pause overlay */}
       {!locked && !devView && (
