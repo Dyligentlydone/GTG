@@ -13,7 +13,6 @@ const NAV = [
   { href: '/sculpture', label: 'Sculpture' },
   { href: '/achievements', label: 'Honors' },
   { href: '/share/new', label: 'Share' },
-  { href: '/settings', label: 'Settings' },
 ];
 
 function Column({ pillar, lit }: { pillar: PillarId; lit: boolean }) {
@@ -31,7 +30,7 @@ interface LevelChip { level: number; xpIntoLevel: number; xpForNext: number; }
 export function TempleHeader({ litPillars = [], handle, minimal = false, level }: { litPillars?: PillarId[]; handle?: string | null; minimal?: boolean; level?: LevelChip | null }) {
   const lit = new Set(litPillars);
   const pillars: PillarId[] = ['mental', 'physical', 'emotional', 'spiritual', 'financial', 'social', 'environmental', 'recreational'];
-  const links = minimal ? NAV.filter((n) => n.href === '/settings') : NAV;
+  const links = minimal ? [] : NAV;
   const levelPct = level ? Math.min(100, Math.round((level.xpIntoLevel / level.xpForNext) * 100)) : 0;
   return (
     <header className="border-b border-line">
@@ -58,7 +57,7 @@ export function TempleHeader({ litPillars = [], handle, minimal = false, level }
               </span>
             </span>
           )}
-          {handle && <span className="text-gold">@{handle}</span>}
+          {handle && <Link href="/settings" className="text-gold hover:text-marble" title="Settings">@{handle}</Link>}
           <Link href="/world" title="Enter the agora" aria-label="Enter the agora"
             className="block h-9 w-14 overflow-hidden rounded-sm border border-line hover:border-gold">
             <video autoPlay muted loop playsInline poster="/agora-preview.jpg"
