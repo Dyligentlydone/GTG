@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
 import { marbleMaterial } from '../../lib/three/materials';
-import { ImpostorStatue } from './ImpostorStatue';
+import { GlbStatue } from './GlbStatue';
 import { mulberry32 } from '../../sculpture/rng';
 import { Column, Brazier, Temple } from './structures';
 import type { DoorDestination } from './types';
@@ -289,7 +289,7 @@ export function Courtyard({ destinations, onDoorChange }: {
       <mesh material={marbleTrim} position={[0, 1.0, 0]} castShadow receiveShadow>
         <boxGeometry args={[3.0, 0.6, 2.2]} />
       </mesh>
-      <ImpostorStatue position={[0, 1.3, 0]} />
+      <GlbStatue position={[0, 1.3, 0]} />
 
       {/* temples */}
       {destinations.map((d, i) => (
