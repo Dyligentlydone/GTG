@@ -397,22 +397,38 @@ export function Courtyard({ destinations, onDoorChange }: {
   );
 }
 
-/** Flat-toned illustrative cumulus: crisp scalloped lobes in 3 tones, flat base. */
+/** Detailed illustrative cumulus: hierarchical lobes, 4 tones, rim-lit silhouette. */
 function cloudTexture(seed: number): THREE.CanvasTexture {
   const r = mulberry32(seed);
+  const W = 512, H = 256;
   const c = document.createElement('canvas');
-  c.width = 320; c.height = 170;
+  c.width = W; c.height = H;
   const g = c.getContext('2d')!;
-  const baseY = 118 + r.range(-4, 8);
+  const baseY = 192 + r.range(-6, 10);
+  type L = [number, number, number, number];
 
-  // silhouette: lobe cluster along the base + one taller tower lobe
-  const lobes: [number, number, number, number][] = [];
-  const n = Math.floor(r.range(7, 11));
+  // main lobes along the base + a taller tower + scallop sub-lobes on their tops
+  const mains: L[] = [];
+  const subs: L[] = [];
+  const n = Math.floor(r.range(7, 10));
   for (let i = 0; i < n; i++) {
-    const rx = r.range(20, 56), ry = r.range(14, 32);
-    lobes.push([r.range(40, 280), baseY - ry * r.range(0.35, 0.8), rx, ry]);
+    const rx = r.range(28, 72), ry = r.range(18, 44);
+    mains.push([r.range(55, 455), baseY - ry * r.range(0.35, 0.8), rx, ry]);
   }
-  lobes.push([r.range(120, 200), baseY - r.range(46, 64), r.range(34, 52), r.range(30, 42)]);
+  mains.push([r.range(190, 330), baseY - r.range(62, 88), r.range(48, 70), r.range(40, 56)]);
+  for (const [x, y, rx, ry] of mains) {
+    const k = 2 + Math.floor(r.range(0, 3));
+    for (let i = 0; i < k; i++) {
+      const a = r.range(Math.PI * 1.1, Math.PI * 1.9);
+      subs.push([
+        x + Math.cos(a) * rx * r.range(0.55, 0.85),
+        y + Math.sin(a) * ry * r.range(0.55, 0.85),
+        rx * r.range(0.32, 0.52),
+        ry * r.range(0.3, 0.48),
+      ]);
+    }
+  }
+  const all = [...mains, ...subs];
 
   const ell = (x: number, y: number, rx: number, ry: number, col: string) => {
     g.fillStyle = col;
@@ -421,15 +437,36 @@ function cloudTexture(seed: number): THREE.CanvasTexture {
     g.fill();
   };
 
-  // 1) mid-tone silhouette — the grey-blue body
-  for (const [x, y, rx, ry] of lobes) ell(x, y, rx, ry, '#9fb7d1');
-  // 2) white caps — offset up-left so each lobe gets a crisp sunlit top
-  for (const [x, y, rx, ry] of lobes) ell(x - rx * 0.14, y - ry * 0.3, rx * 0.8, ry * 0.68, '#f6f9fc');
-  // 3) dark under-scoops — the shadowed belly at the base of each lobe
-  for (const [x, y, rx, ry] of lobes) ell(x + rx * 0.18, y + ry * 0.42, rx * 0.62, ry * 0.44, '#7d97b6');
-  // 4) flat base
+  // 1) mid-tone body — the grey-blue silhouette
+  for (const [x, y, rx, ry] of all) ell(x, y, rx, ry, '#9cb4ce');
+  // 2) underbellies — medium then deep, stacked toward the bottom of each lobe
+  for (const [x, y, rx, ry] of all) ell(x + rx * 0.16, y + ry * 0.4, rx * 0.66, ry * 0.42, '#87a0be');
+  for (const [x, y, rx, ry] of all) ell(x + rx * 0.24, y + ry * 0.6, rx * 0.5, ry * 0.3, '#6f87a8');
+  // 3) white caps — several small overlapping caps per main lobe → scalloped lit top
+  for (const [x, y, rx, ry] of mains) {
+    const k = 2 + Math.floor(r.range(0, 3));
+    for (let i = 0; i < k; i++) {
+      const a = r.range(Math.PI * 1.15, Math.PI * 1.85);
+      ell(
+        x + Math.cos(a) * rx * r.range(0.2, 0.5),
+        y + Math.sin(a) * ry * r.range(0.25, 0.5),
+        rx * r.range(0.4, 0.55), ry * r.range(0.4, 0.55),
+        '#f5f8fc',
+      );
+    }
+  }
+  for (const [x, y, rx, ry] of subs) ell(x - rx * 0.1, y - ry * 0.22, rx * 0.75, ry * 0.65, '#f5f8fc');
+  // 4) rim arcs — bright top edge on the outer scallops + tower
+  g.strokeStyle = 'rgba(255,255,255,0.85)';
+  for (const [x, y, rx, ry] of [...subs, mains[mains.length - 1]!]) {
+    g.lineWidth = Math.max(2, ry * 0.16);
+    g.beginPath();
+    g.ellipse(x, y, rx * 0.92, ry * 0.92, 0, Math.PI * 1.08, Math.PI * 1.92);
+    g.stroke();
+  }
+  // 5) flat base
   g.globalCompositeOperation = 'destination-out';
-  g.fillRect(0, baseY, 320, 170 - baseY);
+  g.fillRect(0, baseY, W, H - baseY);
   g.globalCompositeOperation = 'source-over';
 
   const tex = new THREE.CanvasTexture(c);
