@@ -6,6 +6,7 @@ import { useFrame } from '@react-three/fiber';
 import { RigidBody, CuboidCollider, CylinderCollider } from '@react-three/rapier';
 import { Html } from '@react-three/drei';
 import { marbleMaterial } from '../../lib/three/materials';
+import { HallBoard } from './HallBoard';
 import type { DoorDestination } from './types';
 
 /** Fluted column geometry (shared): lathe profile + sinusoidal fluting. */
@@ -224,6 +225,11 @@ export function Temple({ destination, position, rotationY, onDoorChange }: {
           onIntersectionExit={() => onDoorChange(null)}
         />
       </RigidBody>
+
+      {/* interior — game halls render their live board as shrines */}
+      {destination.gameSlug && (
+        <HallBoard gameSlug={destination.gameSlug} destination={destination} onDoorChange={onDoorChange} />
+      )}
 
       <Html position={[0, FLOOR + COL_H + 2.8, -D / 2 + 1.1]} center distanceFactor={26} zIndexRange={[10, 0]}>
         <div className="world-name">{destination.name}</div>

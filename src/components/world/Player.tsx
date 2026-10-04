@@ -9,11 +9,15 @@ import type { RapierRigidBody } from '@react-three/rapier';
 const SPAWN: [number, number, number] = [0, 1.2, 24];
 // ?cam=DEG → spawn DEG degrees around the statue facing it (screenshot/dev use)
 const devCam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('cam') : null;
+// ?pos=x,y,z&yaw=DEG → exact dev teleport + facing (screenshot/dev use)
+const devPos = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('pos') : null;
+const devYaw = typeof window !== 'undefined' ? Number(new URLSearchParams(window.location.search).get('yaw') ?? 0) : 0;
 const devSpawn = devCam === null ? null : (() => {
   const [d, r] = devCam.split(',').map(Number);
   const a = (d ?? 0) * Math.PI / 180;
   return [(r ?? 18) * Math.sin(a), 1.2, (r ?? 18) * Math.cos(a)] as [number, number, number];
 })();
+const devPosSpawn = devPos === null ? null : devPos.split(',').map(Number) as [number, number, number];
 const EYE = 0.62;
 const WALK = 4.4;
 const RUN = 7.5;
@@ -51,6 +55,7 @@ export function Player() {
     const t = body.translation();
     camera.position.set(t.x, t.y + EYE, t.z);
     if (devSpawn && !aimed.current) { camera.lookAt(0, 2.6, 0); aimed.current = true; }
+    if (devPosSpawn && !aimed.current) { camera.rotation.set(0, devYaw * Math.PI / 180, 0); aimed.current = true; }
 
     const k = keys.current;
     camera.getWorldDirection(fwd.current);
@@ -79,7 +84,7 @@ export function Player() {
     <RigidBody
       ref={rb}
       colliders={false}
-      position={devSpawn ?? SPAWN}
+      position={devPosSpawn ?? devSpawn ?? SPAWN}
       enabledRotations={[false, false, false]}
       ccd
       friction={0}
