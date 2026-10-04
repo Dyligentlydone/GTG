@@ -243,9 +243,9 @@ export function Courtyard({ destinations, onDoorChange }: {
 
   // temple placements: north / east / west, facing the plaza center
   const placements: { pos: [number, number, number]; rotY: number }[] = [
-    { pos: [0, 0, -21], rotY: Math.PI },       // faces +z
-    { pos: [23, 0, 0], rotY: -Math.PI / 2 },   // faces -x
-    { pos: [-23, 0, 0], rotY: Math.PI / 2 },   // faces +x
+    { pos: [0, 0, -21], rotY: Math.PI },       // door faces +z
+    { pos: [23, 0, 0], rotY: Math.PI / 2 },    // door faces -x
+    { pos: [-23, 0, 0], rotY: -Math.PI / 2 },  // door faces +x
   ];
 
   const colMat = marbleTrim;
@@ -383,7 +383,7 @@ export function Courtyard({ destinations, onDoorChange }: {
         const side = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), rotY);
         return [-1, 1].map(s => {
           const p = new THREE.Vector3(pos[0], 0, pos[2])
-            .add(fwd.clone().multiplyScalar(10.5))
+            .add(fwd.clone().multiplyScalar(-10.5))
             .add(side.clone().multiplyScalar(s * 4.4));
           return <Brazier key={`b${i}${s}`} position={[p.x, 0, p.z]} />;
         });
