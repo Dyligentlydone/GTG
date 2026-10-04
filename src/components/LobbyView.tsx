@@ -78,7 +78,7 @@ export function LobbyView({
   return (
     <div className="relative min-h-screen">
       <AmbientLayer />
-      <TempleHeader litPillars={litPillars} handle={handle} />
+      <TempleHeader litPillars={litPillars} handle={handle} minimal />
 
       {/* -------- HERO: the museum stage -------- */}
       <section className="relative h-[68vh] min-h-[460px] overflow-hidden border-b border-line">

@@ -25,9 +25,10 @@ function Column({ pillar, lit }: { pillar: PillarId; lit: boolean }) {
   );
 }
 
-export function TempleHeader({ litPillars = [], handle }: { litPillars?: PillarId[]; handle?: string | null }) {
+export function TempleHeader({ litPillars = [], handle, minimal = false }: { litPillars?: PillarId[]; handle?: string | null; minimal?: boolean }) {
   const lit = new Set(litPillars);
   const pillars: PillarId[] = ['mental', 'physical', 'emotional', 'spiritual', 'financial', 'social', 'environmental', 'recreational'];
+  const links = minimal ? NAV.filter((n) => n.href === '/settings') : NAV;
   return (
     <header className="border-b border-line">
       <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-3">
@@ -36,7 +37,7 @@ export function TempleHeader({ litPillars = [], handle }: { litPillars?: PillarI
           {pillars.map((p) => <Column key={p} pillar={p} lit={lit.has(p)} />)}
         </div>
         <nav className="ml-auto flex items-center gap-3 text-sm text-shadow">
-          {NAV.map((n) => (
+          {links.map((n) => (
             <Link key={n.href} href={n.href}
               className={n.href === '/games/g1' ? 'font-bold text-gold hover:text-marble' : 'hover:text-marble'}>
               {n.label}
