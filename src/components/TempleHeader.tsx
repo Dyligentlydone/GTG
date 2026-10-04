@@ -6,6 +6,7 @@ import type { PillarId } from '../core/types';
 
 const NAV = [
   { href: '/', label: 'Home' },
+  { href: '/games/g1', label: 'Board' },
   { href: '/books', label: 'Books' },
   { href: '/journal', label: 'Journal' },
   { href: '/sculpture', label: 'Sculpture' },

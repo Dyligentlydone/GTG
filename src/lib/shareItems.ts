@@ -193,6 +193,7 @@ export async function loadShareCandidates(db: Db, userId: string, states?: Engin
   const allCompletionIds = new Map<string, LocalDate>();
   for (const s of states_) for (const c of s.completions) allCompletionIds.set(c.id, c.localDate);
   for (const j of journalRows.slice(0, 4)) {
+    if (!j.ciphertext || !j.nonce) continue; // scanned pages have no shareable text
     const d = allCompletionIds.get(j.completion_id);
     try {
       const text = await decryptJournal(j.ciphertext, j.nonce);
