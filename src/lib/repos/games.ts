@@ -14,6 +14,15 @@ export interface LoadedGame {
   achievementUuidByKey: Map<string, string>;
 }
 
+/** All visible games (the lobby lists them; drafts are hidden from players). */
+export async function loadGames(db: Db, opts: { includeDrafts?: boolean } = {}): Promise<GameRow[]> {
+  let q = db.from('games').select('*').order('title');
+  if (!opts.includeDrafts) q = q.neq('status', 'draft');
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as GameRow[];
+}
+
 export async function loadGame(db: Db, slug: string): Promise<LoadedGame | null> {
   const { data: game, error } = await db.from('games').select('*').eq('slug', slug).maybeSingle();
   if (error) throw error;

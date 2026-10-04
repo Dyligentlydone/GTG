@@ -11,18 +11,19 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ ok: false, reason: 'Sign in first.' }, { status: 401 });
 
-  let body: { questKey?: unknown; payload?: unknown };
+  let body: { gameSlug?: unknown; questKey?: unknown; payload?: unknown };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ ok: false, reason: 'Bad request.' }, { status: 400 });
   }
-  if (typeof body?.questKey !== 'string' || typeof body?.payload !== 'object' || body.payload === null) {
+  if (typeof body?.gameSlug !== 'string' || typeof body?.questKey !== 'string'
+    || typeof body?.payload !== 'object' || body.payload === null) {
     return NextResponse.json({ ok: false, reason: 'Bad request.' }, { status: 400 });
   }
 
   const result = await acceptCheckIn(createAdminClient(), {
-    userId: user.id, questKey: body.questKey, payload: body.payload as Record<string, unknown>,
+    userId: user.id, gameSlug: body.gameSlug, questKey: body.questKey, payload: body.payload as Record<string, unknown>,
   });
   return NextResponse.json(result, { status: result.ok ? 200 : 422 });
 }

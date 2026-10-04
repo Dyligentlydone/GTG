@@ -20,15 +20,16 @@ export interface EngineState {
 
 /**
  * Loads everything the engine needs for one player in one game.
- * `completions` are mapped to quest keys; pass `week` to limit the fetch (stats
- * functions that need full history should leave it out).
+ * Completions are scoped to this game's quests — completions from other games
+ * (unmapped quest uuids) are dropped so they can't pollute stats, streaks or weeks.
+ * Pass `week` to limit the fetch (stats functions that need full history should leave it out).
  */
 export async function loadEngineState(
-  db: Db, userId: string, slug = 'g1', week?: { from: LocalDate; to: LocalDate },
+  db: Db, userId: string, slug: string, week?: { from: LocalDate; to: LocalDate },
 ): Promise<EngineState | null> {
   const game = await loadGame(db, slug);
   if (!game) return null;
-  const [profile, paused, xpRows, completions, books] = await Promise.all([
+  const [profile, paused, xpRows, rawCompletions, books] = await Promise.all([
     loadProfile(db, userId),
     loadPausedDates(db, userId),
     loadXpEvents(db, userId),
@@ -36,6 +37,8 @@ export async function loadEngineState(
     loadBooks(db, userId),
   ]);
   if (!profile) return null;
+  const questIds = new Set(game.def.quests.map((q) => q.id));
+  const completions = rawCompletions.filter((c) => questIds.has(c.questId));
   const xpTotal = totalXp(xpRows);
   const level = levelFromXp(xpTotal).level;
   const env: EngineEnv = { game: game.def, ctx: contextFromProfile(profile, paused, level) };

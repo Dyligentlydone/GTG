@@ -1,19 +1,19 @@
-// /quest/[questId] — quest detail + the check-in form (SPEC §10.1).
+// /games/[slug]/quest/[questId] — quest detail + the check-in form (SPEC §10.1).
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { computeStreak, effectiveQuest, localDate, stageForDate, weekStart, activeDays, dueCount, countedCompletions } from '../../../core';
-import { requireViewer } from '../../../lib/viewer';
-import { loadEngineState } from '../../../lib/context';
-import { TempleHeader } from '../../../components/TempleHeader';
-import { CheckinForm } from '../../../components/CheckinForm';
-import { PillarGlyph, StreakChip } from '../../../components/Bits';
+import { computeStreak, effectiveQuest, localDate, stageForDate, weekStart, activeDays, dueCount, countedCompletions } from '../../../../../core';
+import { requireViewer } from '../../../../../lib/viewer';
+import { loadEngineState } from '../../../../../lib/context';
+import { TempleHeader } from '../../../../../components/TempleHeader';
+import { CheckinForm } from '../../../../../components/CheckinForm';
+import { PillarGlyph, StreakChip } from '../../../../../components/Bits';
 
 export const dynamic = 'force-dynamic';
 
-export default async function QuestPage({ params }: { params: Promise<{ questId: string }> }) {
-  const { questId } = await params;
-  const { supabase, user, profile } = await requireViewer(`/quest/${questId}`);
-  const state = await loadEngineState(supabase, user.id);
+export default async function QuestPage({ params }: { params: Promise<{ slug: string; questId: string }> }) {
+  const { slug, questId } = await params;
+  const { supabase, user, profile } = await requireViewer(`/games/${slug}/quest/${questId}`);
+  const state = await loadEngineState(supabase, user.id, slug);
   const quest = state?.env.game.quests.find((q) => q.id === questId);
   if (!state || !quest) notFound();
 
@@ -29,7 +29,7 @@ export default async function QuestPage({ params }: { params: Promise<{ questId:
   const streak = computeStreak(env, quest.id, state.completions, today);
   const books = state.books.filter((b) => b.finishedAt === null).map((b) => ({ id: b.id, title: b.title }));
 
-  const proof = effective.proof ?? quest.proof;
+  const proof = effective.proof;
 
   return (
     <div className="min-h-screen">
@@ -38,6 +38,7 @@ export default async function QuestPage({ params }: { params: Promise<{ questId:
         <div className="flex items-start gap-3">
           <PillarGlyph pillar={quest.pillar} size={28} />
           <div className="flex-1">
+            <p className="text-xs text-shadow"><Link href={`/games/${slug}`} className="hover:text-gold">← {state.game.row.title}</Link></p>
             <h1 className="font-display text-3xl text-marble">{quest.title}</h1>
             <p className="mt-1 text-sm text-shadow">
               {quest.pillar} · +{quest.xp} XP · {quest.schedule.kind === 'daily' ? 'daily' : `${quest.schedule.perWeek}× a week`}
@@ -56,7 +57,7 @@ export default async function QuestPage({ params }: { params: Promise<{ questId:
           <div className="card p-6 text-center">
             <p className="font-display text-xl text-gold">Already chiseled today.</p>
             <p className="mt-2 text-sm text-shadow">Come back tomorrow — or do the rest of the board.</p>
-            <Link href="/home" className="btn mt-5">Back to the board</Link>
+            <Link href={`/games/${slug}`} className="btn mt-5">Back to the board</Link>
           </div>
         ) : !activeToday ? (
           <div className="card p-6 text-center">
@@ -65,6 +66,7 @@ export default async function QuestPage({ params }: { params: Promise<{ questId:
           </div>
         ) : (
           <CheckinForm
+            gameSlug={slug}
             questKey={quest.id}
             proof={proof}
             books={books}

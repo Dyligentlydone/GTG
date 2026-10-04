@@ -95,6 +95,21 @@ export async function loadEnrollment(db: Db, userId: string, gameUuid: string) {
   return data;
 }
 
+export interface EnrollmentRow {
+  id: string;
+  user_id: string;
+  game_id: string;
+  state: 'active' | 'paused' | 'left';
+  started_at: string;
+}
+
+/** The games a player is enrolled in (any state). */
+export async function loadEnrollments(db: Db, userId: string): Promise<EnrollmentRow[]> {
+  const { data, error } = await db.from('enrollments').select('*').eq('user_id', userId);
+  if (error) throw error;
+  return (data ?? []) as EnrollmentRow[];
+}
+
 export async function loadShares(db: Db, userId: string): Promise<ShareRow[]> {
   const { data, error } = await db.from('shares').select('*').eq('user_id', userId)
     .is('deleted_at', null).order('created_at', { ascending: false });

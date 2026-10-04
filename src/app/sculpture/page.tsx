@@ -1,7 +1,7 @@
 // /sculpture — the full statue view: pieces, decorations, chisel history (SPEC §10.1).
 import { computeWeekResult, localDate, weekStart } from '../../core';
 import { requireViewer } from '../../lib/viewer';
-import { loadEngineState } from '../../lib/context';
+import { loadEnrolledStates } from '../../lib/shareItems';
 import { loadAllSculptures, loadDecorations, loadSculpture } from '../../lib/repos/players';
 import { TempleHeader } from '../../components/TempleHeader';
 import { StatueSvg } from '../../components/StatueSvg';
@@ -13,15 +13,16 @@ export const dynamic = 'force-dynamic';
 
 export default async function SculpturePage() {
   const { supabase, user, profile } = await requireViewer('/sculpture');
-  const state = await loadEngineState(supabase, user.id);
+  // The sculpture is fed by every game — on-deck cracks reflect the best current week.
+  const states = await loadEnrolledStates(supabase, user.id);
   const sculpture = await loadSculpture(supabase, user.id);
   const all = await loadAllSculptures(supabase, user.id);
   const decorations = sculpture ? await loadDecorations(supabase, sculpture.id) : [];
 
-  const today = state ? localDate(new Date(), state.env.ctx.timeZone) : '';
-  const weekPct = state
-    ? (() => { const r = computeWeekResult(state.env, weekStart(today), state.completions); return r.due > 0 ? r.done / r.due : 0; })()
-    : 0;
+  const weekPct = Math.max(0, ...states.map((s) => {
+    const r = computeWeekResult(s.env, weekStart(localDate(new Date(), s.env.ctx.timeZone)), s.completions);
+    return r.due > 0 ? r.done / r.due : 0;
+  }));
 
   const { data: chiselRows } = sculpture
     ? await supabase.from('chisel_events').select('week_start, pieces, completion_pct').eq('sculpture_id', sculpture.id).order('week_start', { ascending: false }).limit(12)

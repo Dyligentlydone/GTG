@@ -16,6 +16,8 @@ import type { Db } from './repos/types';
 
 export interface CheckinInput {
   userId: string;
+  /** Game slug the quest belongs to, e.g. 'g1'. */
+  gameSlug: string;
   /** Quest key, e.g. 'g1.read'. */
   questKey: string;
   payload: Record<string, unknown>;
@@ -57,9 +59,16 @@ async function addDecoration(db: Db, sculptureId: string | undefined, type: stri
 
 export async function acceptCheckIn(db: Db, input: CheckinInput): Promise<CheckinResult> {
   const now = input.now ?? new Date();
-  const state = await loadEngineState(db, input.userId);
+  const state = await loadEngineState(db, input.userId, input.gameSlug);
   if (!state) return { ok: false, reason: 'Account is still being set up — try again in a moment.' };
   const { env } = state;
+
+  // Must be actively enrolled to check in.
+  const { data: enrollment } = await db.from('enrollments').select('state')
+    .eq('user_id', input.userId).eq('game_id', state.game.row.id).maybeSingle();
+  if (!enrollment || enrollment.state !== 'active') {
+    return { ok: false, reason: 'Join this game first.' };
+  }
   const quest = env.game.quests.find((q) => q.id === input.questKey);
   if (!quest) return { ok: false, reason: 'Unknown quest.' };
   const today = localDate(now, env.ctx.timeZone);

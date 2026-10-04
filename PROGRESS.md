@@ -10,7 +10,8 @@ Last updated: 2026-09-29. Source of truth: `SPEC.md`. Decisions: `DECISIONS.md`.
 | M3 Database (`supabase/migrations`, `supabase/tests`) | Done | `bash scripts/test-db.sh`: 7/7 pass on Postgres 16 |
 | M4 Sculpture (`src/sculpture`, `previews/`) | Done | 127 tests pass; previews reviewed |
 | M5 Share cards (`src/share`, `previews/cards/`) | Done | 144 tests pass; card previews for all 7 scopes in light + dark |
-| M6 Next.js app layer (`src/app`, `src/lib`, `src/components`) | Done | `tsc --noEmit` clean, 144 tests pass, `next build` succeeds (22 routes + middleware) |
+| M6 Next.js app layer (`src/app`, `src/lib`, `src/components`) | Done | `tsc --noEmit` clean, 144 tests pass, `next build` succeeds |
+| M6 rework: multi-game app shell | Done | lobby `/home` + `/games/[slug]` area; enroll API; cron iterates all games; typecheck/build clean |
 
 ## What's next
 

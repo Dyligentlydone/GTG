@@ -8,6 +8,7 @@ import type { ProofSpec } from '../core/types';
 export interface CheckinBook { id: string; title: string; }
 
 interface Props {
+  gameSlug: string;
   questKey: string;
   proof: ProofSpec;
   /** For reading proofs: the player's books to pick from. */
@@ -25,7 +26,7 @@ interface ApiResult {
   levelUp?: { from: number; to: number };
 }
 
-export function CheckinForm({ questKey, proof, books = [], minSeconds }: Props) {
+export function CheckinForm({ gameSlug, questKey, proof, books = [], minSeconds }: Props) {
   const [fields, setFields] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ApiResult | null>(null);
@@ -50,7 +51,7 @@ export function CheckinForm({ questKey, proof, books = [], minSeconds }: Props) 
       const res = await fetch('/api/checkins', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ questKey, payload: buildPayload() }),
+        body: JSON.stringify({ gameSlug, questKey, payload: buildPayload() }),
       });
       const data = (await res.json()) as ApiResult;
       setResult(data);

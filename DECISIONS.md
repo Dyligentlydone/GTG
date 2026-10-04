@@ -90,3 +90,14 @@ Decisions made where SPEC.md was silent. Newest at the bottom.
 - **Stripe webhook** verifies `stripe-signature`, syncs `subscriptions` on `customer.subscription.*` (upsert by `stripe_subscription_id`, user via `metadata.user_id`), and ignores non-Pro price ids. No checkout UI yet.
 - **Share image route** serves the card as `image/svg+xml` (allowed by spec); swap for `next/og` ImageResponse if a crawler ever needs raster. `/s/[slug]` re-uses `get_public_share` (anon role) and renders the stored `item_refs` through the same model builder.
 - **Wellness wheel + temple header** are hand-rolled SVG (no chart lib); a pillar's temple column lights when every quest under it is `onTarget` for the week.
+
+## M6 restructure — multi-game app (owner request)
+
+- **`/home` is a lobby, not Game 1's board.** Enrolled games show as cards with today's progress and week %; unenrolled active games show under "Discover" with an Enter button. Global XP/level and the account sculpture stay on the lobby — one marble no matter how many games run.
+- **Game area routes** are `/games/[slug]` (board + wheel) and `/games/[slug]/quest/[questId]` (check-in). The old flat `/quest/[questId]` was deleted — quest keys are only unique per game, and the page needs game context anyway.
+- **`loadEngineState` now requires the slug** and filters loaded completions to the game's quest ids, so other games' completions can't pollute streaks, stats or week results. `acceptCheckIn` takes `gameSlug` and rejects non-enrolled check-ins; `POST /api/checkins` requires `{gameSlug, questKey, payload}`.
+- **`POST /api/enroll`** (join → `state='active'`, idempotent upsert) and **DELETE** (leave → `state='left'`; history kept). Enrollments remain service-writes.
+- **Cron iterates every active game** and calls `closeLatestWeek` per (player, game); week results/chisel events stay per-game rows.
+- **Share candidates span all enrolled games**: quest/pillar/day/week/achievement items are collected per game via `loadEnrolledStates`; the day card merges every game's today board (full-set requires all games' boards done); milestones, takeaways, stats and journals stay account-level. Item ids carry the game slug where needed (`week:g1:2026-09-29`).
+- **Achievements page** groups by game title; **admin** picks a game via `?game=<slug>`.
+- **Sculpture cracks** on `/sculpture` use the best current-week completion pct across enrolled games (any game can feed the marble).

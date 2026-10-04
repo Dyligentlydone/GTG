@@ -23,11 +23,12 @@ async function insertXpQuiet(db: Db, ev: XpEvent): Promise<void> {
 export interface WeekCloseResult { userId: string; week: LocalDate; closed: boolean; pieces?: number; error?: string; }
 
 /**
- * Closes the player's most recent fully-ended Monday-week if it hasn't been closed yet.
- * Called hourly by the cron; `now` must be past next-Monday 00:00 local for the close to land.
+ * Closes the player's most recent fully-ended Monday-week in one game if it hasn't
+ * been closed yet. Called hourly by the cron; `now` must be past next-Monday
+ * 00:00 local for the close to land.
  */
-export async function closeLatestWeek(db: Db, userId: string, now: InstantLike = new Date()): Promise<WeekCloseResult> {
-  const state = await loadEngineState(db, userId);
+export async function closeLatestWeek(db: Db, userId: string, gameSlug: string, now: InstantLike = new Date()): Promise<WeekCloseResult> {
+  const state = await loadEngineState(db, userId, gameSlug);
   if (!state) return { userId, week: '', closed: false, error: 'not ready' };
   const { env } = state;
   const today = localDate(now, env.ctx.timeZone);

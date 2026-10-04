@@ -1,9 +1,10 @@
 // GET /api/cron/chisel-day (SPEC §10.2): hourly; closes the just-ended Monday-week
-// for every enrolled player whose local time has passed it. Protected by CRON_SECRET.
+// for every enrolled player, in every active game, whose local time has passed it.
+// Protected by CRON_SECRET.
 import { NextResponse, type NextRequest } from 'next/server';
 import { env } from '../../../../lib/env';
 import { createAdminClient } from '../../../../lib/supabase/admin';
-import { loadGame } from '../../../../lib/repos/games';
+import { loadGames } from '../../../../lib/repos/games';
 import { loadEnrolledProfiles } from '../../../../lib/repos/players';
 import { closeLatestWeek, type WeekCloseResult } from '../../../../lib/weekClose';
 
@@ -12,20 +13,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const admin = createAdminClient();
-  const game = await loadGame(admin, 'g1');
-  if (!game) return NextResponse.json({ error: 'Game 1 is not seeded' }, { status: 500 });
-
-  const profiles = await loadEnrolledProfiles(admin, game.row.id);
-  const results: WeekCloseResult[] = [];
-  for (const p of profiles) {
-    try {
-      results.push(await closeLatestWeek(admin, p.id));
-    } catch (e) {
-      results.push({ userId: p.id, week: '', closed: false, error: e instanceof Error ? e.message : String(e) });
+  const games = await loadGames(admin); // active + archived; drafts are excluded
+  const results: (WeekCloseResult & { game: string })[] = [];
+  for (const game of games.filter((g) => g.status === 'active')) {
+    const profiles = await loadEnrolledProfiles(admin, game.id);
+    for (const p of profiles) {
+      try {
+        results.push({ ...(await closeLatestWeek(admin, p.id, game.slug)), game: game.slug });
+      } catch (e) {
+        results.push({ userId: p.id, game: game.slug, week: '', closed: false, error: e instanceof Error ? e.message : String(e) });
+      }
     }
   }
   return NextResponse.json({
-    players: profiles.length,
+    games: games.filter((g) => g.status === 'active').map((g) => g.slug),
     closed: results.filter((r) => r.closed).length,
     errors: results.filter((r) => r.error).length,
     results,
