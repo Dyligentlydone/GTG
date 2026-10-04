@@ -57,7 +57,7 @@ export default async function GamePage({ params }: { params: Promise<{ slug: str
   for (const [p, a] of acc) wheel[p] = a.due > 0 ? a.done / a.due : 0;
 
   const litPillars = [...acc].filter(([, a]) => a.due > 0 && a.done >= a.due).map(([p]) => p);
-  const dueToday = board.filter((b) => b.dueToday || b.doneToday);
+  const dayLabel = new Date(`${today}T12:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
   return (
     <div className="min-h-screen">
@@ -66,7 +66,7 @@ export default async function GamePage({ params }: { params: Promise<{ slug: str
         <div className="flex items-baseline justify-between">
           <div>
             <h1 className="font-display text-2xl text-marble">{state.game.row.title}</h1>
-            <p className="text-sm text-shadow">{today} · {weekResult.done}/{weekResult.due} this week</p>
+            <p className="text-sm text-shadow">{dayLabel} · {weekResult.done}/{weekResult.due} due this week</p>
           </div>
           <EnrollButton gameSlug={slug} enrolled />
         </div>
@@ -74,19 +74,27 @@ export default async function GamePage({ params }: { params: Promise<{ slug: str
         <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
           <section className="card p-5">
             <div className="mt-1 space-y-2">
-              {dueToday.length === 0 && <p className="py-6 text-center text-shadow">Nothing due today. The marble waits.</p>}
-              {dueToday.map(({ quest, dueToday: due, doneToday, weekDone, weekDue, streak, streakUnit }) => (
-                <Link key={quest.id} href={`/games/${slug}/quest/${quest.id}`}
-                  className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${doneToday ? 'border-gold/40 bg-gold/5' : due ? 'border-line hover:border-stone' : 'border-line/50 opacity-60'}`}>
-                  <PillarGlyph pillar={quest.pillar} lit={doneToday || due} />
-                  <div className="min-w-0 flex-1">
-                    <p className={`truncate font-display text-sm ${doneToday ? 'text-gold line-through' : 'text-marble'}`}>{quest.title}</p>
-                    <p className="text-xs text-shadow">+{quest.xp} XP · {quest.schedule.kind === 'daily' ? 'daily' : `${quest.schedule.perWeek}/week`}</p>
-                  </div>
-                  <Pips done={Math.min(weekDone, weekDue)} due={weekDue} />
-                  <StreakChip days={streak} unit={streakUnit} />
-                </Link>
-              ))}
+              {board.length === 0 && <p className="py-6 text-center text-shadow">Nothing due today. The marble waits.</p>}
+              {board.map(({ quest, unlockedToday, dueToday: due, doneToday, weekDone, weekDue, streak, streakUnit }) => {
+                const state = doneToday ? 'done' : due ? 'due'
+                  : !unlockedToday ? 'locked'
+                  : weekDue > 0 && weekDone >= weekDue ? 'weekDone' : 'rest';
+                const note = state === 'weekDone' ? ' · done this week'
+                  : state === 'locked' ? ' · unlocks later'
+                  : state === 'rest' ? ' · rest day' : '';
+                return (
+                  <Link key={quest.id} href={`/games/${slug}/quest/${quest.id}`}
+                    className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${state === 'done' ? 'border-gold/40 bg-gold/5' : state === 'due' ? 'border-line hover:border-stone' : 'border-line/50 opacity-60'}`}>
+                    <PillarGlyph pillar={quest.pillar} lit={state === 'done' || state === 'due'} />
+                    <div className="min-w-0 flex-1">
+                      <p className={`truncate font-display text-sm ${state === 'done' ? 'text-gold line-through' : state === 'due' ? 'text-marble' : 'text-shadow'}`}>{quest.title}</p>
+                      <p className="text-xs text-shadow">+{quest.xp} XP · {quest.schedule.kind === 'daily' ? 'daily' : `${quest.schedule.perWeek}/week`}{note}</p>
+                    </div>
+                    <Pips done={Math.min(weekDone, weekDue)} due={weekDue} />
+                    <StreakChip days={streak} unit={streakUnit} />
+                  </Link>
+                );
+              })}
             </div>
           </section>
 

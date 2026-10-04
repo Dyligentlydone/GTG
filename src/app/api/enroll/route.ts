@@ -23,10 +23,14 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = createAdminClient();
-  const { error } = await admin.from('enrollments').upsert(
-    { user_id: user.id, game_id: game.row.id, state: 'active', started_at: new Date().toISOString() },
-    { onConflict: 'user_id,game_id' },
-  );
+  const { data: existing } = await admin.from('enrollments')
+    .select('state').eq('user_id', user.id).eq('game_id', game.row.id).maybeSingle();
+  const { error } = existing
+    // rejoining keeps the original started_at — the week index (and ramp stage) continue
+    ? await admin.from('enrollments').update({ state: 'active' }).eq('user_id', user.id).eq('game_id', game.row.id)
+    : await admin.from('enrollments').insert(
+        { user_id: user.id, game_id: game.row.id, state: 'active', started_at: new Date().toISOString() },
+      );
   if (error) throw error;
   return NextResponse.json({ ok: true, gameSlug: game.row.slug });
 }
