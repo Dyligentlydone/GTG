@@ -43,9 +43,12 @@ export function TempleHeader({ litPillars = [], handle }: { litPillars?: PillarI
             </Link>
           ))}
           {handle && <span className="text-gold">@{handle}</span>}
-          <Link href="/world"
-            className="font-display tracking-[0.18em] text-marble whitespace-nowrap hover:text-gold">
-            ENTER THE AGORA
+          <Link href="/world" title="Enter the agora" aria-label="Enter the agora"
+            className="block h-9 w-14 overflow-hidden rounded-sm border border-line hover:border-gold">
+            <video autoPlay muted loop playsInline poster="/agora-preview.jpg"
+              className="h-full w-full object-cover">
+              <source src="/agora-preview.webm" type="video/webm" />
+            </video>
           </Link>
         </nav>
       </div>
