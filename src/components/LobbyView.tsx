@@ -13,7 +13,7 @@ import { Reveal } from './Reveal';
 import { TiltCard } from './TiltCard';
 import { CountUp } from './CountUp';
 import { EnrollButton } from './EnrollButton';
-import { EmptyState, XpBar } from './Bits';
+import { EmptyState } from './Bits';
 import { ChiselCountdown } from './ChiselCountdown';
 
 export interface LobbyGameCard {
@@ -78,7 +78,7 @@ export function LobbyView({
   return (
     <div className="relative min-h-screen">
       <AmbientLayer />
-      <TempleHeader litPillars={litPillars} handle={handle} minimal />
+      <TempleHeader litPillars={litPillars} handle={handle} minimal level={level} />
 
       {/* -------- HERO: the museum stage -------- */}
       <section className="relative h-[68vh] min-h-[460px] overflow-hidden border-b border-line">
@@ -121,13 +121,6 @@ export function LobbyView({
       </section>
 
       <main className="mx-auto max-w-5xl space-y-10 px-4 py-10">
-        {level && (
-          <Reveal>
-            <section className="card p-3 sm:max-w-xs">
-              <XpBar level={level.level} xpIntoLevel={level.xpIntoLevel} xpForNext={level.xpForNext} />
-            </section>
-          </Reveal>
-        )}
         {joinCta && <Reveal>{joinCta}</Reveal>}
 
         {/* -------- game cards -------- */}

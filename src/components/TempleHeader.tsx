@@ -2,6 +2,7 @@
 // column is lit gold when that pillar hit its weekly target.
 import Link from 'next/link';
 import { PILLAR_SYMBOLS } from '../sculpture/symbols';
+import { rankForLevel } from '../lib/ranks';
 import type { PillarId } from '../core/types';
 
 const NAV = [
@@ -25,10 +26,13 @@ function Column({ pillar, lit }: { pillar: PillarId; lit: boolean }) {
   );
 }
 
-export function TempleHeader({ litPillars = [], handle, minimal = false }: { litPillars?: PillarId[]; handle?: string | null; minimal?: boolean }) {
+interface LevelChip { level: number; xpIntoLevel: number; xpForNext: number; }
+
+export function TempleHeader({ litPillars = [], handle, minimal = false, level }: { litPillars?: PillarId[]; handle?: string | null; minimal?: boolean; level?: LevelChip | null }) {
   const lit = new Set(litPillars);
   const pillars: PillarId[] = ['mental', 'physical', 'emotional', 'spiritual', 'financial', 'social', 'environmental', 'recreational'];
   const links = minimal ? NAV.filter((n) => n.href === '/settings') : NAV;
+  const levelPct = level ? Math.min(100, Math.round((level.xpIntoLevel / level.xpForNext) * 100)) : 0;
   return (
     <header className="border-b border-line">
       <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-3">
@@ -43,6 +47,17 @@ export function TempleHeader({ litPillars = [], handle, minimal = false }: { lit
               {n.label}
             </Link>
           ))}
+          {level && (
+            <span className="hidden w-28 sm:block" title={`${level.xpIntoLevel} / ${level.xpForNext} XP`}>
+              <span className="flex items-baseline justify-between font-display">
+                <span className="text-[11px] text-marble">LVL {level.level}</span>
+                <span className="text-[9px] tracking-[0.2em] text-gold">{rankForLevel(level.level).name.toUpperCase()}</span>
+              </span>
+              <span className="mt-0.5 block h-1 overflow-hidden rounded-full bg-line">
+                <span className="block h-full rounded-full bg-gradient-to-r from-golddeep via-gold to-[#f8e68a]" style={{ width: `${levelPct}%` }} />
+              </span>
+            </span>
+          )}
           {handle && <span className="text-gold">@{handle}</span>}
           <Link href="/world" title="Enter the agora" aria-label="Enter the agora"
             className="block h-9 w-14 overflow-hidden rounded-sm border border-line hover:border-gold">
