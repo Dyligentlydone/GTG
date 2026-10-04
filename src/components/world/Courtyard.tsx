@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
 import { marbleMaterial } from '../../lib/three/materials';
-import { buildStatue } from '../../lib/three/statue';
+import { ImpostorStatue } from './ImpostorStatue';
 import { mulberry32 } from '../../sculpture/rng';
 import { Column, Brazier, Temple } from './structures';
 import type { DoorDestination } from './types';
@@ -239,7 +239,6 @@ export function Courtyard({ destinations, onDoorChange }: {
     return m;
   }, []);
   const marbleTrim = useMemo(() => marbleMaterial([198, 190, 172], [126, 118, 106], 13, 0.62), []);
-  const statue = useMemo(() => buildStatue(marbleMaterial([238, 234, 226], [150, 146, 140], 11, 0.42)), []);
   const terrain = useTerrain();
 
   // temple placements: north / east / west, facing the plaza center
@@ -290,9 +289,7 @@ export function Courtyard({ destinations, onDoorChange }: {
       <mesh material={marbleTrim} position={[0, 1.0, 0]} castShadow receiveShadow>
         <boxGeometry args={[3.0, 0.6, 2.2]} />
       </mesh>
-      <group position={[0, 0.8, 0]} scale={[1.15, 1.15, 1.15]}>{/* statue feet sit ~0.5 above its own origin */}
-        <primitive object={statue} position={[0, 0, 0]} />
-      </group>
+      <ImpostorStatue position={[0, 1.3, 0]} />
 
       {/* temples */}
       {destinations.map((d, i) => (
