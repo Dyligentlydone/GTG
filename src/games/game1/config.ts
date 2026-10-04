@@ -154,6 +154,7 @@ export const game1: GameDef = {
   bonusXp: { fullSet: 25, innerBalance: 50, outerBalance: 50, balancedWeek: 100, perfectWeek: 250 },
   books: { questId: 'g1.read', pagesField: 'pages', bookIdField: 'bookId', finishedXp: 150 },
   eventDecorations: { perfect_week: 'gold_vein', book_finished: 'laurel_leaf', balanced_week: 'plinth_carving' },
+  feedsSculpture: true,
 };
 
 export default game1;

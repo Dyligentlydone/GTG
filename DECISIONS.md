@@ -101,3 +101,8 @@ Decisions made where SPEC.md was silent. Newest at the bottom.
 - **Share candidates span all enrolled games**: quest/pillar/day/week/achievement items are collected per game via `loadEnrolledStates`; the day card merges every game's today board (full-set requires all games' boards done); milestones, takeaways, stats and journals stay account-level. Item ids carry the game slug where needed (`week:g1:2026-09-29`).
 - **Achievements page** groups by game title; **admin** picks a game via `?game=<slug>`.
 - **Sculpture cracks** on `/sculpture` use the best current-week completion pct across enrolled games (any game can feed the marble).
+
+## Sculpture ownership (owner correction)
+
+- **Only the founding protocol carves the marble.** `GameDef.feedsSculpture` (persisted in `games.config`) marks whose week-close may emit `chisel_events`, store `week_results.pieces > 0`, and write `sculpture_decorations` (check-in achievements, book-finish laurels). `game1` sets it; other games never touch the statue even if enrolled. The sculpture stays account-level — it just answers to one game.
+- `/sculpture` on-deck cracks use only sculpture-feeding games' current week; week cards and `piecesChiseled` report 0 for non-feeding games so share cards can't imply a game chiseled when it didn't.

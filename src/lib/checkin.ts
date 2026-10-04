@@ -98,7 +98,7 @@ export async function acceptCheckIn(db: Db, input: CheckinInput): Promise<Checki
   };
   const all = [...state.completions, completion];
 
-  const sculptureId = await activeSculptureId(db, input.userId);
+  const sculptureId = env.game.feedsSculpture ? await activeSculptureId(db, input.userId) : undefined;
   const earned: string[] = [];
   let bookFinished: string | undefined;
 

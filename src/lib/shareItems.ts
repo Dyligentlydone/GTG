@@ -127,7 +127,8 @@ export async function loadShareCandidates(db: Db, userId: string, states?: Engin
           const q = questByKey.get(l.questId);
           return { title: q?.title ?? l.questId, pillar: q?.pillar ?? 'mental', done: l.counted, due: l.due };
         }),
-        pagesRead, dawns, perfectWeek: res.perfectWeek, piecesChiseled: res.pieces,
+        pagesRead, dawns, perfectWeek: res.perfectWeek,
+        piecesChiseled: env.game.feedsSculpture ? res.pieces : 0,
         ...(sculpturePieces ? { piecesRevealed: sculpturePieces } : {}),
       });
     }

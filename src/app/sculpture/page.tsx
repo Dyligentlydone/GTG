@@ -13,13 +13,14 @@ export const dynamic = 'force-dynamic';
 
 export default async function SculpturePage() {
   const { supabase, user, profile } = await requireViewer('/sculpture');
-  // The sculpture is fed by every game — on-deck cracks reflect the best current week.
+  // The marble is account-level but carved only by sculpture-feeding games —
+  // on-deck cracks reflect that game's current week.
   const states = await loadEnrolledStates(supabase, user.id);
   const sculpture = await loadSculpture(supabase, user.id);
   const all = await loadAllSculptures(supabase, user.id);
   const decorations = sculpture ? await loadDecorations(supabase, sculpture.id) : [];
 
-  const weekPct = Math.max(0, ...states.map((s) => {
+  const weekPct = Math.max(0, ...states.filter((s) => s.game.def.feedsSculpture).map((s) => {
     const r = computeWeekResult(s.env, weekStart(localDate(new Date(), s.env.ctx.timeZone)), s.completions);
     return r.due > 0 ? r.done / r.due : 0;
   }));

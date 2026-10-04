@@ -157,6 +157,12 @@ export interface GameDef {
   books?: BookRule;
   /** Decoration added every time the event happens (e.g. perfect_week → gold_vein). */
   eventDecorations?: Partial<Record<DecorationEvent, string>>;
+  /**
+   * Whether this game carves the account sculpture: its week-close emits
+   * chisel events and its honors may decorate the statue. Account-level marble,
+   * single-game chisel — at most one active game should set this.
+   */
+  feedsSculpture?: boolean;
 }
 
 export type XpSource =

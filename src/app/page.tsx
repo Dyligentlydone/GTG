@@ -16,11 +16,11 @@ export default function LandingPage() {
       <section className="grid flex-1 items-center gap-10 py-10 md:grid-cols-2">
         <div>
           <h1 className="font-display text-4xl leading-tight text-marble md:text-5xl">
-            Every game carves <span className="text-gold">the same statue</span>.
+            The daily grind, <span className="text-gold">carved in marble</span>.
           </h1>
           <p className="mt-5 max-w-md text-lg text-stone">
-            One account, one block of marble. Pick a game from the catalog — each week you
-            show up, pieces fall, and the statue underneath is you. Face last.
+            One account, one block of marble. The founding protocol carves it — each week
+            you show up, pieces fall, and the statue underneath is you. Face last.
           </p>
           <div className="mt-8 flex gap-3">
             <Link href="/login" className="btn btn-primary">Enter the arena</Link>
@@ -40,11 +40,11 @@ export default function LandingPage() {
           <div className="card">
             <div className="flex items-center justify-between">
               <h3 className="font-display text-lg text-marble">{game1.title} I</h3>
-              <span className="rounded-full border border-gold/40 px-3 py-1 text-xs text-gold">Live · Free</span>
+              <span className="rounded-full border border-gold/40 px-3 py-1 text-xs text-gold">Live · Free · Carves the marble</span>
             </div>
             <p className="mt-2 text-sm text-stone">
               The founding protocol — {game1.quests.length} quests across {game1.pillars.length} pillars,
-              split between the Inner and Outer Worlds.
+              split between the Inner and Outer Worlds. This is the game that chisels your statue.
             </p>
             <p className="mt-3 text-xs text-shadow">
               {game1.pillars.map((p) => p.name).join(' · ')}
@@ -53,7 +53,8 @@ export default function LandingPage() {
           <div className="card flex flex-col items-center justify-center border-dashed py-10 text-center">
             <p className="font-display text-sm tracking-[0.2em] text-shadow">GAME II</p>
             <p className="mt-2 max-w-56 text-xs text-stone">
-              In the forge. New games are data — they plug into the same marble.
+              In the forge. New games plug into your profile — XP, honors, streaks.
+              The marble stays the founding protocol's work.
             </p>
           </div>
         </div>

@@ -44,11 +44,14 @@ export async function closeLatestWeek(db: Db, userId: string, gameSlug: string, 
 
   const result = computeWeekResult(env, week, state.completions);
 
+  // Only a sculpture-feeding game carves the marble (week_results.pieces stays 0 otherwise).
+  const carves = env.game.feedsSculpture === true;
   const { error } = await db.from('week_results').insert({
     user_id: userId, game_id: state.game.row.id, week_start: week,
     due: result.due, done: result.done, completion_pct: result.completionPct,
     perfect_week: result.perfectWeek, balanced_week: result.balancedWeek,
-    inner_balance: result.innerBalance, outer_balance: result.outerBalance, pieces: result.pieces,
+    inner_balance: result.innerBalance, outer_balance: result.outerBalance,
+    pieces: carves ? result.pieces : 0,
   });
   if (error) {
     if (dup(error)) return { userId, week, closed: false };
@@ -56,8 +59,9 @@ export async function closeLatestWeek(db: Db, userId: string, gameSlug: string, 
   }
 
   // Chisel Day: the trigger on chisel_events reveals the pieces and advances status.
-  const { data: sculpture } = await db.from('sculptures').select('id')
-    .eq('user_id', userId).neq('status', 'complete').limit(1).maybeSingle();
+  const { data: sculpture } = carves
+    ? await db.from('sculptures').select('id').eq('user_id', userId).neq('status', 'complete').limit(1).maybeSingle()
+    : { data: null };
   if (sculpture) {
     const { error: e } = await db.from('chisel_events').insert({
       sculpture_id: sculpture.id, week_start: week, completion_pct: result.completionPct, pieces: result.pieces,

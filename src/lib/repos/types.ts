@@ -197,5 +197,6 @@ export function gameFromRow(row: GameRow, quests: QuestDef[], achievements: Achi
     ...(config.worlds ? { worlds: config.worlds } : {}),
     ...(config.books ? { books: config.books } : {}),
     ...(config.eventDecorations ? { eventDecorations: config.eventDecorations } : {}),
+    ...(config.feedsSculpture ? { feedsSculpture: true } : {}),
   };
 }
