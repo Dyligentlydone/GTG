@@ -97,7 +97,7 @@ export function Temple({ destination, position, rotationY, onDoorChange }: {
 }) {
   const W = 12, D = 13, COL_H = 4.4, FLOOR = 0.75;
   const marble = useMemo(() => marbleMaterial([226, 219, 205], [148, 140, 128], 5, 0.52), []);
-  const darkStone = useMemo(() => new THREE.MeshStandardMaterial({ color: 0x14100c, roughness: 0.9 }), []);
+  const darkStone = useMemo(() => new THREE.MeshStandardMaterial({ color: 0x2e2a24, roughness: 0.9 }), []);
   const glowMat = useMemo(() => new THREE.MeshStandardMaterial({
     color: 0x000000, emissive: new THREE.Color(destination.accent), emissiveIntensity: 1.6,
   }), [destination.accent]);

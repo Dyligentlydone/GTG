@@ -5,6 +5,7 @@
 // only; the plaza walls contain the player.
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
+import { useFrame } from '@react-three/fiber';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
 import { marbleMaterial } from '../../lib/three/materials';
 import { buildStatue } from '../../lib/three/statue';
@@ -97,7 +98,7 @@ function Trees({ kind, count }: { kind: 'cypress' | 'olive'; count: number }) {
   }, [spots]);
   return (
     <instancedMesh ref={ref} args={[geo, undefined, spots.length]} castShadow={false}>
-      <meshStandardMaterial color={kind === 'cypress' ? 0x14251a : 0x39472f} roughness={1} />
+      <meshStandardMaterial color={kind === 'cypress' ? 0x1c3120 : 0x4a5c38} roughness={1} />
     </instancedMesh>
   );
 }
@@ -138,10 +139,11 @@ export function Courtyard({ destinations, onDoorChange }: {
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -25.6, 850]}>
         <planeGeometry args={[2400, 1100]} />
-        <meshStandardMaterial color={0x8fa3b8} roughness={0.15} metalness={0.35} />
+        <meshStandardMaterial color={0x4a7ba6} roughness={0.1} metalness={0.4} />
       </mesh>
       <Trees kind="cypress" count={520} />
       <Trees kind="olive" count={340} />
+      <Clouds />
       {/* inlay ring around the statue */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
         <ringGeometry args={[4.4, 4.9, 64]} />
@@ -225,6 +227,69 @@ export function Courtyard({ destinations, onDoorChange }: {
 
       {/* a distant sanctuary on a far ridge — pure silhouette */}
       <DistantShrine />
+    </group>
+  );
+}
+
+/** Stylized flat-bottom cumulus, painted once on canvas and billboarded. */
+function cloudTexture(): THREE.CanvasTexture {
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 128;
+  const g = c.getContext('2d')!;
+  const lobes: [number, number, number, number][] = [
+    [58, 92, 30, 18], [95, 74, 40, 26], [140, 62, 46, 32], [185, 78, 34, 22], [215, 92, 22, 15],
+  ];
+  for (const [x, y, rx, ry] of lobes) {
+    const grad = g.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry) * 1.05);
+    grad.addColorStop(0, 'rgba(255,253,250,0.98)');
+    grad.addColorStop(0.72, 'rgba(255,250,245,0.85)');
+    grad.addColorStop(1, 'rgba(255,248,242,0)');
+    g.fillStyle = grad;
+    g.save();
+    g.translate(x, y); g.scale(rx / Math.max(rx, ry), ry / Math.max(rx, ry)); g.translate(-x, -y);
+    g.beginPath(); g.arc(x, y, Math.max(rx, ry) * 1.05, 0, Math.PI * 2); g.fill();
+    g.restore();
+  }
+  // flat-bottom shading band — the classic cumulus underside
+  const shade = g.createLinearGradient(0, 78, 0, 116);
+  shade.addColorStop(0, 'rgba(148,168,196,0)');
+  shade.addColorStop(0.8, 'rgba(148,168,196,0.4)');
+  shade.addColorStop(1, 'rgba(148,168,196,0)');
+  g.fillStyle = shade;
+  g.fillRect(0, 78, 256, 38);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function Clouds() {
+  const tex = useMemo(cloudTexture, []);
+  const group = useRef<THREE.Group>(null);
+  const clouds = useMemo(() => {
+    const r = mulberry32(55);
+    return Array.from({ length: 20 }, () => ({
+      x: r.range(-1200, 1200),
+      y: r.range(120, 300),
+      z: r.range(-1200, 1200),
+      s: r.range(110, 300),
+      v: r.range(1.5, 4), // drift speed
+    }));
+  }, []);
+  useFrame((_, dt) => {
+    const g = group.current;
+    if (!g) return;
+    for (const child of g.children) {
+      child.position.x += (child.userData.v as number) * dt;
+      if (child.position.x > 1400) child.position.x = -1400;
+    }
+  });
+  return (
+    <group ref={group}>
+      {clouds.map((c, i) => (
+        <sprite key={i} position={[c.x, c.y, c.z]} scale={[c.s, c.s * 0.45, 1]} userData={{ v: c.v }}>
+          <spriteMaterial map={tex} transparent depthWrite={false} opacity={0.95} />
+        </sprite>
+      ))}
     </group>
   );
 }

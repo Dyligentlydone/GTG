@@ -15,6 +15,8 @@ import type { DoorDestination } from './types';
 export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }) {
   const router = useRouter();
   const [locked, setLocked] = useState(false);
+  // ?dev → render without the enter-veil (for screenshotting / visual iteration)
+  const [devView] = useState(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('dev'));
   const [door, setDoor] = useState<DoorDestination | null>(null);
   const doorRef = useRef<DoorDestination | null>(null);
   doorRef.current = door;
@@ -41,13 +43,13 @@ export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }
         camera={{ fov: 72, near: 0.1, far: 3200, position: [0, 1.8, 24] }}
         gl={{ antialias: true }}
       >
-        <fog attach="fog" args={['#8d8490', 70, 1500]} />
-        <Sky distance={45000} sunPosition={[-32, 14, -40]} turbidity={7} rayleigh={1.4} inclination={0.55} />
-        <hemisphereLight args={['#4a5578', '#1c1610', 0.9]} />
+        <fog attach="fog" args={['#aec3d8', 90, 1600]} />
+        <Sky distance={45000} sunPosition={[70, 55, -60]} turbidity={5} rayleigh={0.8} />
+        <hemisphereLight args={['#7ea4d4', '#7a6a4c', 1.0]} />
         <directionalLight
-          position={[-32, 26, -40]}
-          intensity={3.0}
-          color={0xffc07d}
+          position={[70, 80, -60]}
+          intensity={2.6}
+          color={0xfff2dd}
           castShadow
           shadow-mapSize={[2048, 2048]}
           shadow-camera-left={-50}
@@ -83,7 +85,7 @@ export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }
       </div>
 
       {/* start / pause overlay */}
-      {!locked && (
+      {!locked && !devView && (
         <div className="world-veil">
           <div className="world-veil-card">
             <div className="label text-gold">GAMIFY THE GRIND</div>
