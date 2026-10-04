@@ -192,12 +192,12 @@ export function Temple({ destination, position, rotationY, onDoorChange }: {
       <mesh geometry={pedimentGeo} material={marble} position={[0, FLOOR + COL_H + 0.82, -D / 2 + 1.1]} scale={[W / 2 + 0.35, 1.5, 1]} castShadow />
       <mesh geometry={pedimentGeo} material={marble} position={[0, FLOOR + COL_H + 0.82, D / 2 - 0.4]} scale={[W / 2 + 0.35, 1.5, 1]} castShadow />
 
-      {/* door sensor */}
+      {/* hall zone — whole platform + ramp top, so E works anywhere inside */}
       <RigidBody type="fixed" colliders={false}>
         <CuboidCollider
           sensor
-          args={[1.2, 1.6, 1.2]}
-          position={[0, FLOOR + 1.4, doorZ + 0.2]}
+          args={[W / 2 + 0.5, 2.2, D / 2 + 2.6]}
+          position={[0, FLOOR + 1.6, -2.0]}
           onIntersectionEnter={() => onDoorChange(destination)}
           onIntersectionExit={() => onDoorChange(null)}
         />
