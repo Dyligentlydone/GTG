@@ -108,6 +108,20 @@ export function Temple({ destination, position, rotationY, onDoorChange }: {
   }, []);
   const doorZ = -D / 2 + 0.25; // front wall (local -z faces plaza after rotation)
   const colXs = [-W / 2 + 0.9, -W / 6, W / 6, W / 2 - 0.9];
+  // Access ramp to the platform top (0.75): mesh and collider describe the
+  // same slope, so the walk surface is what you see.
+  const RAMP = { w: 5, z0: -10.6, z1: -7.0, rise: FLOOR };
+  const run = RAMP.z1 - RAMP.z0;
+  const theta = Math.atan2(RAMP.rise, run);
+  const slopeLen = Math.hypot(run, RAMP.rise);
+  const rampGeo = useMemo(() => {
+    const s = new THREE.Shape();
+    s.moveTo(0, 0); s.lineTo(3.6, 0); s.lineTo(3.6, 0.75); s.closePath();
+    const g = new THREE.ExtrudeGeometry(s, { depth: 5, bevelEnabled: false });
+    g.rotateY(-Math.PI / 2);   // profile x → +z, extrusion z → -x
+    g.translate(2.5, 0, -10.6); // width centered on x, low edge at z0
+    return g;
+  }, []);
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
       <RigidBody type="fixed" colliders={false}>
@@ -117,11 +131,12 @@ export function Temple({ destination, position, rotationY, onDoorChange }: {
             <boxGeometry args={[W + 2.6 - i * 0.7, 0.24, D + 2.6 - i * 0.7]} />
           </mesh>
         ))}
-        {/* steps — ramp collider at the front so the capsule walks up */}
+        {/* ramp — cuboid aligned with the wedge slope; low edge meets the
+            plaza floor, high edge meets the platform top */}
         <CuboidCollider
-          args={[W / 2 + 1.3, 0.55, 1.6]}
-          position={[0, 0.28, -D / 2 - 1.6]}
-          rotation={[-Math.atan2(0.75, 3.2), 0, 0]}
+          args={[RAMP.w / 2, 0.2, slopeLen / 2]}
+          position={[0, RAMP.rise / 2 - 0.2 * Math.cos(theta), (RAMP.z0 + RAMP.z1) / 2 + 0.2 * Math.sin(theta)]}
+          rotation={[-theta, 0, 0]}
         />
         {/* platform */}
         <CuboidCollider args={[W / 2 + 0.6, 0.38, D / 2 + 0.6]} position={[0, 0.37, 0]} />
@@ -137,6 +152,9 @@ export function Temple({ destination, position, rotationY, onDoorChange }: {
           <CylinderCollider key={x} args={[COL_H / 2, 0.31]} position={[x, FLOOR + COL_H / 2, -D / 2 + 1.1]} />
         ))}
       </RigidBody>
+
+      {/* access ramp — visual wedge matching the collider */}
+      <mesh geometry={rampGeo} material={marble} castShadow receiveShadow />
 
       {/* cella walls — visual */}
       <mesh material={darkStone} position={[0, FLOOR + 1.9, D / 2 - 0.25]} castShadow receiveShadow>
@@ -178,7 +196,7 @@ export function Temple({ destination, position, rotationY, onDoorChange }: {
       <RigidBody type="fixed" colliders={false}>
         <CuboidCollider
           sensor
-          args={[0.95, 1.4, 0.9]}
+          args={[1.2, 1.6, 1.2]}
           position={[0, FLOOR + 1.4, doorZ + 0.2]}
           onIntersectionEnter={() => onDoorChange(destination)}
           onIntersectionExit={() => onDoorChange(null)}
