@@ -141,7 +141,7 @@ describe('share card SVG', () => {
       for (const variant of ['light', 'dark'] as const) {
         const svg = renderShareCardSvg(model(scope, [id]), { variant });
         assert.ok(svg.includes(`viewBox="0 0 ${CARD.width} ${CARD.height}"`));
-        assert.ok(svg.includes('GAMIFY THE GRIND'), scope);
+        assert.ok(svg.includes('GAMIFYING THE GRIND'), scope);
         assert.ok(svg.includes('@dyl'), scope);
         assert.ok(svg.startsWith('<svg') && svg.endsWith('</svg>'), scope);
       }

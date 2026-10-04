@@ -15,7 +15,7 @@ export function LandingScreen({ error }: { error?: string }) {
       <LandingWorld />
       <div className="landing-veil">
         <div className="world-veil-card">
-          <div className="label text-gold">GAMIFY THE GRIND</div>
+          <div className="label text-gold">GAMIFYING THE GRIND</div>
           <h1 className="font-display text-4xl tracking-[0.14em] text-marble md:text-5xl">THE AGORA</h1>
           <p className="world-sub">
             Beyond these columns waits your marble. Sign in and step through.

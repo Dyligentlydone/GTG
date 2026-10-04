@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { WorldScreen } from './WorldScreen';
 import type { DoorDestination } from '../../components/world/types';
 
-export const metadata: Metadata = { title: 'The Agora — Gamify the Grind' };
+export const metadata: Metadata = { title: 'The Agora — Gamifying the Grind' };
 
 // Doorway → destination map. Order = north / east / west around the plaza.
 const DESTINATIONS: DoorDestination[] = [

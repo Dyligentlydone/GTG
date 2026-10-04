@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const found = await loadModel(slug).catch(() => null);
   const appUrl = env.appUrl();
   return {
-    title: found ? `@${found.model.handle} on Gamify the Grind` : 'Gamify the Grind',
+    title: found ? `@${found.model.handle} on Gamifying the Grind` : 'Gamifying the Grind',
     openGraph: { images: [`${appUrl}/api/share/${slug}/image`] },
   };
 }

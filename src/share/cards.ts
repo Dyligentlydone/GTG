@@ -1,6 +1,6 @@
 // Share card templates (SPEC §9.3): SVG, 1200×630, light and dark variants.
 // Greek-meets-gaming: marble field, Greek key border, Cinzel headings, gold accents,
-// pillar emblem, the GAMIFY THE GRIND wordmark and the player's handle.
+// pillar emblem, the GAMIFYING THE GRIND wordmark and the player's handle.
 import type { LocalDate, PillarId } from '../core/types';
 import { PILLAR_SYMBOLS } from '../sculpture/symbols';
 import { PALETTE, STATUE_BBOX } from '../sculpture/placeholderStatue';
@@ -129,7 +129,7 @@ function frame(t: Theme): string {
 
 function wordmark(t: Theme): string {
   const y = 108;
-  return `<text x="600" y="${y}" text-anchor="middle" font-family="${HEADING}" font-size="19" letter-spacing="9" fill="${t.gold}">GAMIFY THE GRIND</text>`
+  return `<text x="600" y="${y}" text-anchor="middle" font-family="${HEADING}" font-size="19" letter-spacing="9" fill="${t.gold}">GAMIFYING THE GRIND</text>`
     + `<path d="M430 ${y + 12} L570 ${y + 12} M630 ${y + 12} L770 ${y + 12}" stroke="${t.hairline}" stroke-width="1"/>`
     + `<path d="M600 ${y + 7} L606 ${y + 12} L600 ${y + 17} L594 ${y + 12} Z" fill="${t.gold}"/>`;
 }
@@ -414,7 +414,7 @@ export function renderShareCardSvg(model: ShareCardModel, input: RenderCardInput
     case 'milestone': body = milestoneBody(model, id, t); break;
   }
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Gamify the Grind share card: ${esc(SCOPE_INFO[model.scope].label)}">`
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Gamifying the Grind share card: ${esc(SCOPE_INFO[model.scope].label)}">`
     + `<defs>${defs.join('')}</defs>`
     + `<rect width="${W}" height="${H}" fill="url(#${id}-bg)"/>`
     + `<rect width="${W}" height="${H}" filter="url(#${id}-noise)" opacity="${variant === 'dark' ? 0.1 : 0.16}"/>`

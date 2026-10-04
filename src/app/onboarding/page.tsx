@@ -26,7 +26,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   return (
     <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-10">
       <div className="mb-6 text-center">
-        <p className="font-display text-sm tracking-[0.35em] text-gold">GAMIFY THE GRIND</p>
+        <p className="font-display text-sm tracking-[0.35em] text-gold">GAMIFYING THE GRIND</p>
         <h1 className="mt-3 font-display text-3xl text-marble">Claim your marble</h1>
       </div>
       <Suspense fallback={<div className="card p-6 text-center text-shadow">Loading…</div>}>

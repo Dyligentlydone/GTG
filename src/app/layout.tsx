@@ -6,7 +6,7 @@ const cinzel = Cinzel({ subsets: ['latin'], variable: '--font-cinzel' });
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: { default: 'Gamify the Grind', template: '%s · Gamify the Grind' },
+  title: { default: 'Gamifying the Grind', template: '%s · Gamifying the Grind' },
   description: 'Turn the daily grind into a marble statue. Quests, streaks, XP — and a block of marble that reveals you, one piece at a time.',
 };
 
