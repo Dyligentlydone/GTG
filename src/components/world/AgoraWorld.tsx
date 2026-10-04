@@ -28,6 +28,8 @@ export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }
   const doorRef = useRef<DoorDestination | null>(null);
   doorRef.current = door;
   const [quest, setQuest] = useState<QuestTarget | null>(null);
+  const questRef = useRef<QuestTarget | null>(null);
+  questRef.current = quest;
   const [boardV, setBoardV] = useState(0);
 
   const openQuest = (q: QuestTarget) => {
@@ -41,6 +43,12 @@ export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
+      if (e.code === 'Escape' && questRef.current) { closeQuest(); return; }
+      // while a check-in modal is open — or any field has focus — the
+      // keyboard belongs to the form, not the world
+      if (questRef.current) return;
+      const t = e.target as HTMLElement | null;
+      if (t?.closest?.('input, textarea, select, [contenteditable="true"]')) return;
       if ((e.code === 'KeyE') && doorRef.current) {
         const d = doorRef.current;
         if (d.quest) openQuest(d.quest);

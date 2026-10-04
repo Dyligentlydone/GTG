@@ -32,9 +32,16 @@ export function Player() {
   const aimed = useRef(false);
 
   useEffect(() => {
+    // keystrokes aimed at a form field (the in-world check-in modal) are
+    // typing, not movement
+    const typing = (e: KeyboardEvent) =>
+      e.target instanceof HTMLElement &&
+      (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' ||
+        e.target.tagName === 'SELECT' || e.target.isContentEditable);
     const dn = (e: KeyboardEvent) => {
+      if (typing(e)) return;
       keys.current[e.code] = true;
-      if (e.code === 'Space') e.preventDefault();
+      if (e.code === 'Space' && document.pointerLockElement) e.preventDefault();
     };
     const up = (e: KeyboardEvent) => { keys.current[e.code] = false; };
     window.addEventListener('keydown', dn);
@@ -57,6 +64,9 @@ export function Player() {
     if (devSpawn && !aimed.current) { camera.lookAt(0, 2.6, 0); aimed.current = true; }
     if (devPosSpawn && !aimed.current) { camera.rotation.set(0, devYaw * Math.PI / 180, 0); aimed.current = true; }
 
+    // no pointer lock → no movement: the veil is up or a modal owns the
+    // keyboard, so held keys are stale and must not steer the body
+    if (!document.pointerLockElement) keys.current = {};
     const k = keys.current;
     camera.getWorldDirection(fwd.current);
     fwd.current.y = 0;
