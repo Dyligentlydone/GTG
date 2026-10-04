@@ -38,7 +38,7 @@ export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }
   return (
     <div className="world-root">
       <Canvas
-        shadows
+        shadows="percentage"
         dpr={[1, 1.75]}
         camera={{ fov: 72, near: 0.1, far: 3200, position: [0, 1.8, 24] }}
         gl={{ antialias: true }}

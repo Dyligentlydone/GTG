@@ -3,7 +3,7 @@
 // statue centerpiece — and the vista: a mountain plateau falling into a
 // valley, ridges on the horizon, the sea to the south. Vista is visual
 // only; the plaza walls contain the player.
-import { useLayoutEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
@@ -58,48 +58,104 @@ function useTerrain() {
   }, []);
 }
 
-const TREE_GEO = {
-  cypress: () => new THREE.ConeGeometry(1.6, 8, 7),
-  olive: () => new THREE.IcosahedronGeometry(2.4, 1),
-} as const;
+/** A copse of trees painted on canvas — cypress spikes or leafy canopy —
+ *  billbboarded on the far slopes so the forest reads real at distance. */
+function treeClusterTexture(kind: 'cypress' | 'leafy', seed: number): THREE.CanvasTexture {
+  const r = mulberry32(seed);
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 256;
+  const g = c.getContext('2d')!;
+  const BASE = 235;
+  const trees = 4 + Math.floor(r.next() * 4);
+  const trunks: { x: number; h: number; w: number }[] = [];
+  for (let i = 0; i < trees; i++) {
+    trunks.push({ x: 30 + r.next() * 196, h: r.range(90, 210), w: r.range(10, 20) });
+  }
+  trunks.sort((a, b) => b.h - a.h); // paint tall back-to-front
+  for (const t of trunks) {
+    const top = BASE - t.h;
+    if (kind === 'cypress') {
+      // tapered flame shape, darker base, sun-kissed left edge
+      const grad = g.createLinearGradient(t.x - t.w, BASE, t.x + t.w, top);
+      grad.addColorStop(0, '#2c4a2e');
+      grad.addColorStop(0.55, '#1e3521');
+      grad.addColorStop(1, '#152718');
+      g.fillStyle = grad;
+      g.beginPath();
+      g.moveTo(t.x - t.w * 0.4, BASE);
+      g.quadraticCurveTo(t.x - t.w, BASE - t.h * 0.45, t.x - t.w * 0.28, top + 18);
+      g.quadraticCurveTo(t.x - t.w * 0.1, top, t.x, top);
+      g.quadraticCurveTo(t.x + t.w * 0.1, top, t.x + t.w * 0.28, top + 18);
+      g.quadraticCurveTo(t.x + t.w, BASE - t.h * 0.45, t.x + t.w * 0.4, BASE);
+      g.closePath();
+      g.fill();
+      // rim light on the sun side
+      g.strokeStyle = 'rgba(180,200,140,0.35)';
+      g.lineWidth = 1.5;
+      g.beginPath();
+      g.moveTo(t.x - t.w * 0.28, top + 18);
+      g.quadraticCurveTo(t.x - t.w, BASE - t.h * 0.45, t.x - t.w * 0.4, BASE);
+      g.stroke();
+    } else {
+      // trunk
+      g.strokeStyle = '#3a2e20';
+      g.lineWidth = Math.max(2, t.w * 0.18);
+      g.beginPath(); g.moveTo(t.x, BASE); g.lineTo(t.x + r.range(-3, 3), top + t.h * 0.3); g.stroke();
+      // canopy: clustered blobs, shaded underneath, lit on top
+      for (let j = 0; j < 14; j++) {
+        const a = r.next() * Math.PI * 2;
+        const rad = r.next() * t.w * 1.9;
+        const cx = t.x + Math.cos(a) * rad;
+        const cy = top + t.h * 0.18 + Math.sin(a) * rad * 0.62 + r.range(-6, 6);
+        const cr = r.range(9, 20);
+        const lit = cy < top + t.h * 0.22;
+        g.fillStyle = lit
+          ? `rgba(${86 + r.int(0, 20)},${110 + r.int(0, 20)},${52 + r.int(0, 14)},0.95)`
+          : `rgba(${38 + r.int(0, 14)},${58 + r.int(0, 14)},${30 + r.int(0, 10)},0.95)`;
+        g.beginPath(); g.arc(cx, cy, cr, 0, Math.PI * 2); g.fill();
+      }
+    }
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
 
-function Trees({ kind, count }: { kind: 'cypress' | 'olive'; count: number }) {
-  const ref = useRef<THREE.InstancedMesh>(null);
-  const geo = useMemo(() => TREE_GEO[kind](), [kind]);
+function Forest({ kind, count, seed }: { kind: 'cypress' | 'leafy'; count: number; seed: number }) {
+  const texA = useMemo(() => treeClusterTexture(kind, seed), [kind, seed]);
+  const texB = useMemo(() => treeClusterTexture(kind, seed + 1000), [kind, seed]);
   const spots = useMemo(() => {
-    const r = mulberry32(kind === 'cypress' ? 99 : 141);
-    const out: { x: number; y: number; z: number; h: number; s: number }[] = [];
+    const r = mulberry32(seed + 7);
+    const out: { x: number; y: number; z: number; s: number; v: number }[] = [];
+    // groves: pick grove centers on the slopes, then pack trees around them —
+    // real hillsides are patchy, not evenly sprinkled
     let guard = 0;
-    while (out.length < count && guard++ < count * 8) {
-      const a = r.next() * Math.PI * 2;
-      const rad = 48 + Math.pow(r.next(), 1.4) * 620;
-      const x = Math.cos(a) * rad;
-      const z = Math.sin(a) * rad;
-      const y = terrainHeight(x, z);
-      if (y < -24 || y > 55) continue; // not in the sea, below the treeline
-      out.push({ x, y, z, h: r.range(6, 13), s: r.range(0.7, 1.5) });
+    while (out.length < count && guard++ < 400) {
+      const ga = r.next() * Math.PI * 2;
+      const grad = 180 + Math.pow(r.next(), 1.4) * 520;
+      const gx = Math.cos(ga) * grad;
+      const gz = Math.sin(ga) * grad;
+      const gy = terrainHeight(gx, gz);
+      if (gy < -22 || gy > 62) continue;
+      const size = 4 + Math.floor(r.next() * 8);
+      for (let i = 0; i < size && out.length < count; i++) {
+        const x = gx + r.signed() * 26;
+        const z = gz + r.signed() * 26;
+        const y = terrainHeight(x, z);
+        if (y < -22 || y > 70) continue;
+        out.push({ x, y, z, s: r.range(22, 48), v: r.next() < 0.5 ? 0 : 1 });
+      }
     }
     return out;
-  }, [count, kind]);
-  useLayoutEffect(() => {
-    const mesh = ref.current;
-    if (!mesh) return;
-    const m = new THREE.Matrix4();
-    const q = new THREE.Quaternion();
-    const p = new THREE.Vector3();
-    const s = new THREE.Vector3();
-    spots.forEach((t, i) => {
-      p.set(t.x, t.y + t.h / 2, t.z);
-      s.set(t.s, t.h / 8, t.s);
-      m.compose(p, q, s);
-      mesh.setMatrixAt(i, m);
-    });
-    mesh.instanceMatrix.needsUpdate = true;
-  }, [spots]);
+  }, [count, seed]);
   return (
-    <instancedMesh ref={ref} args={[geo, undefined, spots.length]} castShadow={false}>
-      <meshStandardMaterial color={kind === 'cypress' ? 0x1c3120 : 0x4a5c38} roughness={1} />
-    </instancedMesh>
+    <group>
+      {spots.map((t, i) => (
+        <sprite key={i} position={[t.x, t.y + t.s / 2, t.z]} scale={[t.s, t.s, 1]}>
+          <spriteMaterial map={t.v ? texA : texB} alphaTest={0.12} transparent depthWrite={false} />
+        </sprite>
+      ))}
+    </group>
   );
 }
 
@@ -141,8 +197,8 @@ export function Courtyard({ destinations, onDoorChange }: {
         <planeGeometry args={[2400, 1100]} />
         <meshStandardMaterial color={0x4a7ba6} roughness={0.1} metalness={0.4} />
       </mesh>
-      <Trees kind="cypress" count={520} />
-      <Trees kind="olive" count={340} />
+      <Forest kind="cypress" count={160} seed={31} />
+      <Forest kind="leafy" count={240} seed={77} />
       <Clouds />
       {/* inlay ring around the statue */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
