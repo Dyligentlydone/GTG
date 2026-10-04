@@ -107,7 +107,7 @@ export function Temple({ destination, position, rotationY, onDoorChange }: {
 }) {
   const W = 12, D = 13, COL_H = 5.0, FLOOR = 0.75;
   const marble = useMemo(() => marbleMaterial([226, 219, 205], [148, 140, 128], 5, 0.52), []);
-  const darkStone = useMemo(() => new THREE.MeshStandardMaterial({ color: 0x2e2a24, roughness: 0.9 }), []);
+
   const glowMat = useMemo(() => new THREE.MeshStandardMaterial({
     color: 0x000000, emissive: new THREE.Color(destination.accent), emissiveIntensity: 1.6,
   }), [destination.accent]);
@@ -167,21 +167,21 @@ export function Temple({ destination, position, rotationY, onDoorChange }: {
       <mesh geometry={rampGeo} material={marble} castShadow receiveShadow />
 
       {/* cella walls — visual */}
-      <mesh material={darkStone} position={[0, FLOOR + 2.3, D / 2 - 0.25]} castShadow receiveShadow>
+      <mesh material={marble} position={[0, FLOOR + 2.3, D / 2 - 0.25]} castShadow receiveShadow>
         <boxGeometry args={[W - 3, 4.6, 0.5]} />
       </mesh>
-      <mesh material={darkStone} position={[-W / 2 + 1.75, FLOOR + 2.3, 0]} castShadow receiveShadow>
+      <mesh material={marble} position={[-W / 2 + 1.75, FLOOR + 2.3, 0]} castShadow receiveShadow>
         <boxGeometry args={[0.5, 4.6, D - 1]} />
       </mesh>
-      <mesh material={darkStone} position={[W / 2 - 1.75, FLOOR + 2.3, 0]} castShadow receiveShadow>
+      <mesh material={marble} position={[W / 2 - 1.75, FLOOR + 2.3, 0]} castShadow receiveShadow>
         <boxGeometry args={[0.5, 4.6, D - 1]} />
       </mesh>
       {[-1, 1].map(s => (
-        <mesh key={s} material={darkStone} position={[s * (0.9 + (W / 2 - 1.5 - 0.9) / 2), FLOOR + 2.3, doorZ]} castShadow receiveShadow>
+        <mesh key={s} material={marble} position={[s * (0.9 + (W / 2 - 1.5 - 0.9) / 2), FLOOR + 2.3, doorZ]} castShadow receiveShadow>
           <boxGeometry args={[W / 2 - 1.5 - 0.9, 4.6, 0.5]} />
         </mesh>
       ))}
-      <mesh material={darkStone} position={[0, FLOOR + 3.35, doorZ]} castShadow>
+      <mesh material={marble} position={[0, FLOOR + 3.35, doorZ]} castShadow>
         <boxGeometry args={[1.9, 1.1, 0.5]} />
       </mesh>
       {/* door glow — emissive plane recessed inside */}
