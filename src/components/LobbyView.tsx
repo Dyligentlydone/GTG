@@ -123,7 +123,7 @@ export function LobbyView({
       <main className="mx-auto max-w-5xl space-y-10 px-4 py-10">
         {level && (
           <Reveal>
-            <section className="card p-5">
+            <section className="card p-3 sm:max-w-xs">
               <XpBar level={level.level} xpIntoLevel={level.xpIntoLevel} xpForNext={level.xpForNext} />
             </section>
           </Reveal>

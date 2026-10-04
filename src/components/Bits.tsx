@@ -8,14 +8,14 @@ export function XpBar({ level, xpIntoLevel, xpForNext }: { level: number; xpInto
   const rank = rankForLevel(level);
   return (
     <div>
-      <div className="flex items-baseline justify-between">
-        <span className="font-display text-2xl text-marble">LVL {level}</span>
-        <span className="font-display text-xs tracking-[0.25em] text-gold">{rank.name.toUpperCase()}</span>
+      <div className="flex items-baseline justify-between gap-4">
+        <span className="font-display text-sm text-marble">LVL {level}</span>
+        <span className="font-display text-[10px] tracking-[0.25em] text-gold">{rank.name.toUpperCase()}</span>
       </div>
-      <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-line">
+      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-line">
         <div className="h-full rounded-full bg-gradient-to-r from-golddeep via-gold to-[#f8e68a]" style={{ width: `${pct}%` }} />
       </div>
-      <div className="mt-1 text-right text-xs text-shadow">{xpIntoLevel} / {xpForNext} XP</div>
+      <div className="mt-1 text-right text-[10px] text-shadow">{xpIntoLevel} / {xpForNext} XP</div>
     </div>
   );
 }
