@@ -35,7 +35,11 @@ export function GlbStatue({ position = [0, 0, 0] as [number, number, number] }) 
     });
   }, [scaled]);
 
-  return <group position={position}><primitive object={scaled} /></group>;
+  return (
+    <group position={position} rotation={[0, -0.45, 0]}>
+      <primitive object={scaled} />
+    </group>
+  );
 }
 
 useGLTF.preload('/models/gladiator.glb');

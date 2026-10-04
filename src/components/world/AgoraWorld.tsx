@@ -59,6 +59,8 @@ export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }
           shadow-camera-far={140}
           shadow-bias={-0.0004}
         />
+        {/* cool sky-bounce fill so south faces (incl. the statue's front) aren't flat shadow */}
+        <directionalLight position={[-15, 30, 60]} intensity={0.45} color={0xcfe0f5} />
         <Suspense fallback={null}>
           <Physics gravity={[0, -22, 0]}>
             <Player />
