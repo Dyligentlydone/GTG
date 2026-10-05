@@ -16,20 +16,20 @@ describe('Game 1 config', () => {
     assert.deepEqual(validateGameConfig(game1), { ok: true });
   });
 
-  test('eight pillars in two worlds, nine quests, founding titles verbatim', () => {
+  test('eight pillars in two worlds, eight quests, founding titles verbatim', () => {
     assert.equal(game1.pillars.length, 8);
     assert.deepEqual(game1.pillars.filter((p) => p.world === 'inner').map((p) => p.id), ['mental', 'physical', 'emotional', 'spiritual']);
-    assert.equal(game1.quests.length, 9);
+    assert.equal(game1.quests.length, 8);
     assert.deepEqual(game1.quests.filter((q) => q.founding).map((q) => q.title), [
       'Read 10 pages a day from a self-development book',
-      'Exercise 4 days a week',
-      'Wake up before the sun rises 5 days a week',
+      'Exercise 4 days a week (20+ minutes)',
       'Journal once a day',
     ]);
     assert.ok(game1.quests.every((q) => !q.title.includes('★')));
+    assert.ok(game1.quests.every((q) => q.description && q.why));
     assert.equal(new Set(game1.quests.map((q) => q.pillar)).size, 8);
-    assert.equal(game1.achievements.length, 20);
-    assert.deepEqual(game1.achievements.filter((a) => a.hidden).map((a) => a.id), ['night_owl_reformed', 'comeback']);
+    assert.equal(game1.achievements.length, 16);
+    assert.deepEqual(game1.achievements.filter((a) => a.hidden).map((a) => a.id), ['comeback']);
   });
 
   test('broken configs fail', () => {
@@ -47,7 +47,7 @@ describe('Game 1 config', () => {
       ['wrong gameId', (g) => { g.quests[1]!.gameId = 'g2'; }, /gameId g2 does not match g1/],
       ['bad quota', (g) => { g.quests[1]!.schedule = { kind: 'weekly_quota', perWeek: 9 }; }, /perWeek must be an integer 1..7/],
       ['books quest not reading', (g) => { g.books = { ...g.books!, questId: 'g1.exercise' }; }, /must use reading proof/],
-      ['unreachable stage', (g) => { g.ramp = g.ramp.filter((s) => s.id !== 'full_protocol'); }, /ramp never reaches stage full_protocol/],
+      ['unreachable stage', (g) => { g.quests[0]!.unlock = { kind: 'ramp_stage', atLeast: 'full_protocol' }; g.ramp = g.ramp.filter((s) => s.id !== 'full_protocol'); }, /ramp never reaches stage full_protocol/],
     ];
     for (const [name, mutate, pattern] of cases) {
       const g = clone();
@@ -60,9 +60,9 @@ describe('Game 1 config', () => {
 
 describe('seed SQL', () => {
   const sql = buildSeedSql([{ game: game1, type: 'free', status: 'active' }]);
-  test('inserts plans, game, 9 quests and 20 achievements idempotently', () => {
-    assert.equal((sql.match(/insert into public\.quests/g) ?? []).length, 9);
-    assert.equal((sql.match(/insert into public\.achievements/g) ?? []).length, 20);
+  test('inserts plans, game, 8 quests and 16 achievements idempotently', () => {
+    assert.equal((sql.match(/insert into public\.quests/g) ?? []).length, 8);
+    assert.equal((sql.match(/insert into public\.achievements/g) ?? []).length, 16);
     assert.equal((sql.match(/insert into public\.games/g) ?? []).length, 1);
     assert.match(sql, /insert into public\.plans \(key, name, description\) values \('free'/);
     assert.match(sql, /values \('pro'/);

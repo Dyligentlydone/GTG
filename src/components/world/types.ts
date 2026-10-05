@@ -5,6 +5,8 @@ export type QuestTarget = {
   gameSlug: string;
   questKey: string;
   title: string;
+  description?: string;
+  why?: string;
   xp: number;
   pillar: PillarId;
   proof: ProofSpec;

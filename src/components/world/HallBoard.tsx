@@ -15,7 +15,8 @@ import type { PillarId, ProofSpec } from '../../core/types';
 import type { DoorDestination, QuestTarget } from './types';
 
 interface QuestPanel {
-  id: string; title: string; pillar: PillarId; xp: number; cadence: string;
+  id: string; title: string; description?: string; why?: string;
+  pillar: PillarId; xp: number; cadence: string;
   state: 'done' | 'due' | 'locked' | 'weekDone' | 'rest';
   activeToday: boolean; proof: ProofSpec;
   weekDone: number; weekDue: number; streak: number; streakUnit: 'day' | 'week';
@@ -247,7 +248,8 @@ export function HallBoard({ gameSlug, destination, onDoorChange, onQuest, versio
   }, [questTex, friezeTex]);
 
   const toTarget = useCallback((q: QuestPanel): QuestTarget => ({
-    gameSlug, questKey: q.id, title: q.title, xp: q.xp, pillar: q.pillar,
+    gameSlug, questKey: q.id, title: q.title, description: q.description, why: q.why,
+    xp: q.xp, pillar: q.pillar,
     proof: q.proof, books: board?.books ?? [],
     blocked: q.state === 'done' ? 'done' : q.state === 'locked' ? 'locked' : !q.activeToday ? 'rest' : undefined,
   }), [gameSlug, board]);

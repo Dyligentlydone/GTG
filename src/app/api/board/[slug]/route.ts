@@ -35,6 +35,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     quests: board.map(({ quest, unlockedToday, dueToday, doneToday, weekDone, weekDue, streak, streakUnit }) => ({
       id: quest.id,
       title: quest.title,
+      description: quest.description,
+      why: quest.why,
       pillar: quest.pillar,
       xp: quest.xp,
       cadence: quest.schedule.kind === 'daily' ? 'daily' : `${quest.schedule.perWeek}× a week`,

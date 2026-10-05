@@ -21,6 +21,7 @@ export default async function QuestPage({ params }: { params: Promise<{ slug: st
   const today = localDate(new Date(), env.ctx.timeZone);
   const stage = stageForDate(env.game.ramp, today, env.ctx);
   const effective = effectiveQuest(quest, stage);
+  const pillar = env.game.pillars.find((p) => p.id === quest.pillar);
   const week = weekStart(today);
   const weekDue = dueCount(quest, week, env);
   const weekDone = countedCompletions(quest, week, state.completions, weekDue);
@@ -47,6 +48,28 @@ export default async function QuestPage({ params }: { params: Promise<{ slug: st
           </div>
           <StreakChip days={streak.value} unit={streak.unit} />
         </div>
+
+        {(quest.description || quest.why) && (
+          <div className="card space-y-4 p-5">
+            {quest.description && (
+              <div>
+                <p className="label">What it is</p>
+                <p className="mt-1 text-sm leading-relaxed text-marble">{quest.description}</p>
+              </div>
+            )}
+            {quest.why && (
+              <div>
+                <p className="label text-gold">Why it's worth it</p>
+                <p className="mt-1 text-sm leading-relaxed text-shadow">{quest.why}</p>
+              </div>
+            )}
+            {pillar && (
+              <p className="border-t border-white/5 pt-3 text-xs text-shadow">
+                {pillar.name} pillar — covers {pillar.covers}
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="card flex items-center justify-between p-4 text-sm">
           <span className="text-shadow">This week</span>

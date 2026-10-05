@@ -42,6 +42,8 @@ export interface QuestRow {
   key: string;
   pillar: QuestDef['pillar'];
   title: string;
+  description: string | null;
+  why: string | null;
   founding: boolean;
   schedule: QuestDef['schedule'];
   window: QuestDef['window'];
@@ -141,10 +143,13 @@ export interface ShareRow {
 
 export function questToDef(q: QuestRow): QuestDef {
   // The engine keys quests by their stable key ('g1.read'), not the row uuid.
-  return {
+  const def: QuestDef = {
     id: q.key, gameId: '', pillar: q.pillar, title: q.title, founding: q.founding,
     schedule: q.schedule, window: q.window, proof: q.proof, xp: q.xp, unlock: q.unlock,
   };
+  if (q.description) def.description = q.description;
+  if (q.why) def.why = q.why;
+  return def;
 }
 
 export function achievementToDef(a: AchievementRow): AchievementDef {

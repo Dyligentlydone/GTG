@@ -56,8 +56,8 @@ export function buildSeedSql(games: GameSeed[], plans: PlanSeed[] = PLANS): stri
     out.push('', `-- Game ${game.id}: ${game.title}`);
     out.push(`insert into public.games (slug, title, type, status, config) values (${sqlText(game.id)}, ${sqlText(game.title)}, ${sqlText(type)}, ${sqlText(status)}, ${sqlJson(rest)}) on conflict (slug) do nothing;`);
     quests.forEach((q, i) => {
-      const cols = ['game_id', 'key', 'pillar', 'title', 'founding', 'schedule', '"window"', 'proof', 'xp', 'unlock', 'sort_order'];
-      const vals = [gameIdSql(game.id), sqlText(q.id), sqlText(q.pillar), sqlText(q.title), sqlValue(q.founding), sqlJson(q.schedule), sqlJson(q.window), sqlJson(q.proof), String(q.xp), sqlJson(q.unlock), String(i + 1)];
+      const cols = ['game_id', 'key', 'pillar', 'title', 'description', 'why', 'founding', 'schedule', '"window"', 'proof', 'xp', 'unlock', 'sort_order'];
+      const vals = [gameIdSql(game.id), sqlText(q.id), sqlText(q.pillar), sqlText(q.title), sqlValue(q.description ?? null), sqlValue(q.why ?? null), sqlValue(q.founding), sqlJson(q.schedule), sqlJson(q.window), sqlJson(q.proof), String(q.xp), sqlJson(q.unlock), String(i + 1)];
       out.push(`insert into public.quests (${cols.join(', ')}) values (${vals.join(', ')}) on conflict (game_id, key) do nothing;`);
     });
     for (const a of achievements) {

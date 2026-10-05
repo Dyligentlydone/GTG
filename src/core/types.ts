@@ -52,6 +52,10 @@ export interface QuestDef {
   gameId: string;
   pillar: PillarId;
   title: string;
+  /** What the quest is — shown on the quest page and in-world. */
+  description?: string;
+  /** Why it's worth doing. */
+  why?: string;
   founding: boolean;
   schedule: ScheduleRule;
   window: WindowRule;

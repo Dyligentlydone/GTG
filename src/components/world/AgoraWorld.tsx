@@ -133,6 +133,7 @@ export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }
               <div>
                 <p className="label text-gold">{quest.pillar} · +{quest.xp} XP</p>
                 <h2 className="font-display text-2xl text-marble">{quest.title}</h2>
+                {quest.description && <p className="mt-1.5 text-sm leading-relaxed text-shadow">{quest.description}</p>}
               </div>
               <button onClick={closeQuest} className="btn px-3 py-1 text-sm" aria-label="Close">✕</button>
             </div>
