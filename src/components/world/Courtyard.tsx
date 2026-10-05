@@ -303,15 +303,27 @@ export function Courtyard({ destinations, onDoorChange, onQuest, boardVersion }:
       {/* the gate — monumental entry at the plaza's north end */}
       <NorthGate />
 
-      {/* perimeter colonnade — behind the temples and along the south edge */}
-      {Array.from({ length: 9 }, (_, i) => -26 + i * 6.5).flatMap(v => [
-        <Column key={`e${v}`} position={[HALF - 1.5, 0, v]} height={7.2} radius={0.55} material={colMat} base />,
-        <Column key={`w${v}`} position={[-(HALF - 1.5), 0, v]} height={7.2} radius={0.55} material={colMat} base />,
-      ])}
-      {Array.from({ length: 9 }, (_, i) => -26 + i * 6.5).flatMap(v => [
-        <Column key={`n${v}`} position={[v, 0, -(HALF - 1.5)]} height={7.2} radius={0.55} material={colMat} base />,
-        <Column key={`s${v}`} position={[v, 0, HALF - 1.5]} height={7.2} radius={0.55} material={colMat} base />,
-      ])}
+      {/* perimeter colonnade — skipping spots that would land inside a temple
+          or the gate (a column inside the hall stood in front of the frieze) */}
+      {(() => {
+        // world-space AABB of each placed temple (W=12, D=13 + krepis/skirt)
+        const boxes = destinations.slice(0, placements.length).map((_, i) => {
+          const { pos, rotY } = placements[i]!;
+          const side = Math.abs(Math.abs(rotY) - Math.PI / 2) < 0.1; // rotated onto the flanks
+          const hx = side ? 8.2 : 7.6;
+          const hz = side ? 7.6 : 8.2;
+          return { x0: pos[0] - hx, x1: pos[0] + hx, z0: pos[2] - hz, z1: pos[2] + hz };
+        });
+        // the gate's footprint at the north end (W=20, D=6.5 at z=-24)
+        boxes.push({ x0: -11, x1: 11, z0: -28.3, z1: -19.5 });
+        const clear = (x: number, z: number) => !boxes.some((b) => x > b.x0 && x < b.x1 && z > b.z0 && z < b.z1);
+        return Array.from({ length: 9 }, (_, i) => -26 + i * 6.5).flatMap(v => [
+          clear(HALF - 1.5, v) ? <Column key={`e${v}`} position={[HALF - 1.5, 0, v]} height={7.2} radius={0.55} material={colMat} base /> : null,
+          clear(-(HALF - 1.5), v) ? <Column key={`w${v}`} position={[-(HALF - 1.5), 0, v]} height={7.2} radius={0.55} material={colMat} base /> : null,
+          clear(v, -(HALF - 1.5)) ? <Column key={`n${v}`} position={[v, 0, -(HALF - 1.5)]} height={7.2} radius={0.55} material={colMat} base /> : null,
+          clear(v, HALF - 1.5) ? <Column key={`s${v}`} position={[v, 0, HALF - 1.5]} height={7.2} radius={0.55} material={colMat} base /> : null,
+        ]);
+      })()}
       {/* entablature: architrave band + overhanging cornice */}
       {[[0, -(HALF - 1.5), 0], [0, HALF - 1.5, 0]].map(([x, z]) => (
         <group key={`ent-z${z}`}>

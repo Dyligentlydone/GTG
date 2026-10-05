@@ -234,6 +234,8 @@ export function Temple({ destination, position, rotationY, onDoorChange, onQuest
         <planeGeometry args={[1.8, 2.8]} />
       </mesh>
       <pointLight position={[0, FLOOR + 2.2, doorZ - 1.5]} color={destination.accent} intensity={14} distance={12} decay={2} />
+      {/* warm interior fill — the roof is fully closed now, so the cella needs its own light */}
+      <pointLight position={[0, FLOOR + 3.6, 1.5]} color={0xffd9a0} intensity={9} distance={15} decay={2} />
 
       {/* portico columns — visual */}
       {colXs.map(x => <Column key={x} position={[x, FLOOR, -D / 2 + 1.1]} height={COL_H} radius={0.44} material={marble} collider={false} />)}
@@ -241,8 +243,8 @@ export function Temple({ destination, position, rotationY, onDoorChange, onQuest
       <mesh material={marble} position={[0, FLOOR + COL_H + 0.3, -D / 2 + 1.1]} castShadow>
         <boxGeometry args={[W + 0.6, 0.6, 1.1]} />
       </mesh>
-      <mesh material={marble} position={[0, FLOOR + COL_H + 0.55, D / 2 - 0.4]} castShadow>
-        <boxGeometry args={[W + 0.6, 0.5, D - 0.6]} />
+      <mesh material={marble} position={[0, FLOOR + COL_H + 0.55, 0.15]} castShadow>
+        <boxGeometry args={[W + 0.8, 0.5, D + 0.4]} />
       </mesh>
       <mesh geometry={pedimentGeo} material={marble} position={[0, FLOOR + COL_H + 0.82, -D / 2 + 1.1]} scale={[W / 2 + 0.35, 1.5, 1]} castShadow />
       <mesh geometry={pedimentGeo} material={marble} position={[0, FLOOR + COL_H + 0.82, D / 2 - 0.4]} scale={[W / 2 + 0.35, 1.5, 1]} castShadow />
