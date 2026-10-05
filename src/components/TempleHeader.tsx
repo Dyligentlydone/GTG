@@ -10,6 +10,7 @@ const NAV = [
   { href: '/profile', label: 'Profile' },
   { href: '/books', label: 'Books' },
   { href: '/journal', label: 'Journal' },
+  { href: '/ledger', label: 'Ledger' },
   { href: '/sculpture', label: 'Sculpture' },
   { href: '/achievements', label: 'Honors' },
   { href: '/share/new', label: 'Share' },
