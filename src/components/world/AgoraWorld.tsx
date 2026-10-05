@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Canvas } from '@react-three/fiber';
 import { Physics } from '@react-three/rapier';
 import { PointerLockControls, Sky } from '@react-three/drei';
+import type { PointerLockControls as PointerLockControlsImpl } from 'three-stdlib';
 import { Suspense } from 'react';
 import { Courtyard } from './Courtyard';
 import { Player } from './Player';
@@ -31,6 +32,7 @@ export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }
   const questRef = useRef<QuestTarget | null>(null);
   questRef.current = quest;
   const [boardV, setBoardV] = useState(0);
+  const plc = useRef<PointerLockControlsImpl>(null);
 
   const openQuest = (q: QuestTarget) => {
     document.exitPointerLock?.();
@@ -39,6 +41,12 @@ export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }
   const closeQuest = () => {
     setQuest(null);
     setBoardV((v) => v + 1); // re-pull the board so panels reflect the check-in
+    // The closing click/Esc is still a live user gesture — relock straight
+    // back into the hall instead of resurfacing the enter-veil.
+    try {
+      (plc.current?.domElement?.requestPointerLock() as Promise<void> | undefined)
+        ?.catch(() => { /* gesture refused → veil is already showing */ });
+    } catch { /* impls without a promise return */ }
   };
 
   useEffect(() => {
@@ -97,6 +105,7 @@ export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }
           </Physics>
         </Suspense>
         <PointerLockControls
+          ref={plc}
           selector="#agora-enter"
           onLock={() => setLocked(true)}
           onUnlock={() => setLocked(false)}
@@ -151,7 +160,7 @@ export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }
       )}
 
       {/* start / pause overlay */}
-      {!locked && !devView && (
+      {!locked && !devView && !quest && (
         <div className="world-veil">
           <div className="world-veil-card">
             <div className="label text-gold">GAMIFYING THE GRIND</div>
