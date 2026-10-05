@@ -24,7 +24,8 @@ interface QuestPanel {
 
 interface BoardData {
   title: string; dayLabel: string; weekDone: number; weekDue: number;
-  litPillars: PillarId[]; books: { id: string; title: string }[]; quests: QuestPanel[];
+  litPillars: PillarId[]; touchedPillars: PillarId[];
+  books: { id: string; title: string }[]; quests: QuestPanel[];
 }
 
 const FLOOR = 0.75;
@@ -137,10 +138,19 @@ function friezeTexture(d: BoardData): THREE.CanvasTexture {
   ctx.fillText(`${d.dayLabel} · ${d.weekDone}/${d.weekDue} due this week`, w / 2, 106);
 
   const lit = new Set(d.litPillars);
+  const touched = new Set(d.touchedPillars);
   PILLAR_ORDER.forEach((p, i) => {
+    const x = 172 + i * 97;
+    if (lit.has(p)) {
+      // quota met — full gold with a glow
+      const g = ctx.createRadialGradient(x, 200, 2, x, 200, 34);
+      g.addColorStop(0, 'rgba(201,162,39,0.35)'); g.addColorStop(1, 'rgba(201,162,39,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(x, 200, 34, 0, Math.PI * 2); ctx.fill();
+    }
     ctx.save();
-    ctx.translate(172 + i * 97, 200); ctx.scale(5.4, 5.4);
-    ctx.strokeStyle = lit.has(p) ? '#C9A227' : '#4a463f';
+    ctx.translate(x, 200); ctx.scale(5.4, 5.4);
+    ctx.strokeStyle = lit.has(p) ? '#C9A227' : touched.has(p) ? '#a8863d' : '#4a463f';
     ctx.lineWidth = 0.3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     ctx.stroke(new Path2D(PILLAR_SYMBOLS[p]));
     ctx.restore();

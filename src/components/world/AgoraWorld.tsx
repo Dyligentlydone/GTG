@@ -149,6 +149,8 @@ export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }
                 proof={quest.proof}
                 books={quest.books}
                 minSeconds={quest.proof.type === 'timer' ? quest.proof.minSeconds : undefined}
+                onDone={() => setBoardV((v) => v + 1)}
+                onClose={closeQuest}
               />
             )}
             <p className="mt-3 text-center">

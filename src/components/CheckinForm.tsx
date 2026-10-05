@@ -63,6 +63,10 @@ interface Props {
   books?: CheckinBook[];
   /** For timer proofs: suggested minimum seconds. */
   minSeconds?: number;
+  /** Fires the moment a check-in lands (in-world boards refresh live). */
+  onDone?: (result: ApiResult) => void;
+  /** Replaces the "Back to the board" link — e.g. close an in-world modal. */
+  onClose?: () => void;
 }
 
 interface ApiResult {
@@ -88,7 +92,7 @@ function Hint({ text }: { text: string }) {
   );
 }
 
-export function CheckinForm({ gameSlug, questKey, proof, books = [], minSeconds }: Props) {
+export function CheckinForm({ gameSlug, questKey, proof, books = [], minSeconds, onDone, onClose }: Props) {
   const [fields, setFields] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ApiResult | null>(null);
@@ -148,6 +152,7 @@ export function CheckinForm({ gameSlug, questKey, proof, books = [], minSeconds 
       });
       const data = (await res.json()) as ApiResult;
       setResult(data);
+      if (data.ok) onDone?.(data);
     } catch {
       setResult({ ok: false, reason: 'Network error — try again.' });
     } finally {
@@ -164,7 +169,11 @@ export function CheckinForm({ gameSlug, questKey, proof, books = [], minSeconds 
         {result.achievements && result.achievements.length > 0 && (
           <p className="mt-2 text-marble">Unlocked: {result.achievements.join(', ')}</p>
         )}
-        <a href={`/games/${gameSlug}`} className="btn btn-primary mt-6">Back to the board</a>
+        {onClose ? (
+          <button onClick={onClose} className="btn btn-primary mt-6">Return to the hall</button>
+        ) : (
+          <a href={`/games/${gameSlug}`} className="btn btn-primary mt-6">Back to the board</a>
+        )}
       </div>
     );
   }

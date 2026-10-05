@@ -31,6 +31,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     weekDone: week.done,
     weekDue: week.due,
     litPillars: [...new Set(week.quests.filter((q) => q.onTarget && q.due > 0).map((q) => q.pillar))],
+    touchedPillars: [...new Set(week.quests.filter((q) => q.completions > 0).map((q) => q.pillar))],
     books,
     quests: board.map(({ quest, unlockedToday, dueToday, doneToday, weekDone, weekDue, streak, streakUnit }) => ({
       id: quest.id,
