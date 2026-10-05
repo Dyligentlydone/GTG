@@ -10,7 +10,7 @@ import { RigidBody, CuboidCollider } from '@react-three/rapier';
 import { marbleMaterial } from '../../lib/three/materials';
 import { GlbStatue } from './GlbStatue';
 import { mulberry32 } from '../../sculpture/rng';
-import { Column, Brazier, Temple } from './structures';
+import { Column, Brazier, Temple, NorthGate } from './structures';
 import type { DoorDestination, QuestTarget } from './types';
 
 const HALF = 30; // plaza half-size
@@ -243,11 +243,13 @@ export function Courtyard({ destinations, onDoorChange, onQuest, boardVersion }:
   const marbleTrim = useMemo(() => marbleMaterial([198, 190, 172], [126, 118, 106], 13, 0.62), []);
   const terrain = useTerrain();
 
-  // temple placements: north / east / west, facing the plaza center
+  // Temples flank the plaza: two on the west (left walking in), two on the east.
+  // The gate at the north end stands where the old north temple was.
   const placements: { pos: [number, number, number]; rotY: number }[] = [
-    { pos: [0, 0, -21], rotY: Math.PI },       // door faces +z
-    { pos: [23, 0, 0], rotY: Math.PI / 2 },    // door faces -x
-    { pos: [-23, 0, 0], rotY: -Math.PI / 2 },  // door faces +x
+    { pos: [-23, 0, 11], rotY: -Math.PI / 2 },  // left, near the entry — door faces +x
+    { pos: [-23, 0, -11], rotY: -Math.PI / 2 }, // left, by the gate — door faces +x
+    { pos: [23, 0, -11], rotY: Math.PI / 2 },   // right, by the gate — door faces -x
+    { pos: [23, 0, 11], rotY: Math.PI / 2 },    // right, near the entry — door faces -x
   ];
 
   const colMat = marbleTrim;
@@ -294,10 +296,12 @@ export function Courtyard({ destinations, onDoorChange, onQuest, boardVersion }:
       <GlbStatue position={[0, 1.3, 0]} />
 
       {/* temples */}
-      {destinations.map((d, i) => (
+      {destinations.slice(0, placements.length).map((d, i) => (
         <Temple key={d.slug} destination={d} position={placements[i]!.pos} rotationY={placements[i]!.rotY}
           onDoorChange={onDoorChange} onQuest={onQuest} boardVersion={boardVersion} />
       ))}
+      {/* the gate — monumental entry at the plaza's north end */}
+      <NorthGate />
 
       {/* perimeter colonnade — behind the temples and along the south edge */}
       {Array.from({ length: 9 }, (_, i) => -26 + i * 6.5).flatMap(v => [
@@ -393,6 +397,9 @@ export function Courtyard({ destinations, onDoorChange, onQuest, boardVersion }:
       })}
       <Brazier position={[-3.4, 0, 27]} />
       <Brazier position={[3.4, 0, 27]} />
+      {/* flanking the gate's approach */}
+      <Brazier position={[-8.3, 0, -16.5]} />
+      <Brazier position={[8.3, 0, -16.5]} />
 
       {/* a distant sanctuary on a far ridge — pure silhouette */}
       <DistantShrine />
