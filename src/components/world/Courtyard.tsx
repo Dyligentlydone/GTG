@@ -7,7 +7,7 @@ import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
-import { marbleMaterial } from '../../lib/three/materials';
+import { marbleMaterial, pavingMaterial } from '../../lib/three/materials';
 import { GlbStatue } from './GlbStatue';
 import { mulberry32 } from '../../sculpture/rng';
 import { Column, Brazier, Temple, NorthGate } from './structures';
@@ -236,8 +236,9 @@ export function Courtyard({ destinations, onDoorChange, onQuest, boardVersion }:
   boardVersion: number;
 }) {
   const marble = useMemo(() => {
-    const m = marbleMaterial([222, 215, 200], [146, 138, 126], 7, 0.55);
-    if (m.map) { m.map.repeat.set(9, 9); }
+    // worn paving slabs — ~2m slabs across the 60m plaza
+    const m = pavingMaterial(7, 5);
+    for (const t of [m.map, m.bumpMap, m.roughnessMap]) t?.repeat.set(6, 6);
     return m;
   }, []);
   const marbleTrim = useMemo(() => marbleMaterial([198, 190, 172], [126, 118, 106], 13, 0.62), []);
@@ -424,7 +425,7 @@ export function Courtyard({ destinations, onDoorChange, onQuest, boardVersion }:
   );
 }
 
-/** Puffy illustrative cumulus: 3-tier scallops, 4 tones, interior contour curves. */
+/** Soft photographic cumulus: stacked feathered gradients, sunlit tops, shaded bellies. */
 function cloudTexture(seed: number): THREE.CanvasTexture {
   const r = mulberry32(seed);
   const W = 512, H = 288;
@@ -471,58 +472,46 @@ function cloudTexture(seed: number): THREE.CanvasTexture {
   }
   const all = [...mains, ...subs, ...minis];
 
-  const ell = (x: number, y: number, rx: number, ry: number, col: string) => {
-    g.fillStyle = col;
+  // soft photographic cumulus: every puff is a feathered radial gradient —
+  // no outlines, no etched contours, just stacked vapor. The gradient must be
+  // authored in the transformed space (canvas transforms hit gradients too).
+  const withAlpha = (core: string, a: number) => core.replace(/[\d.]+\)$/, `${a})`);
+  const puff = (x: number, y: number, rx: number, ry: number, core: string, alpha: number) => {
+    g.save();
+    g.translate(x, y);
+    g.scale(1, ry / rx);
+    const grad = g.createRadialGradient(0, 0, rx * 0.05, 0, 0, rx);
+    grad.addColorStop(0, core);
+    grad.addColorStop(0.5, withAlpha(core, alpha * 0.5));
+    grad.addColorStop(1, withAlpha(core, 0));
+    g.fillStyle = grad;
     g.beginPath();
-    g.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+    g.arc(0, 0, rx, 0, Math.PI * 2);
     g.fill();
+    g.restore();
   };
-  const arc = (x: number, y: number, rx: number, ry: number, a0: number, a1: number, col: string, lw: number) => {
-    g.strokeStyle = col;
-    g.lineWidth = lw;
-    g.beginPath();
-    g.ellipse(x, y, rx, ry, 0, a0, a1);
-    g.stroke();
-  };
-
-  // 1) mid-tone body
-  for (const [x, y, rx, ry] of all) ell(x, y, rx, ry, '#9cb4ce');
-  // 2) underbellies — medium then deep scoops
-  for (const [x, y, rx, ry] of all) ell(x + rx * 0.16, y + ry * 0.4, rx * 0.66, ry * 0.42, '#87a0be');
-  for (const [x, y, rx, ry] of all) ell(x + rx * 0.24, y + ry * 0.6, rx * 0.5, ry * 0.3, '#6f87a8');
-  // 3) white caps — scalloped multi-caps on mains, single caps on subs/minis
-  for (const [x, y, rx, ry] of mains) {
-    const k = 2 + Math.floor(r.range(0, 3));
-    for (let i = 0; i < k; i++) {
-      const a = r.range(Math.PI * 1.15, Math.PI * 1.85);
-      ell(
-        x + Math.cos(a) * rx * r.range(0.2, 0.5),
-        y + Math.sin(a) * ry * r.range(0.25, 0.5),
-        rx * r.range(0.4, 0.55), ry * r.range(0.4, 0.55),
-        '#f5f8fc',
-      );
-    }
-  }
-  for (const [x, y, rx, ry] of [...subs, ...minis]) {
-    ell(x - rx * 0.1, y - ry * 0.22, rx * 0.75, ry * 0.65, '#f5f8fc');
-  }
-  // 4) interior contour curves — the etched lines where puffs meet shade
+  // 1) shadowed vapor mass
+  for (const [x, y, rx, ry] of all) puff(x, y + ry * 0.25, rx * 1.2, ry * 1.1, 'rgba(168,182,201,0.5)', 0.5);
+  // 2) mid body
+  for (const [x, y, rx, ry] of all) puff(x, y, rx, ry, 'rgba(222,230,240,0.75)', 0.75);
+  // 3) sunlit tops — brightest where the sun hits (upper left of each puff)
   for (const [x, y, rx, ry] of all) {
-    arc(x + rx * 0.16, y + ry * 0.4, rx * 0.66, ry * 0.42,
-      Math.PI * 1.1, Math.PI * 1.9, 'rgba(110,135,168,0.5)', Math.max(1.5, ry * 0.05));
+    puff(x - rx * 0.15, y - ry * 0.3, rx * 0.72, ry * 0.6, 'rgba(255,253,248,0.9)', 0.9);
   }
-  for (const [x, y, rx, ry] of [...subs, ...minis]) {
-    arc(x - rx * 0.1, y - ry * 0.22, rx * 0.75, ry * 0.65,
-      Math.PI * 0.1, Math.PI * 0.9, 'rgba(190,205,228,0.7)', Math.max(1.5, ry * 0.06));
+  for (const [x, y, rx, ry] of mains) {
+    puff(x - rx * 0.1, y - ry * 0.45, rx * 0.5, ry * 0.42, 'rgba(255,255,255,0.95)', 0.95);
   }
-  // 5) bright rims along the outer tops
-  for (const [x, y, rx, ry] of [...subs, ...minis]) {
-    arc(x, y, rx * 0.92, ry * 0.92,
-      Math.PI * 1.08, Math.PI * 1.92, 'rgba(255,255,255,0.85)', Math.max(2, ry * 0.14));
+  // 4) darker underbelly
+  for (const [x, y, rx, ry] of mains) {
+    puff(x + rx * 0.15, y + ry * 0.55, rx * 0.8, ry * 0.4, 'rgba(142,158,180,0.45)', 0.45);
   }
-  // 6) flat base
+  // 5) feathered flat-ish base: fade out rather than hard-cut
+  const fade = g.createLinearGradient(0, baseY - 22, 0, baseY + 26);
+  fade.addColorStop(0, 'rgba(0,0,0,0)');
+  fade.addColorStop(1, 'rgba(0,0,0,1)');
   g.globalCompositeOperation = 'destination-out';
-  g.fillRect(0, baseY, W, H - baseY);
+  g.fillStyle = fade;
+  g.fillRect(0, baseY - 22, W, H - baseY + 22);
   g.globalCompositeOperation = 'source-over';
 
   const tex = new THREE.CanvasTexture(c);
@@ -535,16 +524,18 @@ function Clouds() {
   const group = useRef<THREE.Group>(null);
   const clouds = useMemo(() => {
     const r = mulberry32(31);
-    return Array.from({ length: 26 }, (_, i) => ({
+    // high, wide cumulus — big enough to read as clouds, never low enough
+    // to swallow the plaza
+    return Array.from({ length: 24 }, (_, i) => ({
       x: r.range(-1200, 1200),
-      y: r.range(120, 300),
+      y: r.range(260, 420),
       z: r.range(-1200, 1200),
-      s: r.range(110, 300),
+      s: r.range(160, 340),
       v: r.range(1.5, 4), // drift speed
       t: i % texs.length,
       flip: r.next() > 0.5 ? -1 : 1,
-      o: r.range(0.8, 0.97),
-      sy: r.range(0.38, 0.52),
+      o: r.range(0.75, 0.95),
+      sy: r.range(0.45, 0.62),
     }));
   }, [texs.length]);
   useFrame((_, dt) => {
@@ -559,7 +550,7 @@ function Clouds() {
     <group ref={group}>
       {clouds.map((c, i) => (
         <sprite key={i} position={[c.x, c.y, c.z]} scale={[c.s * c.flip, c.s * c.sy, 1]} userData={{ v: c.v }}>
-          <spriteMaterial map={texs[c.t]!} transparent depthWrite={false} opacity={c.o} />
+          <spriteMaterial map={texs[c.t]!} transparent depthWrite={false} opacity={c.o} fog={false} />
         </sprite>
       ))}
     </group>

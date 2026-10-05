@@ -4,9 +4,11 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
 import { Physics } from '@react-three/rapier';
-import { PointerLockControls, Sky } from '@react-three/drei';
+import { PointerLockControls, Sky, Environment, Lightformer } from '@react-three/drei';
+import { EffectComposer, N8AO, Bloom, Vignette } from '@react-three/postprocessing';
 import type { PointerLockControls as PointerLockControlsImpl } from 'three-stdlib';
 import { Suspense } from 'react';
 import { Courtyard } from './Courtyard';
@@ -75,35 +77,52 @@ export function AgoraWorld({ destinations }: { destinations: DoorDestination[] }
   return (
     <div className="world-root">
       <Canvas
-        shadows="percentage"
+        shadows="soft"
         dpr={[1, 1.75]}
         camera={{ fov: 72, near: 0.1, far: 3200, position: [0, 1.8, 24] }}
-        gl={{ antialias: true }}
+        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.95 }}
       >
-        <fog attach="fog" args={['#aec3d8', 90, 1600]} />
-        <Sky distance={45000} sunPosition={[70, 55, -60]} turbidity={5} rayleigh={0.8} />
-        <hemisphereLight args={['#7ea4d4', '#7a6a4c', 1.0]} />
+        <fog attach="fog" args={['#b9c9da', 110, 1700]} />
+        {/* tight mie halo → a crisp sun disc instead of a giant glow blob */}
+        <Sky distance={45000} sunPosition={[70, 55, -60]} turbidity={3.5} rayleigh={0.9} mieCoefficient={0.0012} mieDirectionalG={0.97} />
+        {/* image-based lighting: a procedural "sky dome + sun" env map gives the
+            marble and bronze real reflections and soft directional ambience */}
+        <Environment frames={1} resolution={256} background={false} environmentIntensity={0.5}>
+          <color attach="background" args={['#5a7696']} />
+          <Lightformer form="rect" intensity={0.9} color="#fff4e0" position={[18, 14, -15]} scale={[10, 10, 1]} target={[0, 0, 0]} />
+          <Lightformer form="rect" intensity={0.25} color="#b9d2ef" position={[0, 22, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[60, 60, 1]} />
+          <Lightformer form="rect" intensity={0.12} color="#c9b89a" position={[0, -8, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[60, 60, 1]} />
+        </Environment>
+        <hemisphereLight args={['#7ea4d4', '#7a6a4c', 0.55]} />
         <directionalLight
           position={[70, 80, -60]}
-          intensity={2.6}
-          color={0xfff2dd}
+          intensity={2.7}
+          color={0xffeed2}
           castShadow
-          shadow-mapSize={[2048, 2048]}
-          shadow-camera-left={-50}
-          shadow-camera-right={50}
-          shadow-camera-top={50}
-          shadow-camera-bottom={-50}
-          shadow-camera-far={140}
-          shadow-bias={-0.0004}
+          shadow-mapSize={[4096, 4096]}
+          shadow-camera-left={-52}
+          shadow-camera-right={52}
+          shadow-camera-top={52}
+          shadow-camera-bottom={-52}
+          shadow-camera-far={200}
+          shadow-bias={-0.00022}
+          shadow-normalBias={0.02}
         />
         {/* cool sky-bounce fill so south faces (incl. the statue's front) aren't flat shadow */}
-        <directionalLight position={[-15, 30, 60]} intensity={0.45} color={0xcfe0f5} />
+        <directionalLight position={[-15, 30, 60]} intensity={0.35} color={0xcfe0f5} />
         <Suspense fallback={null}>
           <Physics gravity={[0, -22, 0]}>
             <Player />
             <Courtyard destinations={destinations} onDoorChange={setDoor} onQuest={openQuest} boardVersion={boardV} />
           </Physics>
         </Suspense>
+        {/* the photographic glue: contact-shadow AO, gentle highlight bloom,
+            and a subtle lens vignette */}
+        <EffectComposer multisampling={4}>
+          <N8AO halfRes aoRadius={1.8} intensity={2.6} distanceFalloff={2.2} quality="performance" />
+          <Bloom mipmapBlur luminanceThreshold={1.0} intensity={0.32} radius={0.65} />
+          <Vignette eskil={false} offset={0.18} darkness={0.62} />
+        </EffectComposer>
         <PointerLockControls
           ref={plc}
           selector="#agora-enter"
