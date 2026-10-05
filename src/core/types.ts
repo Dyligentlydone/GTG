@@ -17,7 +17,8 @@ export type World = 'inner' | 'outer';
 export interface Pillar { id: PillarId; world: World; name: string; covers: string; }
 
 export type ProofType =
-  | 'checkbox' | 'text' | 'reading' | 'duration' | 'timer' | 'dawn' | 'journal' | 'photo_optional';
+  | 'checkbox' | 'text' | 'reading' | 'duration' | 'timer' | 'dawn' | 'journal' | 'photo_optional'
+  | 'metrics';
 
 export type ScheduleRule =
   | { kind: 'daily' }                          // due every active day
@@ -36,6 +37,17 @@ export type UnlockRule =
   | { kind: 'any'; rules: UnlockRule[] }
   | { kind: 'min_level'; level: number };
 
+/** One numeric input a `metrics` proof asks for (e.g. net worth). */
+export interface MetricField {
+  /** Payload key, e.g. 'netWorth'. */
+  key: string;
+  label: string;
+  /** Hover text explaining what the number means. */
+  hint?: string;
+  /** Adornment shown before the input, e.g. '$'. */
+  prefix?: string;
+}
+
 /** Validation rules for a check-in payload (SPEC §5). Numeric fields are "targets" a ramp stage may override. */
 export type ProofSpec =
   | { type: 'checkbox' }
@@ -45,7 +57,8 @@ export type ProofSpec =
   | { type: 'timer'; minSeconds?: number }
   | { type: 'dawn' }
   | { type: 'journal'; minWords?: number }
-  | { type: 'photo_optional' };
+  | { type: 'photo_optional' }
+  | { type: 'metrics'; fields: MetricField[] };
 
 export interface QuestDef {
   id: string;          // e.g. 'g1.read'

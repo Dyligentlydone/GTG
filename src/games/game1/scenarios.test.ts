@@ -19,17 +19,17 @@ describe('Scenario 1: new player joining on a Wednesday', () => {
     assert.equal(w1.stage, 'initiate');
     const due = Object.fromEntries(w1.quests.map((l) => [l.questId, l.due]));
     // 5 active days (Wed–Sun): dailies 5 each; weekly quotas prorate by 5/7 —
-    // exercise/connect/reset/play ceil(3·5/7)=3… wait, exercise is 4 → ceil(20/7)=3,
-    // stillness/money 5 → ceil(25/7)=4, connect/reset/play 3 → 3.
+    // exercise 4 → ceil(20/7)=3, stillness 5 → ceil(25/7)=4, money 2 → ceil(10/7)=2,
+    // connect/reset/play 3 → 3.
     assert.deepEqual(due, {
       'g1.read': 5, 'g1.journal': 5,
-      'g1.exercise': 3, 'g1.stillness': 4, 'g1.money': 4,
+      'g1.exercise': 3, 'g1.stillness': 4, 'g1.money': 2,
       'g1.connect': 3, 'g1.reset': 3, 'g1.play': 3,
     });
     assert.deepEqual([...new Set(w1.quests.map((l) => l.pillar))].sort(),
       ['emotional', 'environmental', 'financial', 'mental', 'physical', 'recreational', 'social', 'spiritual']);
-    assert.equal(w1.due, 30);
-    assert.equal(w1.done, 30);
+    assert.equal(w1.due, 28);
+    assert.equal(w1.done, 28);
     assert.equal(w1.pieces, 5);
     assert.equal(w1.balancedWeek, true);
     assert.equal(sim.completions.find((c) => c.questId === 'g1.read')?.payload.pages, 10);
@@ -56,8 +56,8 @@ describe('Scenario 2: perfect player joining on a Monday, 30 weeks', () => {
 
   test('every week is perfect; balanced from week 1 (all eight pillars)', () => {
     assert.ok(sim.weekResults.every((w) => w.perfectWeek && w.completionPct === 1));
-    // every quest unlocked from day 1: dailies 7+7, quotas 4+5+5+3+3+3 → 37/wk
-    assert.deepEqual(sim.weekResults.map((w) => w.due).slice(0, 5), [37, 37, 37, 37, 37]);
+    // every quest unlocked from day 1: dailies 7+7, quotas 4+5+2+3+3+3 → 34/wk
+    assert.deepEqual(sim.weekResults.map((w) => w.due).slice(0, 5), [34, 34, 34, 34, 34]);
     assert.equal(sim.weekResults.filter((w) => w.balancedWeek)[0]?.weekIndex, 1);
     assert.equal(sim.weekResults.filter((w) => w.balancedWeek).length, 30);
   });
@@ -133,9 +133,10 @@ describe('Scenario 4: a player who pauses 3 days (travel)', () => {
     for (const sim of [home, traveler]) sim.run('2026-01-05', '2026-02-01', GameSimulator.perfectDay);
     const h = home.weekResults.find((w) => w.weekStart === week)!;
     const t = traveler.weekResults.find((w) => w.weekStart === week)!;
-    assert.equal(h.due, 37);
-    // 4 active days: read 4, journal 4, exercise ceil(16/7)=3, stillness/money ceil(20/7)=3, connect/reset/play ceil(12/7)=2.
-    assert.equal(t.due, 4 + 4 + 3 + 3 + 3 + 2 + 2 + 2);
+    assert.equal(h.due, 34);
+    // 4 active days: read 4, journal 4, exercise ceil(16/7)=3, stillness ceil(20/7)=3,
+    // money ceil(8/7)=2, connect/reset/play ceil(12/7)=2.
+    assert.equal(t.due, 4 + 4 + 3 + 3 + 2 + 2 + 2 + 2);
     assert.ok(traveler.completions.every((c) => !['2026-01-27', '2026-01-28', '2026-01-29'].includes(c.localDate)));
     assert.equal(h.completionPct, 1);
     assert.equal(t.completionPct, 1);

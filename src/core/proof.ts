@@ -110,6 +110,13 @@ export function validateProof(spec: ProofSpec, payload: Record<string, unknown>,
       }
       return ok;
     }
+    case 'metrics': {
+      for (const f of spec.fields) {
+        const v = num(payload, f.key);
+        if (v === undefined || v < 0) return fail(`Enter a number for ${f.label.toLowerCase()} (0 counts).`);
+      }
+      return ok;
+    }
   }
 }
 

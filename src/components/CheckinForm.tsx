@@ -74,6 +74,20 @@ interface ApiResult {
   levelUp?: { from: number; to: number };
 }
 
+function Hint({ text }: { text: string }) {
+  return (
+    <span className="group relative inline-flex cursor-help items-center text-shadow" tabIndex={-1}>
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2" />
+        <path d="M7 6.2v3.4M7 4.2v.2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      </svg>
+      <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 w-56 -translate-x-1/2 rounded-md border border-line bg-panel p-2.5 text-xs normal-case leading-snug tracking-normal text-marble opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100">
+        {text}
+      </span>
+    </span>
+  );
+}
+
 export function CheckinForm({ gameSlug, questKey, proof, books = [], minSeconds }: Props) {
   const [fields, setFields] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -101,10 +115,10 @@ export function CheckinForm({ gameSlug, questKey, proof, books = [], minSeconds 
 
   const buildPayload = (): Record<string, unknown> => {
     const p: Record<string, unknown> = {};
+    const numeric = new Set(proof.type === 'metrics' ? proof.fields.map((f) => f.key) : ['pages', 'minutes', 'seconds']);
     for (const [k, v] of Object.entries(fields)) {
       if (v === '') continue;
-      if (['pages', 'minutes', 'seconds'].includes(k)) p[k] = Number(v);
-      else p[k] = v;
+      p[k] = numeric.has(k) ? Number(v) : v;
     }
     return p;
   };
@@ -254,6 +268,25 @@ export function CheckinForm({ gameSlug, questKey, proof, books = [], minSeconds 
         <div>
           <label className="label" htmlFor="text">A short note</label>
           <input id="text" className="input" maxLength={200} value={fields.text ?? ''} onChange={set('text')} required />
+        </div>
+      )}
+      {proof.type === 'metrics' && (
+        <div className="space-y-4">
+          {proof.fields.map((f) => (
+            <div key={f.key}>
+              <div className="mb-1 flex items-center gap-1.5">
+                <label className="label !mb-0" htmlFor={f.key}>{f.label}</label>
+                {f.hint && <Hint text={f.hint} />}
+              </div>
+              <div className="relative">
+                {f.prefix && (
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-shadow">{f.prefix}</span>
+                )}
+                <input id={f.key} className={`input ${f.prefix ? 'pl-7' : ''}`} type="number" min={0} step="any"
+                  inputMode="decimal" value={fields[f.key] ?? ''} onChange={set(f.key)} required />
+              </div>
+            </div>
+          ))}
         </div>
       )}
       {proof.type === 'photo_optional' && (

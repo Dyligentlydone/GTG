@@ -1,6 +1,7 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateCheckIn, validateProof, wordCount } from './proof';
+import type { ProofSpec } from './types';
 import { fixtureEnv, fixtureGame } from './testing/fixtureGame';
 import { zonedTimeToUtc } from './time';
 
@@ -69,6 +70,15 @@ test('photo_optional: note 3–200, photos optional string refs', () => {
   good(validateProof(spec, { note: 'Cleared desk', photos: ['before.jpg', 'after.jpg'] }));
   bad(validateProof(spec, { note: 'ok' }));
   bad(validateProof(spec, { note: 'Cleared desk', photos: [42] }));
+});
+
+test('metrics: every field needs a finite, non-negative number (0 counts)', () => {
+  const spec: ProofSpec = { type: 'metrics', fields: [{ key: 'netWorth', label: 'Net worth' }, { key: 'cashOnHand', label: 'Cash on hand' }] };
+  good(validateProof(spec, { netWorth: 12500, cashOnHand: 0 }));
+  bad(validateProof(spec, { netWorth: 12500 }));
+  bad(validateProof(spec, { netWorth: -5, cashOnHand: 10 }));
+  bad(validateProof(spec, { netWorth: '12500', cashOnHand: 10 }));
+  bad(validateProof(spec, { netWorth: NaN, cashOnHand: 10 }));
 });
 
 test('dawn requires a window and a 3–140 char intention', () => {

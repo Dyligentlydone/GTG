@@ -56,10 +56,18 @@ export const game1Quests: QuestDef[] = [
   {
     id: 'g1.money', gameId: GAME1_ID, pillar: 'financial', founding: false,
     title: 'Money minute',
-    description: 'One minute with your money: log what you spent, glance at the budget, or take one career-growth action.',
-    why: 'Wealth compounds like XP — a minute of daily awareness beats a monthly panic. Thirty sessions carve Money Minded.',
-    schedule: { kind: 'weekly_quota', perWeek: 5 }, window: ANYTIME,
-    proof: { type: 'text', minChars: 3, maxChars: 200 }, xp: 10,
+    description: 'Twice a week, update the four numbers that tell the truth about your money: what came in, what you are worth, what you could touch today, and what your life costs per month.',
+    why: 'What you measure becomes visible. What becomes visible can be managed.',
+    schedule: { kind: 'weekly_quota', perWeek: 2 }, window: ANYTIME,
+    proof: {
+      type: 'metrics',
+      fields: [
+        { key: 'weeklyIncome', label: 'Total weekly income', prefix: '$', hint: 'Everything that came in this week — paychecks, side gigs, anything.' },
+        { key: 'netWorth', label: 'Net worth', prefix: '$', hint: 'Everything you own minus everything you owe.' },
+        { key: 'cashOnHand', label: 'Cash on hand', prefix: '$', hint: 'How much cash could I access today?' },
+        { key: 'monthlyBurn', label: 'Monthly burn', prefix: '$', hint: 'How much does it cost me to maintain my current life for one month?' },
+      ],
+    }, xp: 10,
     unlock: { kind: 'ramp_stage', atLeast: 'initiate' },
   },
   {

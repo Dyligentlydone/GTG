@@ -88,6 +88,7 @@ export class GameSimulator {
       case 'timer': return { seconds: proof.minSeconds ?? 300 };
       case 'text': return { text: 'Did it today' };
       case 'photo_optional': return { note: 'Cleared the desk' };
+      case 'metrics': return Object.fromEntries(proof.fields.map((f) => [f.key, 100]));
       case 'checkbox': return {};
     }
   }

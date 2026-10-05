@@ -11,7 +11,7 @@ const WORLDS = ['inner', 'outer'];
 const NUMERIC_TARGETS: Record<string, string[]> = {
   reading: ['targetPages'], duration: ['minMinutes'], timer: ['minSeconds'], journal: ['minWords'], text: ['minChars', 'maxChars'],
 };
-const PROOF_TYPES = ['checkbox', 'text', 'reading', 'duration', 'timer', 'dawn', 'journal', 'photo_optional'];
+const PROOF_TYPES = ['checkbox', 'text', 'reading', 'duration', 'timer', 'dawn', 'journal', 'photo_optional', 'metrics'];
 
 function duplicates(ids: string[]): string[] {
   const seen = new Set<string>();
@@ -75,6 +75,11 @@ export function validateGameConfig(game: GameDef): ConfigValidation {
     }
     if (!PROOF_TYPES.includes(q.proof.type)) err(`quest ${q.id}: unknown proof type ${q.proof.type}`);
     if (q.proof.type === 'dawn' && q.window.kind !== 'before_sunrise') err(`quest ${q.id}: dawn proof needs a before_sunrise window`);
+    if (q.proof.type === 'metrics') {
+      if (q.proof.fields.length === 0) err(`quest ${q.id}: metrics proof needs at least one field`);
+      for (const d of duplicates(q.proof.fields.map((f) => f.key))) err(`quest ${q.id}: duplicate metric field ${d}`);
+      for (const f of q.proof.fields) if (!f.key || !f.label) err(`quest ${q.id}: metric fields need a key and a label`);
+    }
     checkUnlock(q, q.unlock);
     checkWindow(q, q.window);
   }

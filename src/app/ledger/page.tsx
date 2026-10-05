@@ -62,6 +62,17 @@ function EntryDetail({ meta, payload, bookTitle, journal }: {
       else lines.push('Journal entry.');
       break;
     }
+    case 'metrics': {
+      for (const f of meta.proof.fields) {
+        const v = payload[f.key];
+        if (typeof v === 'number' && Number.isFinite(v)) lines.push(`${f.label}: ${f.prefix ?? ''}${v.toLocaleString()}`);
+      }
+      if (lines.length === 0) {
+        const t = str(payload.text); // legacy money notes predate the metrics proof
+        lines.push(t ? `“${t}”` : 'Logged.');
+      }
+      break;
+    }
     case 'photo_optional': {
       const n = str(payload.note);
       if (n) lines.push(`“${n}”`);
