@@ -275,37 +275,39 @@ export function Temple({ destination, position, rotationY, onDoorChange, onQuest
   );
 }
 
-/** Monumental gate at the plaza's north end — a propylaea: steps up to a
- *  columned porch, twin pylons, and a closed bronze double door. Pure
- *  architecture for now; the passage opens up when the world expands. */
-export function NorthGate({ position = [0, 0, -24] }: { position?: [number, number, number] }) {
-  const W = 20, D = 6.5, FLOOR = 0.75;
+/** Monumental gate-hall at the plaza's north end — a propylaea: steps up to a
+ *  columned porch, bronze doors swung open, and a full-depth hall behind them.
+ *  Interior is the whole footprint, not just the doorway. */
+export function NorthGate({ position = [0, 0, -23] }: { position?: [number, number, number] }) {
+  const W = 20, D = 13, FLOOR = 0.75;
   const COL_H = 6.2;          // porch columns, taller than the temples'
-  const WALL_H = 7.6;         // pylon / flank wall height
-  const DOOR_W = 5.4, DOOR_H = 5.0;
-  const PYLON_W = 4.2;
+  const WALL_H = 7.6;         // wall height
+  const DOOR_W = 5.6, DOOR_H = 5.0;
   const marble = useMemo(() => marbleMaterial([226, 219, 205], [148, 140, 128], 9, 0.52), []);
   const bronze = useMemo(() => new THREE.MeshStandardMaterial({ color: 0x3d2c14, metalness: 0.85, roughness: 0.42 }), []);
   const [fontReady, setFontReady] = useState(false);
   useEffect(() => { document.fonts?.ready.then(() => setFontReady(true)); }, []);
   const nameTex = useMemo(() => namePlateTexture('The Agora'), [fontReady]);
   useEffect(() => () => nameTex.dispose(), [nameTex]);
-  const seamMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: 0x000000, emissive: new THREE.Color(0xd9a84e), emissiveIntensity: 0.9,
-  }), []);
   const pedimentGeo = useMemo(() => {
     const g = new THREE.ExtrudeGeometry(TRI, { depth: 1.4, bevelEnabled: false });
     g.translate(0, 0, -0.7);
     return g;
   }, []);
 
-  const doorX = DOOR_W / 2 + PYLON_W / 2;                       // pylon centers ±4.8
-  const wallX = DOOR_W / 2 + PYLON_W + (W / 2 - DOOR_W / 2 - PYLON_W) / 2; // flank wall centers
-  const wallW = W / 2 - (DOOR_W / 2 + PYLON_W);
+  const segW = (W - DOOR_W) / 2;                       // front wall halves flanking the entry
   const STAIR = { w: 15, z0: D / 2 + 4.2, z1: D / 2 + 0.5, rise: FLOOR, steps: 5 };
   const stepRise = STAIR.rise / STAIR.steps;
   const stepRun = (STAIR.z0 - STAIR.z1) / STAIR.steps;
-  const colXs = [-8.8, -5.9, -3.4, 3.4, 5.9, 8.8];              // porch columns, clear of the passage
+  const colXs = [-8.8, -6.0, -3.6, 3.6, 6.0, 8.8];     // porch columns, clear of the entry
+  const DOOR_SWING = 1.9;                              // ~109° — leaves swung into the hall
+  const leafOff = DOOR_W / 4 - 0.03;                   // leaf center offset from its hinge
+  // leaf world position: hinge at ±DOOR_W/2, offset rotated by the group's swing
+  const doorLeaf = (s: 1 | -1): [number, number, number] => [
+    s * (DOOR_W / 2 - leafOff * Math.cos(DOOR_SWING)),
+    FLOOR + DOOR_H / 2,
+    D / 2 - 0.6 - leafOff * Math.sin(DOOR_SWING),
+  ];
 
   return (
     <group position={position}>
@@ -323,25 +325,29 @@ export function NorthGate({ position = [0, 0, -24] }: { position?: [number, numb
         {/* krepis tiers beside the stair corridor */}
         {[0, 1, 2].map(i => {
           const halfW = (W + 2.6 - i * 0.7) / 2;
-          const segW = halfW - STAIR.w / 2 - 0.05;
+          const seg = halfW - STAIR.w / 2 - 0.05;
           return [-1, 1].map(s => (
             <CuboidCollider key={`${i}-${s}`}
-              args={[segW / 2, 0.12, (D + 2.6 - i * 0.7) / 2]}
-              position={[s * (STAIR.w / 2 + 0.05 + segW / 2), 0.12 + i * 0.25, 0]}
+              args={[seg / 2, 0.12, (D + 2.6 - i * 0.7) / 2]}
+              position={[s * (STAIR.w / 2 + 0.05 + seg / 2), 0.12 + i * 0.25, 0]}
             />
           ));
         })}
         {/* platform */}
         <CuboidCollider args={[W / 2 + 0.6, 0.38, D / 2 + 0.6]} position={[0, 0.37, 0]} />
-        {/* pylons, flank walls, lintel, and the closed doors */}
+        {/* walls: back, sides, front halves — the entry itself stays open */}
+        <CuboidCollider args={[W / 2 - 0.4, WALL_H / 2, 0.3]} position={[0, FLOOR + WALL_H / 2, -D / 2 + 0.3]} />
         {[-1, 1].map(s => (
-          <CuboidCollider key={s} args={[PYLON_W / 2, WALL_H / 2, D / 2]} position={[s * doorX, FLOOR + WALL_H / 2, 0]} />
+          <CuboidCollider key={s} args={[0.3, WALL_H / 2, D / 2 - 0.4]} position={[s * (W / 2 - 0.3), FLOOR + WALL_H / 2, -0.1]} />
         ))}
         {[-1, 1].map(s => (
-          <CuboidCollider key={`w${s}`} args={[wallW / 2, WALL_H / 2, D / 2]} position={[s * wallX, FLOOR + WALL_H / 2, 0]} />
+          <CuboidCollider key={`f${s}`} args={[segW / 2, WALL_H / 2, 0.3]} position={[s * (DOOR_W / 2 + segW / 2), FLOOR + WALL_H / 2, D / 2 - 0.3]} />
         ))}
-        <CuboidCollider args={[DOOR_W / 2 + 0.4, 0.6, D / 2]} position={[0, FLOOR + DOOR_H + (WALL_H - DOOR_H) / 2, 0]} />
-        <CuboidCollider args={[DOOR_W / 2, DOOR_H / 2, 0.3]} position={[0, FLOOR + DOOR_H / 2, 0]} />
+        {/* swung-open door leaves */}
+        {([-1, 1] as const).map(s => (
+          <CuboidCollider key={`d${s}`} args={[DOOR_W / 4, DOOR_H / 2, 0.12]}
+            position={doorLeaf(s)} rotation={[0, s * -DOOR_SWING, 0]} />
+        ))}
         {colXs.map(x => (
           <CylinderCollider key={x} args={[COL_H / 2, 0.42]} position={[x, FLOOR + COL_H / 2, D / 2 + 0.7]} />
         ))}
@@ -365,47 +371,57 @@ export function NorthGate({ position = [0, 0, -24] }: { position?: [number, numb
         </mesh>
       ))}
 
-      {/* pylons + flank walls + lintel over the passage */}
-      {[-1, 1].map(s => (
-        <mesh key={s} material={marble} position={[s * doorX, FLOOR + WALL_H / 2, 0]} castShadow receiveShadow>
-          <boxGeometry args={[PYLON_W, WALL_H, D]} />
-        </mesh>
-      ))}
-      {[-1, 1].map(s => (
-        <mesh key={`w${s}`} material={marble} position={[s * wallX, FLOOR + WALL_H / 2, 0]} castShadow receiveShadow>
-          <boxGeometry args={[wallW, WALL_H, D]} />
-        </mesh>
-      ))}
-      <mesh material={marble} position={[0, FLOOR + DOOR_H + (WALL_H - DOOR_H) / 2, 0]} castShadow>
-        <boxGeometry args={[DOOR_W + 0.8, WALL_H - DOOR_H, D]} />
-      </mesh>
-
-      {/* the closed bronze doors + a gold seam of light between them */}
-      {[-1, 1].map(s => (
-        <mesh key={`d${s}`} material={bronze} position={[s * DOOR_W / 4, FLOOR + DOOR_H / 2, D / 2 - 1.2]} castShadow>
-          <boxGeometry args={[DOOR_W / 2 - 0.05, DOOR_H, 0.16]} />
-        </mesh>
-      ))}
-      <mesh material={seamMat} position={[0, FLOOR + DOOR_H / 2, D / 2 - 1.1]}>
-        <boxGeometry args={[0.08, DOOR_H, 0.1]} />
+      {/* walls — back (closed), sides, and the front halves around the entry */}
+      <mesh material={marble} position={[0, FLOOR + WALL_H / 2, -D / 2 + 0.25]} castShadow receiveShadow>
+        <boxGeometry args={[W - 0.6, WALL_H, 0.5]} />
       </mesh>
       {[-1, 1].map(s => (
-        <mesh key={`h${s}`} position={[s * 0.7, FLOOR + 2.2, D / 2 - 1.0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.34, 0.05, 8, 20]} />
-          <meshStandardMaterial color={0x6a4d1c} metalness={0.9} roughness={0.35} />
+        <mesh key={s} material={marble} position={[s * (W / 2 - 0.25), FLOOR + WALL_H / 2, -0.1]} castShadow receiveShadow>
+          <boxGeometry args={[0.5, WALL_H, D - 0.4]} />
         </mesh>
       ))}
+      {[-1, 1].map(s => (
+        <mesh key={`f${s}`} material={marble} position={[s * (DOOR_W / 2 + segW / 2), FLOOR + WALL_H / 2, D / 2 - 0.25]} castShadow receiveShadow>
+          <boxGeometry args={[segW, WALL_H, 0.5]} />
+        </mesh>
+      ))}
+      {/* lintel over the entry */}
+      <mesh material={marble} position={[0, FLOOR + DOOR_H + (WALL_H - DOOR_H) / 2, D / 2 - 0.25]} castShadow>
+        <boxGeometry args={[DOOR_W + 0.8, WALL_H - DOOR_H, 0.5]} />
+      </mesh>
 
-      {/* porch columns + architrave + roof + pediment */}
+      {/* bronze doors swung open into the hall, ring handles facing the plaza */}
+      {([-1, 1] as const).map(s => (
+        <group key={`door${s}`} position={[s * DOOR_W / 2, 0, D / 2 - 0.6]} rotation={[0, s * -DOOR_SWING, 0]}>
+          <mesh material={bronze} position={[s * -(DOOR_W / 4 - 0.03), FLOOR + DOOR_H / 2, 0]} castShadow>
+            <boxGeometry args={[DOOR_W / 2 - 0.06, DOOR_H, 0.14]} />
+          </mesh>
+          <mesh position={[s * -(DOOR_W / 4 - 0.03) - s * 0.6, FLOOR + 2.2, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.3, 0.05, 8, 20]} />
+            <meshStandardMaterial color={0x6a4d1c} metalness={0.9} roughness={0.35} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* porch columns + architrave + roof + pediments (front and back) */}
       {colXs.map(x => <Column key={x} position={[x, FLOOR, D / 2 + 0.7]} height={COL_H} radius={0.46} material={marble} collider={false} />)}
       <mesh material={marble} position={[0, FLOOR + COL_H + 0.3, D / 2 + 0.7]} castShadow>
         <boxGeometry args={[W + 0.8, 0.6, 1.4]} />
       </mesh>
       <mesh material={marble} position={[0, FLOOR + WALL_H + 0.35, 0]} castShadow>
-        <boxGeometry args={[W + 0.8, 0.6, D + 0.8]} />
+        <boxGeometry args={[W + 0.8, 0.5, D + 0.8]} />
       </mesh>
       <mesh geometry={pedimentGeo} material={marble} position={[0, FLOOR + WALL_H + 0.85, D / 2 + 0.7]} scale={[W / 2 + 0.45, 1.9, 1]} castShadow />
       <mesh geometry={pedimentGeo} material={marble} position={[0, FLOOR + WALL_H + 0.85, -D / 2 - 0.1]} rotation={[0, Math.PI, 0]} scale={[W / 2 + 0.45, 1.9, 1]} castShadow />
+
+      {/* interior floor inlay + braziers + warm fill */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, FLOOR + 0.02, 0]}>
+        <ringGeometry args={[2.6, 3.0, 48]} />
+        <meshStandardMaterial color={0x8a6a2f} roughness={0.4} metalness={0.6} />
+      </mesh>
+      <Brazier position={[-7.6, FLOOR, -4.6]} />
+      <Brazier position={[7.6, FLOOR, -4.6]} />
+      <pointLight position={[0, FLOOR + 4.2, -0.5]} color={0xffd9a0} intensity={12} distance={20} decay={2} />
 
       {/* name carved over the gate */}
       <mesh position={[0, FLOOR + WALL_H + 1.6, D / 2 + 1.42]}>

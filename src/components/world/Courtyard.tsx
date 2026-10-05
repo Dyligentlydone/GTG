@@ -314,8 +314,8 @@ export function Courtyard({ destinations, onDoorChange, onQuest, boardVersion }:
           const hz = side ? 7.6 : 8.2;
           return { x0: pos[0] - hx, x1: pos[0] + hx, z0: pos[2] - hz, z1: pos[2] + hz };
         });
-        // the gate's footprint at the north end (W=20, D=6.5 at z=-24)
-        boxes.push({ x0: -11, x1: 11, z0: -28.3, z1: -19.5 });
+        // the gate's footprint at the north end (W=20, D=13 at z=-23 + stairs)
+        boxes.push({ x0: -11, x1: 11, z0: -29.6, z1: -12 });
         const clear = (x: number, z: number) => !boxes.some((b) => x > b.x0 && x < b.x1 && z > b.z0 && z < b.z1);
         return Array.from({ length: 9 }, (_, i) => -26 + i * 6.5).flatMap(v => [
           clear(HALF - 1.5, v) ? <Column key={`e${v}`} position={[HALF - 1.5, 0, v]} height={7.2} radius={0.55} material={colMat} base /> : null,
@@ -324,14 +324,19 @@ export function Courtyard({ destinations, onDoorChange, onQuest, boardVersion }:
           clear(v, HALF - 1.5) ? <Column key={`s${v}`} position={[v, 0, HALF - 1.5]} height={7.2} radius={0.55} material={colMat} base /> : null,
         ]);
       })()}
-      {/* entablature: architrave band + overhanging cornice */}
-      {[[0, -(HALF - 1.5), 0], [0, HALF - 1.5, 0]].map(([x, z]) => (
-        <group key={`ent-z${z}`}>
-          <mesh material={marbleTrim} position={[x!, 7.95, z!]} castShadow>
-            <boxGeometry args={[HALF * 2 - 2, 0.6, 1.3]} />
+      {/* entablature: architrave band + overhanging cornice — the north band
+          splits around the gate (|x| < ~10.5 is the gate's footprint) */}
+      {[
+        { x: 0, z: HALF - 1.5, w: HALF * 2 - 2 },       // south band
+        { x: -20.3, z: -(HALF - 1.5), w: 19.4 },        // north band, west of the gate
+        { x: 20.3, z: -(HALF - 1.5), w: 19.4 },         // north band, east of the gate
+      ].map(({ x, z, w }) => (
+        <group key={`ent-${z}-${x}`}>
+          <mesh material={marbleTrim} position={[x, 7.95, z]} castShadow>
+            <boxGeometry args={[w, 0.6, 1.3]} />
           </mesh>
-          <mesh material={marbleTrim} position={[x!, 8.4, z!]} castShadow>
-            <boxGeometry args={[HALF * 2 - 1, 0.28, 1.7]} />
+          <mesh material={marbleTrim} position={[x, 8.4, z]} castShadow>
+            <boxGeometry args={[w + 1, 0.28, 1.7]} />
           </mesh>
         </group>
       ))}
