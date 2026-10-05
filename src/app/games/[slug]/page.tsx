@@ -55,6 +55,14 @@ export default async function GamePage({ params }: { params: Promise<{ slug: str
   }
   const wheel: Partial<Record<PillarId, number>> = {};
   for (const [p, a] of acc) wheel[p] = a.due > 0 ? a.done / a.due : 0;
+  const wheelLinks: Partial<Record<PillarId, string>> = {};
+  const wheelTitles: Partial<Record<PillarId, string>> = {};
+  for (const q of env.game.quests) {
+    if (!wheelLinks[q.pillar]) {
+      wheelLinks[q.pillar] = `/games/${slug}/quest/${q.id}`;
+      wheelTitles[q.pillar] = q.title;
+    }
+  }
 
   const litPillars = [...acc].filter(([, a]) => a.due > 0 && a.done >= a.due).map(([p]) => p);
   const dayLabel = new Date(`${today}T12:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -100,8 +108,8 @@ export default async function GamePage({ params }: { params: Promise<{ slug: str
 
           <section className="card flex flex-col items-center p-5">
             <h2 className="self-start font-display text-sm tracking-widest text-shadow">THE WHEEL</h2>
-            <WellnessWheel values={wheel} />
-            <p className="text-xs text-shadow">Inner world up top, outer world below — filled by this week's completions.</p>
+            <WellnessWheel values={wheel} links={wheelLinks} linkTitles={wheelTitles} />
+            <p className="text-xs text-shadow">Inner world up top, outer world below — click a spoke to open its quest.</p>
           </section>
         </div>
       </main>
