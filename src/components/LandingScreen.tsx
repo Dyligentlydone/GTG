@@ -71,7 +71,7 @@ export function LandingScreen({ inviteError }: { inviteError?: string }) {
 
         {/* gold circle gate — centered on the closing emblem */}
         <div
-          className={`absolute left-1/2 top-[45%] z-10 flex h-[clamp(160px,24vh,210px)] w-[clamp(160px,24vh,210px)] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-gold/80 bg-black/75 text-center shadow-[0_0_70px_rgba(212,175,55,0.4)] backdrop-blur-sm transition-all duration-[2500ms] ease-out ${
+          className={`absolute left-1/2 top-[49%] z-10 flex h-[clamp(200px,32vh,270px)] w-[clamp(200px,32vh,270px)] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-gold/80 bg-black/75 text-center shadow-[0_0_70px_rgba(212,175,55,0.4)] backdrop-blur-sm transition-all duration-[2500ms] ease-out ${
             gateOpen ? 'scale-100 opacity-100' : 'pointer-events-none scale-90 opacity-0'
           }`}
         >
