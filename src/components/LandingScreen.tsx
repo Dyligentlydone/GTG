@@ -64,6 +64,10 @@ export function LandingScreen({ inviteError }: { inviteError?: string }) {
           muted
           playsInline
           preload="auto"
+          onTimeUpdate={(e) => {
+            const v = e.currentTarget;
+            if (v.duration && v.currentTime >= v.duration - 1) setGateOpen(true);
+          }}
           onEnded={() => setGateOpen(true)}
           onError={() => setGateOpen(true)}
           className="max-h-[56vh] max-w-[88vw] rounded-2xl border border-gold/15 shadow-[0_0_90px_rgba(201,162,39,0.12)]"
