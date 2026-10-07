@@ -28,7 +28,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     ok: true,
     title: state.game.row.title,
     dayLabel,
-    weekDone: week.done,
+    weekDone: week.quests.reduce((a, q) => a + q.completions, 0),
     weekDue: week.due,
     litPillars: [...new Set(week.quests.filter((q) => q.onTarget && q.due > 0).map((q) => q.pillar))],
     touchedPillars: [...new Set(week.quests.filter((q) => q.completions > 0).map((q) => q.pillar))],

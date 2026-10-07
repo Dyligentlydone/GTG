@@ -37,10 +37,10 @@ const PANEL_ZS = [-3.6, -1.2, 1.2, 3.6];
 const INTERNAL = new Set<PillarId>(['mental', 'physical', 'emotional', 'spiritual']);
 
 const STATE_COLOR: Record<QuestPanel['state'], string> = {
-  due: '#C9A227', done: '#7da87d', weekDone: '#8a8578', rest: '#6e6a63', locked: '#55504a',
+  due: '#C9A227', done: '#66bb6a', weekDone: '#8a8578', rest: '#6e6a63', locked: '#55504a',
 };
 const STATE_WORD: Record<QuestPanel['state'], string> = {
-  due: 'DUE TODAY', done: 'DONE', weekDone: 'DONE THIS WEEK', rest: 'REST DAY', locked: 'LOCKED',
+  due: 'DO', done: 'DONE', weekDone: 'DONE THIS WEEK', rest: 'REST DAY', locked: 'LOCKED',
 };
 
 function wrap(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lh: number, maxLines = 3) {
@@ -135,7 +135,7 @@ function friezeTexture(d: BoardData): THREE.CanvasTexture {
   ctx.fillText(d.title.toUpperCase(), w / 2, 68);
   ctx.font = '20px Inter, Georgia, serif';
   ctx.fillStyle = '#9a958a';
-  ctx.fillText(`${d.dayLabel} · ${d.weekDone}/${d.weekDue} due this week`, w / 2, 106);
+  ctx.fillText(`${d.dayLabel} · ${d.weekDone} done`, w / 2, 106);
 
   const lit = new Set(d.litPillars);
   const touched = new Set(d.touchedPillars);
