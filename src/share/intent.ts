@@ -1,11 +1,11 @@
 // Posting to X (SPEC §9.2): the intent URL, the 280-char rule (every URL counts as 23),
-// and a suggested post text per scope — short, at most one #GamifyTheGrind hashtag.
+// and a suggested post text per scope — short, at most one #GamifyingTheGrind hashtag.
 import { primaryItem, type ShareCardModel } from './model';
 
 export const MAX_POST_LENGTH = 280;
 /** X wraps every URL in t.co; a posted URL always costs 23 characters. */
 export const POST_URL_WEIGHT = 23;
-export const SHARE_HASHTAG = '#GamifyTheGrind';
+export const SHARE_HASHTAG = '#GamifyingTheGrind';
 export const X_INTENT_BASE = 'https://x.com/intent/post';
 
 const URL_RE = /https?:\/\/\S+/g;
@@ -112,7 +112,7 @@ function baseText(model: ShareCardModel): string {
 }
 
 /**
- * A suggested post for the card: short, no hashtag spam, at most one #GamifyTheGrind.
+ * A suggested post for the card: short, no hashtag spam, at most one #GamifyingTheGrind.
  * Always fits the 280-char budget with room reserved for the share-page URL.
  */
 export function suggestedPostText(model: ShareCardModel): string {

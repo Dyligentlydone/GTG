@@ -13,7 +13,7 @@ const SLOGAN = 'Turn the grind into the game.';
 
 /** Brand-voiced post body: quest, what the player actually wrote, XP, slogan. */
 function postText(title: string, xp: number, detail: string, url: string): string {
-  const tail = `+${xp} XP · ${SLOGAN} #GamifyTheGrind`;
+  const tail = `+${xp} XP · ${SLOGAN} #GamifyingTheGrind`;
   const full = (d: string) => (d ? `${title} — ${d}\n${tail}` : `${title}\n${tail}`);
   const d = detail.trim();
   if (postLengthWithUrl(full(d), url) <= 280) return full(d);
