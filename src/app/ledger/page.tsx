@@ -8,6 +8,7 @@ import { decryptJournal } from '../../lib/journalCrypto';
 import { PILLAR_SYMBOLS } from '../../sculpture/symbols';
 import { TempleHeader } from '../../components/TempleHeader';
 import { EmptyState } from '../../components/Bits';
+import { LedgerShareButton } from '../../components/LedgerShareButton';
 import type { CompletionRow, QuestRow } from '../../lib/repos/types';
 import type { PillarId, QuestDef } from '../../core/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -131,6 +132,32 @@ const dayLabel = (d: string) =>
   new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC' })
     .format(new Date(`${d}T12:00:00Z`));
 
+/** One line of shareable detail for a post — mirrors EntryDetail, minus anything private. */
+function shareDetail(meta: QuestMeta, payload: Record<string, unknown>, bookTitle: (id: string) => string | undefined): string {
+  const q = (v: unknown) => (str(v) ? `“${str(v)}”` : null);
+  switch (meta.proof.type) {
+    case 'reading': {
+      const book = str(payload.bookId) ? bookTitle(str(payload.bookId)!) : null;
+      const bits = [num(payload.pages) ? `${payload.pages} pages` : null, book ? `of ${book}` : null].filter(Boolean);
+      return [bits.join(' ') || null, q(payload.takeaway)].filter(Boolean).join(' — ');
+    }
+    case 'duration':
+      return [num(payload.minutes) ? `${payload.minutes} minutes` : null, q(payload.activity)].filter(Boolean).join(' — ');
+    case 'timer':
+      return [num(payload.seconds) ? `${Math.round((payload.seconds as number) / 60)} min of stillness` : null, q(payload.reflection)].filter(Boolean).join(' — ');
+    case 'metrics': {
+      const parts = meta.proof.fields
+        .map((f) => (typeof payload[f.key] === 'number' ? `${f.label}: ${f.prefix ?? ''}${(payload[f.key] as number).toLocaleString()}` : null))
+        .filter(Boolean);
+      return parts.length ? parts.join(' · ') : (q(payload.text) ?? '');
+    }
+    case 'photo_optional': return q(payload.note) ?? '';
+    case 'dawn': return q(payload.intention) ?? '';
+    case 'text': return q(payload.text) ?? '';
+    default: return ''; // journal stays private unless the share sheet opts it in
+  }
+}
+
 export default async function LedgerPage() {
   const { supabase, user, profile } = await requireViewer('/ledger');
   const timeFmt = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', timeZone: profile.time_zone });
@@ -209,10 +236,18 @@ export default async function LedgerPage() {
                               {multiGame && meta && <span className="ml-2 text-[10px] uppercase tracking-wider text-shadow">{meta.gameSlug}</span>}
                               {e.is_repair && <span className="ml-2 text-[10px] uppercase tracking-wider text-shadow">repair</span>}
                             </p>
-                            <p className="shrink-0 text-xs text-shadow">
-                              {timeFmt.format(new Date(e.completed_at))}
-                              {xp ? <span className="ml-2 text-gold">+{xp} XP</span> : null}
-                            </p>
+                            <div className="flex shrink-0 items-center gap-3">
+                              <p className="text-xs text-shadow">
+                                {timeFmt.format(new Date(e.completed_at))}
+                                {xp ? <span className="ml-2 text-gold">+{xp} XP</span> : null}
+                              </p>
+                              <LedgerShareButton
+                                completionId={e.id}
+                                title={meta?.title ?? 'Quest'}
+                                xp={xp ?? meta?.xp ?? 0}
+                                detail={meta ? shareDetail(meta, e.payload ?? {}, (id) => bookTitle.get(id)) : ''}
+                              />
+                            </div>
                           </div>
                           {meta && (
                             <EntryDetail meta={meta} payload={e.payload ?? {}}

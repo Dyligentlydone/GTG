@@ -13,7 +13,6 @@ const NAV = [
   { href: '/ledger', label: 'Ledger' },
   { href: '/sculpture', label: 'Sculpture' },
   { href: '/achievements', label: 'Honors' },
-  { href: '/share/new', label: 'Share' },
 ];
 
 function Column({ pillar, lit }: { pillar: PillarId; lit: boolean }) {
