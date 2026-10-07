@@ -66,12 +66,12 @@ export function LandingScreen({ inviteError }: { inviteError?: string }) {
           preload="auto"
           onEnded={() => setGateOpen(true)}
           onError={() => setGateOpen(true)}
-          className="max-h-screen max-w-full"
+          className="max-h-[56vh] max-w-[88vw] rounded-2xl border border-gold/15 shadow-[0_0_90px_rgba(201,162,39,0.12)]"
         />
 
-        {/* gold circle gate — pendant above the closing emblem */}
+        {/* gold circle gate — centered on the closing emblem */}
         <div
-          className={`absolute left-1/2 top-[10%] z-10 flex h-[clamp(170px,27vh,230px)] w-[clamp(170px,27vh,230px)] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-gold/80 bg-black/75 text-center shadow-[0_0_70px_rgba(212,175,55,0.4)] backdrop-blur-sm transition-all duration-[2500ms] ease-out ${
+          className={`absolute left-1/2 top-[45%] z-10 flex h-[clamp(160px,24vh,210px)] w-[clamp(160px,24vh,210px)] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-gold/80 bg-black/75 text-center shadow-[0_0_70px_rgba(212,175,55,0.4)] backdrop-blur-sm transition-all duration-[2500ms] ease-out ${
             gateOpen ? 'scale-100 opacity-100' : 'pointer-events-none scale-90 opacity-0'
           }`}
         >
