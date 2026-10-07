@@ -69,9 +69,6 @@ export default async function ProfilePage() {
       decorations={decorations}
       carvingWeekPct={carvingWeekPct}
       recentChisel={recentChisel}
-      heroNote={recentChisel > 0
-        ? `Chisel Day — ${recentChisel} ${recentChisel === 1 ? 'piece' : 'pieces'} fell this week.`
-        : 'Drag to walk around your marble.'}
       timeZone={profile.time_zone}
       hallHref="/sculpture"
       hallLabel="enter the hall →"

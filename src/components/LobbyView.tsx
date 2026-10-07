@@ -43,8 +43,6 @@ export interface LobbyViewProps {
   carvingWeekPct: number;
   /** Pieces to replay falling on arrival (recent Chisel Day). */
   recentChisel: number;
-  /** Line under THE AGORA — auth state decides the wording. */
-  heroNote: string;
   /** Chisel countdown zone — the player's tz or a visitor's local zone. */
   timeZone: string;
   /** 'enter the hall' target: /sculpture signed-in, /login anonymous. */
@@ -70,7 +68,7 @@ function statusText(n: number): string {
 
 export function LobbyView({
   handle, litPillars = [], sculpture, decorations, carvingWeekPct, recentChisel,
-  heroNote, timeZone, hallHref, hallLabel, level, joinCta, games, discover,
+  timeZone, hallHref, hallLabel, level, joinCta, games, discover,
 }: LobbyViewProps) {
   const piecesRevealed = sculpture?.pieces_revealed ?? 0;
   const piecesTotal = sculpture?.pieces_total ?? 120;
@@ -91,11 +89,7 @@ export function LobbyView({
         <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-ink/80 to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-ink to-transparent" />
 
-        <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-6 md:p-10">
-          <div>
-            <h1 className="text-shimmer font-display text-3xl tracking-[0.15em] md:text-4xl">THE AGORA</h1>
-            <p className="mt-2 text-sm text-stone">{heroNote}</p>
-          </div>
+        <div className="pointer-events-none absolute inset-0 flex flex-col justify-end p-6 md:p-10">
           <div className="flex items-end justify-between gap-6">
             <div>
               <p className="font-display text-4xl text-marble md:text-5xl">

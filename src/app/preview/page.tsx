@@ -24,7 +24,6 @@ export default function PreviewPage() {
       decorations={[{ type: 'laurel_leaf', count: 2 }, { type: 'gold_vein', count: 1 }]}
       carvingWeekPct={0.62}
       recentChisel={5} // pretend a Chisel Day just landed — watch the pieces fall
-      heroNote="Chisel Day — 5 pieces fell this week."
       timeZone="America/New_York"
       hallHref="/preview"
       hallLabel="enter the hall →"
