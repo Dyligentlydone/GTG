@@ -4,6 +4,7 @@
 // step; the code rides along to /auth/callback, which claims it server-side.
 import { useState, type FormEvent } from 'react';
 import { createClient } from '../lib/supabase/client';
+import { SocialLinks } from './SocialLinks';
 
 type Phase = 'code' | 'email' | 'sent';
 
@@ -125,6 +126,10 @@ export function LandingScreen({ inviteError }: { inviteError?: string }) {
             <p className="absolute inset-x-4 bottom-[10%] text-[10px] leading-tight text-red-400">{error}</p>
           )}
         </div>
+      </div>
+
+      <div className="absolute inset-x-0 bottom-6 flex justify-center">
+        <SocialLinks />
       </div>
     </div>
   );
