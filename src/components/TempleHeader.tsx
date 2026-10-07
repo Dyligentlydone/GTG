@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { PILLAR_SYMBOLS } from '../sculpture/symbols';
 import { rankForLevel } from '../lib/ranks';
+import { HandleMenu } from './HandleMenu';
 import type { PillarId } from '../core/types';
 
 const NAV = [
   { href: '/games/g1', label: 'Board' },
-  { href: '/profile', label: 'Profile' },
   { href: '/books', label: 'Books' },
   { href: '/journal', label: 'Journal' },
   { href: '/ledger', label: 'Ledger' },
@@ -62,7 +62,7 @@ export function TempleHeader({ litPillars = [], handle, minimal = false, level }
               </span>
             </span>
           )}
-          {handle && <Link href="/settings" className="text-gold hover:text-marble" title="Settings">@{handle}</Link>}
+          {handle && <HandleMenu handle={handle} />}
           <Link href="/world" title="Enter the agora" aria-label="Enter the agora"
             className="block h-9 w-14 overflow-hidden rounded-sm border border-line hover:border-gold">
             <video autoPlay muted loop playsInline poster="/agora-preview.jpg"
