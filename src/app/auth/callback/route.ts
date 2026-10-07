@@ -40,12 +40,18 @@ export async function GET(request: NextRequest) {
             .update({ claimed_by: user.id, claimed_at: new Date().toISOString() })
             .eq('code', inviteCode)
             .is('claimed_by', null)
-            .select('id')
+            .select('id, created_by')
             .maybeSingle()
         : { data: null };
       if (!claimed) {
         await supabase.auth.signOut();
         return NextResponse.redirect(new URL('/?invite=invalid', url.origin));
+      }
+      // record the referral link (founder codes have no referrer); unique(referred_id) dedupes
+      if (claimed.created_by) {
+        await admin
+          .from('referrals')
+          .insert({ referrer_id: claimed.created_by, referred_id: user.id });
       }
       // every member carries three keys forward
       await admin.from('invites').insert(
