@@ -1,29 +1,125 @@
 'use client';
-// The landing gate: live agora behind a login card. The world is a client-only
-// dynamic import so the page shell renders instantly while WebGL warms up.
-import dynamic from 'next/dynamic';
-import { LoginForm } from './LoginForm';
+// The landing gate: GTG clip on black, then a gold circle fades in above the
+// closing emblem with the invite-code entry. A valid code unlocks the email
+// step; the code rides along to /auth/callback, which claims it server-side.
+import { useState, type FormEvent } from 'react';
+import { createClient } from '../lib/supabase/client';
 
-const LandingWorld = dynamic(
-  () => import('./world/LandingWorld').then((m) => m.LandingWorld),
-  { ssr: false },
-);
+type Phase = 'code' | 'email' | 'sent';
 
-export function LandingScreen({ error }: { error?: string }) {
+export function LandingScreen({ inviteError }: { inviteError?: string }) {
+  const [gateOpen, setGateOpen] = useState(!!inviteError);
+  const [phase, setPhase] = useState<Phase>('code');
+  const [code, setCode] = useState('');
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState(
+    inviteError === 'invalid' ? 'That key has already been claimed.' : inviteError ? 'This door opens by invitation.' : '',
+  );
+  const [busy, setBusy] = useState(false);
+  const supabase = createClient();
+
+  async function submitCode(e: FormEvent) {
+    e.preventDefault();
+    if (!code.trim() || busy) return;
+    setBusy(true);
+    setError('');
+    const res = await fetch('/api/invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    }).catch(() => null);
+    const { ok } = (await res?.json().catch(() => null)) ?? { ok: false };
+    setBusy(false);
+    if (!ok) {
+      setError('That key doesn\u2019t open the gate.');
+      return;
+    }
+    setPhase('email');
+  }
+
+  async function submitEmail(e: FormEvent) {
+    e.preventDefault();
+    if (!email.trim() || busy) return;
+    setBusy(true);
+    setError('');
+    const redirectTo = `${window.location.origin}/auth/callback?next=/world&invite=${encodeURIComponent(code.trim().toUpperCase())}`;
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: { emailRedirectTo: redirectTo },
+    });
+    setBusy(false);
+    if (otpError) {
+      setError(otpError.message);
+      return;
+    }
+    setPhase('sent');
+  }
+
   return (
-    <div className="world-root">
-      <LandingWorld />
-      <div className="landing-veil">
-        <div className="world-veil-card">
-          <div className="label text-gold">GAMIFYING THE GRIND</div>
-          <h1 className="font-display text-4xl tracking-[0.14em] text-marble md:text-5xl">THE AGORA</h1>
-          <p className="world-sub">
-            Beyond these columns waits your marble. Sign in and step through.
-          </p>
-          <div className="text-left">
-            <LoginForm next="/world" error={error} />
-          </div>
-          <p className="text-xs text-shadow">Magic link only — no passwords in the temple.</p>
+    <div className="fixed inset-0 flex items-center justify-center bg-black">
+      <div className="relative inline-block leading-none">
+        <video
+          src="/gtg-clip.mp4"
+          autoPlay
+          muted
+          playsInline
+          preload="auto"
+          onEnded={() => setGateOpen(true)}
+          onError={() => setGateOpen(true)}
+          className="max-h-screen max-w-full"
+        />
+
+        {/* gold circle gate — pendant above the closing emblem */}
+        <div
+          className={`absolute left-1/2 top-[10%] z-10 flex h-[clamp(170px,27vh,230px)] w-[clamp(170px,27vh,230px)] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-gold/80 bg-black/75 text-center shadow-[0_0_70px_rgba(212,175,55,0.4)] backdrop-blur-sm transition-all duration-[2500ms] ease-out ${
+            gateOpen ? 'scale-100 opacity-100' : 'pointer-events-none scale-90 opacity-0'
+          }`}
+        >
+          {phase === 'code' && (
+            <form onSubmit={submitCode} className="flex w-[72%] flex-col items-center gap-2">
+              <p className="label text-gold/90">invitation</p>
+              <input
+                value={code}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                placeholder="GTG-XXXX-XXXX"
+                autoComplete="off"
+                spellCheck={false}
+                className="w-full border-b border-gold/40 bg-transparent pb-1 text-center font-mono text-xs tracking-[0.18em] text-gold placeholder:text-gold/30 focus:outline-none"
+              />
+              <button type="submit" disabled={busy || !code.trim()} className="mt-1 text-[11px] font-semibold tracking-[0.3em] text-gold hover:text-marble disabled:opacity-40">
+                {busy ? '…' : 'ENTER'}
+              </button>
+            </form>
+          )}
+
+          {phase === 'email' && (
+            <form onSubmit={submitEmail} className="flex w-[72%] flex-col items-center gap-2">
+              <p className="label text-gold/90">welcome</p>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@email.com"
+                autoComplete="email"
+                className="w-full border-b border-gold/40 bg-transparent pb-1 text-center text-xs text-gold placeholder:text-gold/30 focus:outline-none"
+              />
+              <button type="submit" disabled={busy || !email.trim()} className="mt-1 text-[11px] font-semibold tracking-[0.3em] text-gold hover:text-marble disabled:opacity-40">
+                {busy ? '…' : 'SEND LINK'}
+              </button>
+            </form>
+          )}
+
+          {phase === 'sent' && (
+            <div className="flex w-[72%] flex-col items-center gap-2">
+              <p className="font-display text-sm tracking-[0.2em] text-gold">CHECK YOUR EMAIL</p>
+              <p className="text-[10px] leading-relaxed text-gold/60">Your link carries the key. Click it to step inside.</p>
+            </div>
+          )}
+
+          {error && phase !== 'sent' && (
+            <p className="absolute inset-x-4 bottom-[10%] text-[10px] leading-tight text-red-400">{error}</p>
+          )}
         </div>
       </div>
     </div>

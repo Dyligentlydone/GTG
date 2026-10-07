@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from './lib/supabase/middleware';
 
 const PUBLIC_PATHS = ['/', '/home', '/login', '/onboarding', '/preview']; // /home redirects to /; /preview is dev-only (404s in prod)
-const PUBLIC_PREFIXES = ['/s/', '/api/share/', '/api/stripe/', '/api/cron/', '/auth/', '/_next/', '/favicon', '/hall/'];
+const PUBLIC_PREFIXES = ['/s/', '/api/share/', '/api/stripe/', '/api/cron/', '/api/invite', '/auth/', '/_next/', '/favicon', '/hall/'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -31,5 +31,5 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   // Everything except static assets and image files.
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|glb|gltf|bin|hdr)$).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp4|webm|mov|glb|gltf|bin|hdr)$).*)'],
 };
