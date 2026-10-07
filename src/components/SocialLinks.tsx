@@ -1,6 +1,6 @@
 'use client';
-// Social row for the landing gate. Each icon only renders when its
-// NEXT_PUBLIC_* env var is set — add the URLs in Railway when ready.
+// Social row for the landing gate. Icons always render; hrefs come from the
+// NEXT_PUBLIC_SOCIAL_* env vars — until set, the icon is a dead placeholder.
 import { FaInstagram, FaFacebookF, FaYoutube, FaXTwitter, FaDiscord } from 'react-icons/fa6';
 
 const LINKS = [
@@ -12,18 +12,17 @@ const LINKS = [
 ] as const;
 
 export function SocialLinks() {
-  const links = LINKS.filter((l) => l.href);
-  if (links.length === 0) return null;
   return (
     <nav className="pointer-events-auto flex items-center gap-5">
-      {links.map(({ label, href, Icon }) => (
+      {LINKS.map(({ label, href, Icon }) => (
         <a
           key={label}
-          href={href}
+          href={href ?? '#'}
+          onClick={href ? undefined : (e) => e.preventDefault()}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={label}
-          className="text-gold/45 transition-colors hover:text-gold"
+          className={`transition-colors ${href ? 'text-gold/45 hover:text-gold' : 'cursor-default text-gold/25'}`}
         >
           <Icon size={19} />
         </a>
