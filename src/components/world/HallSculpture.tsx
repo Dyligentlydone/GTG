@@ -17,6 +17,8 @@ export function HallSculpture({ destination, onDoorChange }: {
   onDoorChange: (d: DoorDestination | null) => void;
 }) {
   const [st, setSt] = useState<ScState | null>(null);
+  const [inside, setInside] = useState(false);
+  const [entered, setEntered] = useState(false); // latches — merge once, then toggle visibility
   const marble = useMemo(() => marbleMaterial([206, 199, 186], [130, 122, 110], 9, 0.5), []);
 
   const load = useCallback(async () => {
@@ -60,12 +62,25 @@ export function HallSculpture({ destination, onDoorChange }: {
       {/* museum light — the marble is the hall's centerpiece */}
       <pointLight position={[0, 3.1, 0.9]} intensity={7} distance={6} decay={2} color={0xffe2b8} />
 
-      {st && (
-        <FracturedRock height={1.9} revealed={st.revealed} pending={st.pending}
-          onStrike={strike} position={[0, 0.64, 0]} />
+      {/* the rock mounts on first entry (decode+merge once) and hides when
+          you leave — 1.5M tris never render from the courtyard */}
+      {entered && st && (
+        <group visible={inside}>
+          <FracturedRock height={1.9} revealed={st.revealed} pending={st.pending}
+            onStrike={strike} position={[0, 0.64, 0]} />
+        </group>
       )}
 
+      {/* mounting gate: a wide sensor a step into the hall wakes the rock;
+          leaving the hall unmounts it entirely */}
       <RigidBody type="fixed" colliders={false}>
+        <CuboidCollider
+          sensor
+          args={[5.0, 3.0, 5.5]}
+          position={[0, 2.0, 0.5]}
+          onIntersectionEnter={() => { setInside(true); setEntered(true); }}
+          onIntersectionExit={() => setInside(false)}
+        />
         {/* you can't walk through the marble */}
         <CuboidCollider args={[0.62, 1.5, 0.62]} position={[0, 1.5, 0]} />
         {/* standing close → prompt; E opens the full view, click strikes */}

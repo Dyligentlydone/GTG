@@ -16,7 +16,7 @@ import { rngFor } from '../sculpture/rng';
 import { buildStatue } from '../lib/three/statue';
 import { marbleMaterial } from '../lib/three/materials';
 
-const ROCK_URL = '/models/rock_875_v2.glb';
+const ROCK_URL = '/models/rock_875_v3.glb';
 const ON_DECK = 5;
 
 interface Piece {
@@ -73,7 +73,6 @@ export function FracturedRock({
 
     // merge in reveal order → revealed chunks form a contiguous index prefix
     const rockMat = marbleMaterial([232, 228, 219], [168, 162, 152], 13, 0.5);
-    rockMat.side = THREE.DoubleSide; // a flipped cut normal must never look like a hole
     const geos = order.map((pi) => {
       const g = pieces[pi]!.mesh.geometry.clone();
       g.applyMatrix4(pieces[pi]!.mesh.matrixWorld);
@@ -86,7 +85,9 @@ export function FracturedRock({
       cursor += geos[k]!.index!.count;
     }
     const mergedMesh = new THREE.Mesh(merged, rockMat);
-    mergedMesh.castShadow = mergedMesh.receiveShadow = true;
+    // No castShadow: a multi-million-tri mesh doubles its cost in the shadow
+    // pass. FrontSide is safe — the pipeline recalcs face normals per chunk.
+    mergedMesh.receiveShadow = true;
 
     const statue = withStatue ? buildStatue(marbleMaterial([238, 234, 226], [150, 146, 140], 11, 0.42)) : null;
     if (statue) {

@@ -191,6 +191,8 @@ def cell_mesh(seed, neighbors):
     bmesh.ops.dissolve_limit(bm, angle_limit=0.09,
                              verts=bm.verts[:], edges=bm.edges[:])
     bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=voxel * 0.02)
+    # guarantee consistent winding so FrontSide rendering never shows holes
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
     m = bpy.data.meshes.new('chunk')
     bm.to_mesh(m)
     bm.free()
