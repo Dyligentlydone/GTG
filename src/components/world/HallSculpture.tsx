@@ -56,23 +56,23 @@ export function HallSculpture({ destination, onDoorChange }: {
   return (
     <group position={[0, FLOOR, 4.35]}>
       {/* pedestal */}
-      <mesh material={marble} position={[0, 0.28, 0]} castShadow receiveShadow>
-        <boxGeometry args={[1.15, 0.56, 1.15]} />
+      <mesh material={marble} position={[0, 0.3, 0]} castShadow receiveShadow>
+        <boxGeometry args={[1.4, 0.6, 1.4]} />
       </mesh>
-      <mesh material={marble} position={[0, 0.6, 0]} castShadow receiveShadow>
-        <boxGeometry args={[0.95, 0.08, 0.95]} />
+      <mesh material={marble} position={[0, 0.65, 0]} castShadow receiveShadow>
+        <boxGeometry args={[1.15, 0.1, 1.15]} />
       </mesh>
 
       {/* museum light — the marble is the hall's centerpiece */}
-      <pointLight position={[0, 3.1, 0.9]} intensity={7} distance={6} decay={2} color={0xffe2b8} />
+      <pointLight position={[0, 3.6, 1.0]} intensity={8} distance={7} decay={2} color={0xffe2b8} />
 
       {/* the rock mounts on first entry (decode+merge once) and hides when
           you leave — 1.5M tris never render from the courtyard */}
       {entered && st && (
         <group visible={inside}>
           <Suspense fallback={null}>
-            <CarvedRock height={1.9} seed={st.seed} revealed={st.revealed} pending={st.pending}
-              onStrike={strike} position={[0, 0.64, 0]} rotationY={Math.PI} />
+            <CarvedRock height={2.45} seed={st.seed} revealed={st.revealed} pending={st.pending}
+              onStrike={strike} position={[0, 0.7, 0]} rotationY={Math.PI} />
           </Suspense>
         </group>
       )}
@@ -88,7 +88,7 @@ export function HallSculpture({ destination, onDoorChange }: {
           onIntersectionExit={() => setInside(false)}
         />
         {/* you can't walk through the marble */}
-        <CuboidCollider args={[0.62, 1.5, 0.62]} position={[0, 1.5, 0]} />
+        <CuboidCollider args={[0.8, 1.9, 0.8]} position={[0, 1.9, 0]} />
         {/* standing close → prompt; E opens the full view, click strikes */}
         <CuboidCollider
           sensor
