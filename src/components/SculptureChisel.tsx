@@ -5,7 +5,7 @@
 import { Suspense, useCallback, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { FracturedRock } from './FracturedRock';
+import { CarvedRock } from './CarvedRock';
 import { marbleMaterial } from '../lib/three/materials';
 import { useMemo } from 'react';
 
@@ -47,7 +47,7 @@ export function SculptureChisel({ revealed, pending, total }: { revealed: number
           <spotLight position={[-4, 6, -4]} intensity={60} angle={0.5} penumbra={0.6} color={0xffe0b0} />
           <Suspense fallback={null}>
             <Plinth />
-            <FracturedRock revealed={st.revealed} pending={st.pending} onStrike={strike} position={[0, 0.5, 0]} />
+            <CarvedRock revealed={st.revealed} pending={st.pending} onStrike={strike} position={[0, 0.5, 0]} />
           </Suspense>
           <OrbitControls enablePan={false} enableZoom={false} target={[0, 1.9, 0]}
             minPolarAngle={0.9} maxPolarAngle={1.55} autoRotate autoRotateSpeed={0.5} />

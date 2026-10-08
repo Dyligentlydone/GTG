@@ -5,7 +5,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
 import { marbleMaterial } from '../../lib/three/materials';
-import { FracturedRock } from '../FracturedRock';
+import { Suspense } from 'react';
+import { CarvedRock } from '../CarvedRock';
 import type { DoorDestination } from './types';
 
 const FLOOR = 0.75;
@@ -66,8 +67,10 @@ export function HallSculpture({ destination, onDoorChange }: {
           you leave — 1.5M tris never render from the courtyard */}
       {entered && st && (
         <group visible={inside}>
-          <FracturedRock height={1.9} revealed={st.revealed} pending={st.pending}
-            onStrike={strike} position={[0, 0.64, 0]} />
+          <Suspense fallback={null}>
+            <CarvedRock height={1.9} revealed={st.revealed} pending={st.pending}
+              onStrike={strike} position={[0, 0.64, 0]} />
+          </Suspense>
         </group>
       )}
 
