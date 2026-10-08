@@ -51,8 +51,9 @@ export function HallSculpture({ destination, onDoorChange }: {
         ? { revealed: data.revealed, pending: data.pending, complete: data.complete,
             seed: s?.seed ?? 7, archetype: s?.archetype ?? DEFAULT_ARCHETYPE }
         : s));
+      else await load(); // server refused — resync, the optimistic bump was wrong
     } catch { /* next strike reconciles */ }
-  }, []);
+  }, [load]);
 
   return (
     <group position={[0, FLOOR, 4.35]}>
@@ -65,7 +66,7 @@ export function HallSculpture({ destination, onDoorChange }: {
         <group visible={inside}>
           <Suspense fallback={null}>
             <CarvedRock height={2.45} seed={st.seed} archetype={st.archetype} revealed={st.revealed} pending={st.pending}
-              onStrike={strike} position={[0, 0, 0]} rotationY={Math.PI} />
+              onStrike={inside ? strike : undefined} position={[0, 0, 0]} rotationY={Math.PI} />
           </Suspense>
         </group>
       )}

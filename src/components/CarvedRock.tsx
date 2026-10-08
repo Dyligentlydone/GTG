@@ -179,6 +179,15 @@ export function CarvedRock({
   // `applied` is tracked PER build: if `built` rebuilds (seed arrives async,
   // height changes), the occupancy data is fresh zeros and must re-bake from
   // 0 — a plain counter here once silently skipped the bake entirely.
+  // dispose per-build GPU resources on rebuild/unmount (rock geo/material are
+  // clones — safe; the occupancy texture is ours entirely)
+  useEffect(() => () => {
+    if (!built) return;
+    built.rock.geometry.dispose();
+    (built.rock.material as THREE.Material).dispose();
+    built.occ.dispose();
+  }, [built]);
+
   const applied = useRef<{ built: unknown; n: number }>({ built: null, n: 0 });
   useEffect(() => {
     if (!built) return;
@@ -259,6 +268,7 @@ export function CarvedRock({
   const glowMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: 0xc9a227, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false,
   }), []);
+  useEffect(() => () => { glowGeo.dispose(); glowMat.dispose(); debrisMat.dispose(); }, [glowGeo, glowMat, debrisMat]);
   useEffect(() => {
     const grp = glowRef.current;
     if (!grp || !built) return;
@@ -294,7 +304,7 @@ export function CarvedRock({
       {/* strike surface — invisible proxy so clicks never raycast the rock */}
       {onStrike && (
         <mesh position={[0, height / 2, 0]} onClick={(e) => { e.stopPropagation(); onStrike(); }}>
-          <cylinderGeometry args={[height * 0.3, height * 0.36, height, 12]} />
+          <cylinderGeometry args={[height * 0.55, height * 0.6, height, 12]} />
           <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
         </mesh>
       )}

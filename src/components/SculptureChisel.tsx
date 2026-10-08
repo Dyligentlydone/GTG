@@ -36,9 +36,17 @@ export function SculptureChisel({ revealed, pending, total, seed, archetype }: {
     try {
       const res = await fetch('/api/sculpture/chisel', { method: 'POST' });
       const data = await res.json();
-      if (data?.ok) setSt((s) => (data.revealed >= s.revealed
-        ? { revealed: data.revealed, pending: data.pending, complete: data.complete }
-        : s));
+      if (data?.ok) {
+        setSt((s) => (data.revealed >= s.revealed
+          ? { revealed: data.revealed, pending: data.pending, complete: data.complete }
+          : s));
+      } else {
+        // server refused — the optimistic bump was wrong; pull the truth
+        const sc = await fetch('/api/sculpture', { cache: 'no-store' }).then((r) => r.json()).catch(() => null);
+        if (sc?.ok && sc.sculpture) {
+          setSt({ revealed: sc.sculpture.revealed, pending: sc.sculpture.pending, complete: sc.sculpture.status === 'complete' });
+        }
+      }
     } catch { /* next strike reconciles */ }
   }, []);
 

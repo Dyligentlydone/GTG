@@ -14,7 +14,8 @@ export interface SculptureCanvasProps {
   seed: number;
   archetype: SculptureRow['archetype'];
   piecesRevealed: number;
-  weekPct: number;
+  /** Banked chisels — drives the gold on-deck markers. */
+  pending: number;
   /**
    * Pieces to animate falling shortly after mount — the lobby passes a recent
    * chisel count so returning players watch their strikes land for real.
@@ -23,7 +24,7 @@ export interface SculptureCanvasProps {
   autoChisel?: number;
 }
 
-export function SculptureCanvas({ seed, archetype, piecesRevealed, weekPct, autoChisel = 0 }: SculptureCanvasProps) {
+export function SculptureCanvas({ seed, archetype, piecesRevealed, pending, autoChisel = 0 }: SculptureCanvasProps) {
   const replay = Math.min(Math.max(0, autoChisel), piecesRevealed);
   const [revealed, setRevealed] = useState(piecesRevealed - replay);
 
@@ -41,8 +42,7 @@ export function SculptureCanvas({ seed, archetype, piecesRevealed, weekPct, auto
     return () => timers.forEach(clearTimeout);
   }, [replay, piecesRevealed]);
 
-  // on-deck glow count scales with week progress, mirroring the old stage
-  const pending = Math.max(1, Math.round(weekPct * 5));
+
 
   return (
     <Canvas shadows camera={{ position: [0, 2.3, 6.2], fov: 38 }}>
