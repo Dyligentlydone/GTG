@@ -54,7 +54,9 @@ export function FracturedRock({
     const meshes: THREE.Mesh[] = [];
     root.traverse((o) => { if ((o as THREE.Mesh).isMesh) meshes.push(o as THREE.Mesh); });
     // The GLB ships geometry-only — every chunk gets the white marble.
+    // DoubleSide: a cut face with a flipped normal must never look like a hole.
     const rockMat = marbleMaterial([232, 228, 219], [168, 162, 152], 13, 0.5);
+    rockMat.side = THREE.DoubleSide;
     for (const m of meshes) m.material = rockMat;
     const rng = rngFor(seed, 'rock-order');
     const pieces: Piece[] = meshes.map((mesh) => {

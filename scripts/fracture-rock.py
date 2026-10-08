@@ -13,6 +13,7 @@
 # to its neighbours — the voronoi cell of that seed inside the rock. Chunks are
 # named rock_001…rock_NNN and exported as one GLB.
 import sys
+import os
 import bpy
 from mathutils import Vector
 import bmesh
@@ -35,14 +36,32 @@ bpy.ops.object.select_all(action='DESELECT')
 rock.select_set(True)
 bpy.context.view_layer.objects.active = rock
 
-# ---------- watertight, evenly dense base ----------
-voxel = rock.dimensions.length / 70
-mod = rock.modifiers.new('voxel', 'REMESH')
-mod.mode = 'VOXEL'
-mod.voxel_size = voxel
-bpy.context.view_layer.objects.active = rock
-bpy.ops.object.modifier_apply(modifier=mod.name)
-rock.data.update()
+# ---------- base solid ----------
+# Two modes:
+#   default  — voxel-remesh first (watertight guaranteed; surface fidelity =
+#              voxel density, so dense remesh = heavy chunks)
+#   SKIP_REMESH=1 — fracture the source mesh directly (full original surface
+#              fidelity; requires the source to be near-manifold). Pair with
+#              PRE_DECIMATE=<ratio> to lighten the source first — safe because
+#              decimation happens while the rock is still ONE unified mesh, so
+#              seams can't gap. NEVER decimate chunks after fracturing.
+voxel = rock.dimensions.length / float(os.environ.get('VOX_DIV', '70'))
+if os.environ.get('SKIP_REMESH'):
+    ratio = float(os.environ.get('PRE_DECIMATE', '1'))
+    if ratio < 1:
+        bpy.context.view_layer.objects.active = rock
+        dec = rock.modifiers.new('dec', 'DECIMATE')
+        dec.ratio = ratio
+        bpy.ops.object.modifier_apply(modifier=dec.name)
+        rock.data.update()
+        print(f'PRE_DECIMATE: source -> {len(rock.data.vertices)} verts')
+else:
+    mod = rock.modifiers.new('voxel', 'REMESH')
+    mod.mode = 'VOXEL'
+    mod.voxel_size = voxel
+    bpy.context.view_layer.objects.active = rock
+    bpy.ops.object.modifier_apply(modifier=mod.name)
+    rock.data.update()
 
 # ---------- carve the statue cavity so chunks never intersect the figure ----------
 if STATUE_PATH:
@@ -175,10 +194,14 @@ def cell_mesh(seed, neighbors):
     m = bpy.data.meshes.new('chunk')
     bm.to_mesh(m)
     bm.free()
+    # smooth shading → the assembled chunks read as one continuous marble
+    # surface; fracture lines stay only as hairline seams, like real breaks
+    for p in m.polygons:
+        p.use_smooth = True
     return m
 
 
-src_mat = rock.data.materials[0] if rock.data.materials else None
+src_mat = None if os.environ.get('NO_MATS') else (rock.data.materials[0] if rock.data.materials else None)
 radius = spacing * 1.9
 chunks = []
 for idx, s in enumerate(seeds):
@@ -265,5 +288,6 @@ for ob in kept:
 
 print(f'FRACTURED: {len(kept)} chunks (target {N_PIECES})')
 bpy.ops.export_scene.gltf(filepath=OUT_PATH, export_format='GLB', use_selection=True,
+                          export_materials='NONE' if os.environ.get('NO_MATS') else 'EXPORT',
                           export_draco_mesh_compression_enable=True)
 print(f'WROTE {OUT_PATH}')
