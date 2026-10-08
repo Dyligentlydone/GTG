@@ -1,6 +1,7 @@
 'use client';
-// Real GLB statue — the Hunyuan3D-generated gladiator mesh, normalized to
-// stand on the plinth. Untextured shape export, so it wears marble.
+// The agora's centerpiece — the GTG marble figure (warrior wielding a
+// keyboard), compressed draco GLB, normalized to stand on the plinth.
+// Keeps its own authored materials — the red/blue paint streaks are part of it.
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
@@ -8,7 +9,7 @@ import { useGLTF } from '@react-three/drei';
 const H = 3.8;
 
 export function GlbStatue({ position = [0, 0, 0] as [number, number, number] }) {
-  const { scene } = useGLTF('/models/gladiator.glb');
+  const { scene } = useGLTF('/models/gtg-logo.glb');
 
   const scaled = useMemo(() => {
     const clone = scene.clone(true);
@@ -26,11 +27,6 @@ export function GlbStatue({ position = [0, 0, 0] as [number, number, number] }) 
       if (o instanceof THREE.Mesh) {
         o.castShadow = true;
         o.receiveShadow = false;
-        o.material = new THREE.MeshStandardMaterial({
-          color: 0xefece4,
-          roughness: 0.55,
-          metalness: 0.02,
-        });
       }
     });
   }, [scaled]);
@@ -42,4 +38,4 @@ export function GlbStatue({ position = [0, 0, 0] as [number, number, number] }) 
   );
 }
 
-useGLTF.preload('/models/gladiator.glb');
+useGLTF.preload('/models/gtg-logo.glb');
