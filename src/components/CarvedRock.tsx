@@ -14,7 +14,7 @@ import { useGLTF } from '@react-three/drei';
 import { rngFor } from '../sculpture/rng';
 
 const ROCK_URL = '/models/rock_carve.glb';
-const STATUE_URL = '/models/gtg-logo.glb';
+const STATUE_URL = '/models/statue_1m.glb';
 const TOTAL = 875;
 const OCC = 96;                 // occupancy texture resolution per axis
 const ON_DECK = 5;              // pending glow markers
@@ -299,12 +299,13 @@ function InnerStatue({ height, visible }: { height: number; visible: boolean }) 
   const { scene } = useGLTF(STATUE_URL);
   const statue = useMemo(() => {
     const clone = scene.clone(true);
+    clone.rotation.y = Math.PI; // statue front is authored -Z; rock front is +Z
+    const s0 = new THREE.Box3().setFromObject(clone).getSize(new THREE.Vector3());
+    clone.scale.setScalar((height * 0.66) / s0.y);
+    clone.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(clone);
-    const size = box.getSize(new THREE.Vector3());
-    const s = (height * 0.66) / size.y;
     const center = box.getCenter(new THREE.Vector3());
-    clone.scale.setScalar(s);
-    clone.position.set(-center.x * s, -box.min.y * s + height * 0.05, -center.z * s);
+    clone.position.set(-center.x, -box.min.y + height * 0.05, -center.z);
     clone.traverse((o) => { if ((o as THREE.Mesh).isMesh) (o as THREE.Mesh).castShadow = true; });
     return clone;
   }, [scene, height]);
