@@ -28,7 +28,7 @@ export interface SimOptions {
 }
 
 export interface Decoration { type: string; sourceType: 'event' | 'achievement'; sourceId: string; }
-export interface ChiselRecord { weekStart: LocalDate; tierPieces: number; applied: number; piecesRevealed: number; }
+export interface ChiselRecord { weekStart: LocalDate; banked: number; applied: number; piecesRevealed: number; }
 
 const DEFAULT_TIMES: Partial<Record<ProofSpec['type'], LocalTime>> = { dawn: '05:00' };
 
@@ -116,7 +116,13 @@ export class GameSimulator {
       completedAt, payload, isRepair: opts.isRepair ?? false,
     };
     this.completions.push(c);
-    if (!c.isRepair) this.xpEvents.push(questXpEvent(this.ctx.userId, c.id, quest.xp));
+    if (!c.isRepair) {
+      this.xpEvents.push(questXpEvent(this.ctx.userId, c.id, quest.xp));
+      // Daily quests chip a piece live (sculpture games), matching acceptCheckIn.
+      if (this.game.feedsSculpture && quest.schedule.kind === 'daily') {
+        this.piecesRevealed = applyChisel(this.piecesRevealed, 1).piecesRevealed;
+      }
+    }
     this.applyBookPages(c);
     return { ok: true };
   }
@@ -173,7 +179,7 @@ export class GameSimulator {
     this.xpEvents.push(...result.bonusXp);
     const step = applyChisel(this.piecesRevealed, result.pieces);
     this.piecesRevealed = step.piecesRevealed;
-    this.chisel.push({ weekStart: week, tierPieces: result.pieces, applied: step.applied, piecesRevealed: step.piecesRevealed });
+    this.chisel.push({ weekStart: week, banked: result.pieces, applied: step.applied, piecesRevealed: step.piecesRevealed });
     if (result.perfectWeek) this.addEventDecoration('perfect_week', week);
     if (result.balancedWeek) this.addEventDecoration('balanced_week', week);
     this.evaluate(addDays(week, 6));

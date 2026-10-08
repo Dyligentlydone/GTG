@@ -159,7 +159,7 @@ describe('share card SVG', () => {
     const svg = renderShareCardSvg(model('milestone', ['m1']), { idPrefix: 'm' });
     assert.ok(svg.includes('clip-path="url(#m-bust)"'));
     assert.ok((svg.match(/<svg/g) ?? []).length >= 2); // card + nested sculpture
-    assert.ok(svg.includes('60 / 120'));
+    assert.ok(svg.includes('60 / 875'));
   });
 
   test('item text is XML-escaped on the card', () => {

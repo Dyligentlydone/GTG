@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '../lib/supabase/client';
 import { renderSculptureSvg, ARCHETYPES, type Archetype } from '../sculpture';
 import { PILLAR_SYMBOLS } from '../sculpture/symbols';
+import { STATUE_PIECES } from '../core/chisel';
 
 const STEPS = ['Name', 'Place', 'Face', 'Archetype', 'Vision'] as const;
 
@@ -92,7 +93,7 @@ export function OnboardingForm({ timeZone }: { timeZone: string }) {
   }
 
   if (vision) {
-    const statue = renderSculptureSvg({ seed: seed ?? 1, piecesRevealed: 120, weekProgressPct: 0, archetype, idPrefix: 'vision' });
+    const statue = renderSculptureSvg({ seed: seed ?? 1, piecesRevealed: STATUE_PIECES, weekProgressPct: 0, archetype, idPrefix: 'vision' });
     return (
       <div className="card p-8 text-center">
         <p className="font-display text-sm tracking-[0.3em] text-gold">THIS IS WHO YOU ARE BECOMING</p>

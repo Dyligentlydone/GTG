@@ -1,6 +1,7 @@
 // Posting to X (SPEC §9.2): the intent URL, the 280-char rule (every URL counts as 23),
 // and a suggested post text per scope — short, at most one #GamifyingTheGrind hashtag.
 import { primaryItem, type ShareCardModel } from './model';
+import { STATUE_PIECES } from '../core/chisel';
 
 export const MAX_POST_LENGTH = 280;
 /** X wraps every URL in t.co; a posted URL always costs 23 characters. */
@@ -102,10 +103,10 @@ function baseText(model: ShareCardModel): string {
       const m = primaryItem(model, 'milestone');
       switch (m.kind) {
         case 'book_finished': return `Finished reading ${m.bookTitle ? `"${m.bookTitle}"` : 'another book'}.`;
-        case 'chisel_day': return `Chisel Day: ${m.piecesThisWeek ?? 0} pieces fell. ${m.piecesRevealed}/120 revealed.`;
-        case 'sculpture_halfway': return `Halfway there — 60 of 120 pieces off the marble.`;
+        case 'chisel_day': return `Chisel Day: ${m.piecesThisWeek ?? 0} pieces fell. ${m.piecesRevealed}/${STATUE_PIECES} revealed.`;
+        case 'sculpture_halfway': return `Halfway there — ${Math.ceil(STATUE_PIECES / 2)} of ${STATUE_PIECES} pieces off the marble.`;
         case 'face_reveal': return `The face emerges from the marble.`;
-        case 'sculpture_complete': return `120/120 — the statue stands complete.`;
+        case 'sculpture_complete': return `${STATUE_PIECES}/${STATUE_PIECES} — the statue stands complete.`;
       }
     }
   }

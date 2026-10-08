@@ -56,13 +56,14 @@ export interface LobbyViewProps {
 }
 
 /** Narrative status line under the piece counter (mirrors the 3D demo). */
-function statusText(n: number): string {
+function statusText(n: number, total: number): string {
+  const f = total > 0 ? n / total : 0;
   if (n === 0) return 'Sealed. Your statue waits inside.';
-  if (n < 30) return 'The plinth and feet emerge.';
-  if (n < 60) return 'The drapery takes shape.';
-  if (n < 90) return 'Halfway there. The body is free.';
-  if (n < 110) return 'Shoulders and arms are carved.';
-  if (n < 120) return 'Only the face remains.';
+  if (f < 0.25) return 'The plinth and feet emerge.';
+  if (f < 0.5) return 'The drapery takes shape.';
+  if (f < 0.75) return 'Halfway there. The body is free.';
+  if (f < 0.92) return 'Shoulders and arms are carved.';
+  if (n < total) return 'Only the face remains.';
   return 'Complete. Your statue enters the Pantheon.';
 }
 
@@ -71,7 +72,7 @@ export function LobbyView({
   timeZone, hallHref, hallLabel, level, joinCta, games, discover,
 }: LobbyViewProps) {
   const piecesRevealed = sculpture?.pieces_revealed ?? 0;
-  const piecesTotal = sculpture?.pieces_total ?? 120;
+  const piecesTotal = sculpture?.pieces_total ?? 875;
 
   return (
     <div className="relative min-h-screen">
@@ -96,7 +97,7 @@ export function LobbyView({
                 <CountUp value={piecesRevealed} />
                 <span className="text-lg text-shadow md:text-xl"> / {piecesTotal} pieces</span>
               </p>
-              <p className="mt-1 text-sm text-gold">{statusText(piecesRevealed)}</p>
+              <p className="mt-1 text-sm text-gold">{statusText(piecesRevealed, piecesTotal)}</p>
             </div>
             <div className="text-right">
               <p className="label mb-1">Chisel Day in</p>
@@ -183,7 +184,7 @@ export function LobbyView({
         )}
 
         <footer className="pb-4 text-center text-xs text-shadow">
-          A game is data. A statue is patience. 120 pieces, one week at a time.
+          A game is data. A statue is patience. 875 pieces, one deed at a time.
         </footer>
       </main>
     </div>

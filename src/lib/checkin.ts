@@ -33,6 +33,8 @@ export interface CheckinResult {
   levelUp?: { from: number; to: number };
   achievements?: string[];
   bookFinished?: string;
+  /** A marble piece fell for this check-in (daily quests chip live). */
+  chipped?: boolean;
 }
 
 function isDuplicate(error: unknown): boolean {
@@ -106,6 +108,7 @@ export async function acceptCheckIn(db: Db, input: CheckinInput): Promise<Checki
 
   const sculptureId = env.game.feedsSculpture ? await activeSculptureId(db, input.userId) : undefined;
   const earned: string[] = [];
+  let chipped = false;
   let bookFinished: string | undefined;
 
   const bus = createEventBus();
@@ -163,6 +166,16 @@ export async function acceptCheckIn(db: Db, input: CheckinInput): Promise<Checki
     }
   });
 
+  bus.on('quest.completed', 'chisel', async () => {
+    // Daily quests chip a piece the moment they land; quota completions bank for the Sunday cascade.
+    if (!sculptureId || quest.schedule.kind !== 'daily' || isRepair) return;
+    const { error: e } = await db.from('chisel_events').insert({
+      sculpture_id: sculptureId, completion_id: completion.id, pieces: 1,
+    });
+    if (e && !isDuplicate(e)) throw e;
+    chipped = !e;
+  });
+
   bus.on('quest.completed', 'achievements', async () => {
     earned.push(...(await evaluateAndAward(db, state, all, today, sculptureId)));
   });
@@ -180,7 +193,7 @@ export async function acceptCheckIn(db: Db, input: CheckinInput): Promise<Checki
   const xpTotal = state.xpTotal + xpAwarded;
   const newLevel = levelFromXp(xpTotal).level;
   const levelUp = newLevel > env.ctx.level ? { from: env.ctx.level, to: newLevel } : undefined;
-  return { ok: true, completionId: completion.id, localDate: date, xpAwarded, achievements: earned, bookFinished, levelUp };
+  return { ok: true, completionId: completion.id, localDate: date, xpAwarded, achievements: earned, bookFinished, levelUp, chipped };
 }
 
 function fullSetXp(env: EngineEnv, date: LocalDate): XpEvent {

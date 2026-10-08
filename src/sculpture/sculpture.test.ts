@@ -105,17 +105,17 @@ test('on deck: the next 5 shards in the reveal order', () => {
   assert.deepEqual(onDeckShards(order, -4), order.slice(0, 5));
 });
 
-test('piecesRevealed clamps to 0..120', () => {
+test('piecesRevealed clamps to 0..875', () => {
   assert.equal(clampPieces(-5), 0);
   assert.equal(clampPieces(0), 0);
   assert.equal(clampPieces(7.9), 7);
-  assert.equal(clampPieces(120), 120);
-  assert.equal(clampPieces(121), 120);
+  assert.equal(clampPieces(875), 875);
+  assert.equal(clampPieces(876), 875);
   assert.equal(clampPieces(Number.NaN), 0);
   assert.equal(clampPieces(Infinity), 0);
-  assert.match(renderSculptureSvg({ seed: 1, piecesRevealed: 999, weekProgressPct: 0 }), /120 of 120 pieces/);
-  assert.match(renderSculptureSvg({ seed: 1, piecesRevealed: -3, weekProgressPct: 0 }), /0 of 120 pieces/);
-  assert.equal(renderSculptureSvg({ seed: 1, piecesRevealed: 500, weekProgressPct: 0 }), renderSculptureSvg({ seed: 1, piecesRevealed: 120, weekProgressPct: 0 }));
+  assert.match(renderSculptureSvg({ seed: 1, piecesRevealed: 999, weekProgressPct: 0 }), /875 of 875 pieces/);
+  assert.match(renderSculptureSvg({ seed: 1, piecesRevealed: -3, weekProgressPct: 0 }), /0 of 875 pieces/);
+  assert.equal(renderSculptureSvg({ seed: 1, piecesRevealed: 999, weekProgressPct: 0 }), renderSculptureSvg({ seed: 1, piecesRevealed: 875, weekProgressPct: 0 }));
 });
 
 test('cracks: intensity = min(1, progress / 0.75); more progress never removes cracks', () => {
@@ -137,7 +137,7 @@ test('cracks: intensity = min(1, progress / 0.75); more progress never removes c
   const at100 = renderSculptureSvg({ seed: 1, piecesRevealed: 60, weekProgressPct: 1 });
   assert.equal(count(at0), 0);
   assert.ok(count(at50) > 0 && count(at100) > count(at50));
-  for (const svg of [at0, at50, at100]) assert.match(svg, /60 of 120 pieces/);
+  for (const svg of [at0, at50, at100]) assert.match(svg, /60 of 875 pieces/);
 });
 
 test('render: deterministic SVG for every archetype, decorations and images', () => {
@@ -155,7 +155,7 @@ test('render: deterministic SVG for every archetype, decorations and images', ()
   assert.match(withImages, /href="https:\/\/x\.test\/a\.png\?a=1&amp;b=&quot;2&quot;"/);
   assert.match(withImages, /href="https:\/\/x\.test\/r\.png"/);
   // Complete statue: no rock left.
-  assert.doesNotMatch(renderSculptureSvg({ seed: 1, piecesRevealed: 120, weekProgressPct: 1 }), /-unrevealed\)"/);
+  assert.doesNotMatch(renderSculptureSvg({ seed: 1, piecesRevealed: 875, weekProgressPct: 1 }), /-unrevealed\)"/);
 });
 
 test('statue provider: placeholder returns final and rough SVGs per archetype', async () => {

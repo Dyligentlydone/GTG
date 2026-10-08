@@ -30,7 +30,7 @@ describe('Scenario 1: new player joining on a Wednesday', () => {
       ['emotional', 'environmental', 'financial', 'mental', 'physical', 'recreational', 'social', 'spiritual']);
     assert.equal(w1.due, 28);
     assert.equal(w1.done, 28);
-    assert.equal(w1.pieces, 5);
+    assert.equal(w1.pieces, 18); // banked quota: 3+4+2+3+3+3 (10 daily completions chip live)
     assert.equal(w1.balancedWeek, true);
     assert.equal(sim.completions.find((c) => c.questId === 'g1.read')?.payload.pages, 10);
   });
@@ -40,18 +40,19 @@ describe('Scenario 2: perfect player joining on a Monday, 30 weeks', () => {
   const sim = newPlayer('2026-01-05', { bookPages: 150 });
   sim.run('2026-01-05', addDays('2026-01-05', 30 * 7 - 1), GameSimulator.perfectDay);
 
-  test('reaches 120 pieces exactly at week 24 and never exceeds 120; ≤ 5 per week', () => {
+  test('reaches 875 pieces during week 26 and never exceeds; 34/week (14 live + 20 banked)', () => {
     assert.equal(sim.chisel.length, 30);
     for (const c of sim.chisel) {
-      assert.equal(c.tierPieces, 5);
-      assert.ok(c.applied <= 5);
-      assert.ok(c.piecesRevealed <= 120);
+      assert.equal(c.banked, 20);
+      assert.ok(c.applied <= 20);
+      assert.ok(c.piecesRevealed <= 875);
     }
-    assert.equal(sim.chisel[22]!.piecesRevealed, 115);
-    assert.equal(sim.chisel[23]!.piecesRevealed, 120);
-    assert.equal(sim.chisel.findIndex((c) => c.piecesRevealed === 120), 23);
-    assert.ok(sim.chisel.slice(24).every((c) => c.applied === 0 && c.piecesRevealed === 120));
-    assert.equal(sim.piecesRevealed, 120);
+    assert.equal(sim.chisel[24]!.piecesRevealed, 850); // 25 × 34
+    assert.equal(sim.chisel[25]!.piecesRevealed, 875); // 864 after the week's live chips → cascade caps
+    assert.equal(sim.chisel[25]!.applied, 11);         // only 11 of the 20 banked land
+    assert.equal(sim.chisel.findIndex((c) => c.piecesRevealed === 875), 25);
+    assert.ok(sim.chisel.slice(26).every((c) => c.applied === 0 && c.piecesRevealed === 875));
+    assert.equal(sim.piecesRevealed, 875);
   });
 
   test('every week is perfect; balanced from week 1 (all eight pillars)', () => {
@@ -117,10 +118,10 @@ describe('Scenario 3: a player at ~80% for 10 weeks', () => {
     assert.equal(sim.weekResults.length, 10);
     for (const w of sim.weekResults) {
       assert.ok(w.completionPct >= 0.75 && w.completionPct < 0.85, `week ${w.weekIndex}: ${w.completionPct}`);
-      assert.equal(w.pieces, 5);
+      assert.equal(w.pieces, 19); // 19 of 20 quota slots done; 9 daily check-ins chip live
       assert.equal(w.perfectWeek, false);
     }
-    assert.equal(sim.piecesRevealed, 50);
+    assert.equal(sim.piecesRevealed, 280); // 10 × (19 banked + 9 live)
   });
 });
 
@@ -140,7 +141,7 @@ describe('Scenario 4: a player who pauses 3 days (travel)', () => {
     assert.ok(traveler.completions.every((c) => !['2026-01-27', '2026-01-28', '2026-01-29'].includes(c.localDate)));
     assert.equal(h.completionPct, 1);
     assert.equal(t.completionPct, 1);
-    assert.equal(t.pieces, 5);
+    assert.equal(t.pieces, 14); // quotas over 4 days: 3+3+2+2+2+2
     assert.equal(t.perfectWeek, true);
     // The pause does not break (or spend freezes on) the daily streaks.
     const s = traveler.streaks('2026-02-01');

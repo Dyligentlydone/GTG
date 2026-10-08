@@ -121,3 +121,11 @@ Decisions made where SPEC.md was silent. Newest at the bottom.
 - **`LobbyView` (`src/components/LobbyView.tsx`)** is the shared presentational component; `optionalViewer` in `src/lib/viewer.ts` returns the viewer or null without redirecting (also null when Supabase env is absent).
 - **`/home` redirects to `/`** and stays in PUBLIC_PATHS so the redirect runs without a session; all internal `/home` links point at `/`.
 - `ChiselCountdown.timeZone` is optional — visitors' clocks use their browser zone.
+
+## Live chisel: deed-per-piece carving (owner request — "a task done chips a chunk")
+
+- **875 pieces ≈ 180 perfect days.** `STATUE_PIECES` 120 → 875 (~34/week: 14 daily live chips + up to 20 banked quota pieces). The weekly 0–5 tier math is gone: `chisel_events` rows are either live chips (`completion_id` set, `pieces: 1`, unique per completion) or the Sunday cascade (`week_start` set, `pieces` = that week's counted quota completions). The xor check on `chisel_events` enforces the two shapes.
+- **Daily quests chip at check-in** inside `acceptCheckIn`'s `quest.completed` handlers (daily schedule, not a repair, sculpture feeds + active). Replays/double-submits are idempotent via the `completion_id` unique index.
+- **Weekly-quota completions bank and drop at week close** — `computeWeekResult.pieces` is now the banked count, so Chisel Day remains a spectacle (up to ~20 chunks cascading) rather than a 0–5 trickle.
+- **Migration 0015** swaps the 120-bound checks for `pieces_total = 875`, makes the reveal trigger `pieces_total`-driven, and migrates existing statues (finished ones stay finished).
+- **Renderers scale differently on purpose:** the 3D museum scene draws all 875 chunks (a deed = a visible pebble falling); the flat `StatueSvg` keeps 120 shards and maps pieces proportionally — it's a share/fallback render, not the live view.

@@ -6,8 +6,7 @@ import {
   addDays, computeStreaks, computeWeekResult, localDate, weekStart,
   type AchievementScope, type Completion, type LocalDate, type PillarId,
 } from '../core';
-import { STATUE_PIECES } from '../core/chisel';
-import { HEAD_SITES } from '../sculpture/shards';
+import { FACE_PIECES, STATUE_PIECES } from '../core/chisel';
 import { decryptJournal } from './journalCrypto';
 import { loadEngineState, type EngineState } from './context';
 import { loadGames } from './repos/games';
@@ -26,7 +25,7 @@ export interface ShareCandidate {
 export type ShareCandidates = Partial<Record<ShareScope, ShareCandidate[]>>;
 
 const MAX_PER_GROUP = 12;
-const FACE_REVEAL_AT = STATUE_PIECES - HEAD_SITES; // 110 — the head band is the last to fall
+const FACE_REVEAL_AT = STATUE_PIECES - FACE_PIECES; // 802 — the head band is the last to fall
 
 function rarityFor(scope: string, hidden: boolean): Rarity {
   if (hidden) return 'legendary';

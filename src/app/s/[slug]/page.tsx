@@ -48,7 +48,7 @@ export default async function PublicSharePage({ params }: { params: Promise<{ sl
       <div className="w-full overflow-hidden rounded-xl border border-line" dangerouslySetInnerHTML={{ __html: svg }} />
       <div className="text-center">
         <p className="font-display text-xl text-marble">@{model.handle} is carving a statue out of their daily grind.</p>
-        <p className="mt-1 text-sm text-shadow">120 pieces of marble. One week at a time. Face last.</p>
+        <p className="mt-1 text-sm text-shadow">875 pieces of marble. One deed at a time. Face last.</p>
         <Link href={joinUrl} className="btn btn-primary mt-5">Start your own statue</Link>
       </div>
     </main>

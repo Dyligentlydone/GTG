@@ -4,7 +4,7 @@
 // unrevealed area (faceted marble, veins, grain, surface cracks) → on-deck cracks → rings (front).
 import { centroid, dilate, fmt, polygonPath, polylinePath, smoothOpenPath, type Point } from './geometry';
 import { generateRock, LIGHT, type Rock, type RockFacet } from './rock';
-import { generateShards, type Shard } from './shards';
+import { generateShards, SHARD_COUNT, type Shard } from './shards';
 import { revealOrder } from './revealOrder';
 import { clampPieces, crackIntensity, cracksPerShard, onDeckShards, shardCrackLines } from './cracks';
 import { ANCHORS, CANVAS, DEFAULT_ARCHETYPE, PALETTE, STATUE_BBOX, placeholderStatueSvg, figureSilhouettePaths, type Archetype } from './placeholderStatue';
@@ -252,8 +252,9 @@ export function renderSculptureSvg(input: RenderSculptureInput): string {
   const { rock, shards, order } = model;
   const archetype = input.archetype ?? DEFAULT_ARCHETYPE;
   const id = (input.idPrefix ?? `sc${model.seed}`).replace(/[^A-Za-z0-9_-]/g, '');
-  const revealed = clampPieces(input.piecesRevealed);
-  const complete = revealed >= STATUE_PIECES;
+  const piecesRaw = clampPieces(input.piecesRevealed);
+  const revealed = Math.round((piecesRaw / STATUE_PIECES) * SHARD_COUNT);
+  const complete = piecesRaw >= STATUE_PIECES;
   const roughWindow = complete ? 0 : Math.max(0, input.roughWindow ?? 10);
   const revealedSet = order.slice(0, revealed);
   const roughSet = new Set(revealedSet.slice(Math.max(0, revealed - roughWindow)));
@@ -300,7 +301,7 @@ export function renderSculptureSvg(input: RenderSculptureInput): string {
     ? `<image href="${escapeAttr(input.roughImageHref)}" x="0" y="0" width="${CANVAS.width}" height="${CANVAS.height}" preserveAspectRatio="xMidYMid meet"/>`
     : placeholderStatueSvg(`${id}-pr`, 'rough', archetype);
 
-  const remaining = unrevealed.length / STATUE_PIECES;
+  const remaining = unrevealed.length / SHARD_COUNT;
   const layers: string[] = [];
   if (bg !== 'none') layers.push(`<rect width="${CANVAS.width}" height="${CANVAS.height}" fill="url(#${id}-bg)"/>`);
   // Ground shadow: the plinth's, plus the rock's (cast toward the lower right) while it remains.
@@ -372,6 +373,6 @@ export function renderSculptureSvg(input: RenderSculptureInput): string {
 
   layers.push(rings(id, counts, 'front'));
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CANVAS.width} ${CANVAS.height}" width="${W}" height="${H}" role="img" aria-label="Marble sculpture, ${revealed} of ${STATUE_PIECES} pieces revealed">`
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CANVAS.width} ${CANVAS.height}" width="${W}" height="${H}" role="img" aria-label="Marble sculpture, ${piecesRaw} of ${STATUE_PIECES} pieces revealed">`
     + `<defs>${defs.join('')}</defs>${layers.join('')}</svg>`;
 }

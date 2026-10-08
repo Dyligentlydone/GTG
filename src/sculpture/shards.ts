@@ -5,9 +5,10 @@ import type { Point, Polygon } from './geometry';
 import { area, bbox, centroid, pointInPolygon, voronoiCell } from './geometry';
 import { rngFor, type Rng } from './rng';
 import type { Rock } from './rock';
-import { STATUE_PIECES } from '../core/chisel';
 
-export const SHARD_COUNT = STATUE_PIECES; // 120
+// The statue's STATUE_PIECES map proportionally onto this many drawn shards —
+// the SVG is a flat render, so the visual density is fixed independent of piece count.
+export const SHARD_COUNT = 120;
 /** Sites reserved for the head band (top ~15% of the statue box): the last 10 pieces. */
 export const HEAD_SITES = 10;
 /** Head-band sites lie above this line… */

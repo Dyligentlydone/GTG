@@ -1,7 +1,7 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { closeWeek, computeWeekResult, isFullSetDay, memoryWeekResultStore, weekClosesAt } from './weekly';
-import { applyChisel, chiselPieces, MAX_PIECES_PER_WEEK, STATUE_PIECES } from './chisel';
+import { applyChisel, MAX_PIECES_PER_EVENT, STATUE_PIECES } from './chisel';
 import { questWeekSchedule } from './schedule';
 import { completion, fixtureEnv, fixtureGame } from './testing/fixtureGame';
 import { addDays, zonedTimeToUtc } from './time';
@@ -20,42 +20,37 @@ function slots(env: EngineEnv, week: string): Completion[] {
   return out;
 }
 
-describe('chisel tiers', () => {
-  test('worked example at full protocol (due = 42)', () => {
+describe('chisel events', () => {
+  test('banked pieces = counted weekly-quota completions; dailies chip live instead', () => {
     const env = fixtureEnv();
     const all = slots(env, FULL);
     assert.equal(all.length, 42);
-    const expected: Array<[number, number]> = [[42, 5], [32, 5], [31, 2], [21, 2], [20, 1], [11, 1], [10, 0], [0, 0]];
-    for (const [done, pieces] of expected) {
+    const quotaOf = (done: number) => all.slice(0, done).filter((c) => {
+      const q = fixtureGame.quests.find((x) => x.id === c.questId)!;
+      return q.schedule.kind !== 'daily';
+    }).length;
+    for (const done of [42, 32, 21, 10, 0]) {
       const r = computeWeekResult(env, FULL, all.slice(0, done));
       assert.equal(r.due, 42);
       assert.equal(r.done, done);
-      assert.equal(r.pieces, pieces, `${done}/42 → ${pieces}`);
+      assert.equal(r.pieces, quotaOf(done), `${done}/42 → ${quotaOf(done)}`);
     }
+    // A perfect week banks the whole quota: 4+5+5+5+3+3+3.
+    assert.equal(computeWeekResult(env, FULL, all).pieces, 28);
     assert.equal(computeWeekResult(env, FULL, all.slice(0, 32)).completionPct.toFixed(3), '0.762');
   });
 
-  test('tier boundaries are exact', () => {
-    assert.equal(chiselPieces(3, 4), 5);
-    assert.equal(chiselPieces(1, 2), 2);
-    assert.equal(chiselPieces(1, 4), 1);
-    assert.equal(chiselPieces(0, 4), 0);
-    assert.equal(chiselPieces(0, 0), 0);
-    assert.equal(chiselPieces(99, 4), 5); // over-reporting is capped
-  });
-
-  test('never more than 5 per week, never past 120', () => {
+  test('one event caps at 64 pieces, never past the statue', () => {
     assert.deepEqual(applyChisel(0, 5), { applied: 5, piecesRevealed: 5, complete: false });
-    assert.equal(applyChisel(0, 9).applied, MAX_PIECES_PER_WEEK);
-    assert.deepEqual(applyChisel(118, 5), { applied: 2, piecesRevealed: 120, complete: true });
-    assert.deepEqual(applyChisel(120, 5), { applied: 0, piecesRevealed: 120, complete: true });
+    assert.equal(applyChisel(0, 99).applied, MAX_PIECES_PER_EVENT);
+    assert.deepEqual(applyChisel(870, 20), { applied: 5, piecesRevealed: 875, complete: true });
+    assert.deepEqual(applyChisel(875, 20), { applied: 0, piecesRevealed: 875, complete: true });
     assert.equal(applyChisel(-3, 1).piecesRevealed, 1);
     let revealed = 0;
     for (let w = 0; w < 30; w++) {
-      const step = applyChisel(revealed, 5);
-      assert.ok(step.applied <= 5);
+      const step = applyChisel(revealed, 34); // a perfect week: 14 live + 20 banked
       revealed = step.piecesRevealed;
-      if (w === 23) assert.equal(revealed, STATUE_PIECES);
+      if (w === 25) assert.equal(revealed, STATUE_PIECES); // week 26 caps mid-cascade
     }
     assert.equal(revealed, STATUE_PIECES);
   });
@@ -71,7 +66,7 @@ describe('week result', () => {
     assert.equal(r.balancedWeek, true);
     assert.equal(r.innerBalance, true);
     assert.equal(r.outerBalance, true);
-    assert.equal(r.pieces, 5);
+    assert.equal(r.pieces, 28); // quota banked: 4+5+5+5+3+3+3 (dailies chip live)
     const bySource = (s: string) => r.bonusXp.filter((e) => e.sourceType === s);
     assert.equal(bySource('perfect_week')[0]?.amount, 250);
     assert.equal(bySource('balanced_week')[0]?.amount, 100);
@@ -88,6 +83,7 @@ describe('week result', () => {
     assert.equal(r.done, 4);
     assert.equal(r.perfectWeek, false);
     assert.equal(r.quests.find((l) => l.questId === 'fx.exercise')?.completions, 10);
+    assert.equal(r.pieces, 4); // banked is capped at the quest's quota too
   });
 
   test('balanced week needs a completion in every pillar; one miss breaks perfect but not balance', () => {
@@ -133,7 +129,7 @@ describe('week result', () => {
     const r = computeWeekResult(env, FULL, slots(env, FULL));
     assert.ok(r.due < 42);
     assert.equal(r.completionPct, 1);
-    assert.equal(r.pieces, 5);
+    assert.equal(r.pieces, 18); // quotas prorate to 4 days: 3+3+3+3+2+2+2
   });
 
   test('zero due is a skipped week: 0 pieces, no penalty, not perfect', () => {

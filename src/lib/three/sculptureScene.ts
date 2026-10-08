@@ -1,6 +1,6 @@
 // Three.js museum stage for the player's sculpture — a port of the proven
 // docs/chisel-3d-demo.html prototype to modern three (ESM, physical lights,
-// CapsuleGeometry). The rock's 120 chunks are seeded so they match the account.
+// CapsuleGeometry). The rock's 875 chunks are seeded so they match the account.
 // Client-only: import via a 'use client' component, never on the server.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -33,7 +33,7 @@ interface Piece {
 interface Dust { pts: THREE.Points; vel: THREE.Vector3[]; life: number; }
 
 const VOID = 0x0a0a0c;
-const TOTAL = 120;
+const TOTAL = 875;
 
 export class SculptureScene {
   private renderer: THREE.WebGLRenderer;
@@ -127,10 +127,10 @@ export class SculptureScene {
     cap.castShadow = cap.receiveShadow = true;
     this.scene.add(cap);
 
-    // ---------- the rock: 120 chunks on a jittered grid ----------
-    const NX = 4;
-    const NY = 10;
-    const NZ = 3;
+    // ---------- the rock: 875 chunks on a jittered grid ----------
+    const NX = 7;
+    const NY = 25;
+    const NZ = 5;
     const minB = new THREE.Vector3(-0.78, 0.5, -0.58);
     const maxB = new THREE.Vector3(0.78, 3.92, 0.62);
     const cell = new THREE.Vector3((maxB.x - minB.x) / NX, (maxB.y - minB.y) / NY, (maxB.z - minB.z) / NZ);

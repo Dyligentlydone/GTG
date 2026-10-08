@@ -34,7 +34,7 @@ export default async function SculpturePage() {
       <TempleHeader handle={profile.handle} />
       <main className="mx-auto max-w-4xl px-4 py-8">
         <h1 className="font-display text-3xl text-marble">The Sculpture</h1>
-        <p className="mt-1 text-sm text-shadow">120 pieces. Face last. Chisel Day is Monday 00:00 your time.</p>
+        <p className="mt-1 text-sm text-shadow">875 pieces. Daily deeds chip live. The week's banked pieces fall Sunday night.</p>
 
         <div className="mt-6 grid gap-6 md:grid-cols-[1fr_1.2fr]">
           <section className="card flex flex-col items-center p-5">

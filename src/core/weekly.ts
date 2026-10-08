@@ -3,7 +3,6 @@ import type { Completion, EngineEnv, Instant, InstantLike, LocalDate, PillarId, 
 import { addDays, toMs, weekDates, weekStart as mondayOf, zonedTimeToUtc } from './time';
 import { questWeekSchedule, weekCompletionCount, type QuestWeekSchedule } from './schedule';
 import { stageForWeek, weekIndexOf } from './ramp';
-import { chiselPieces } from './chisel';
 import { DEFAULT_BONUS_XP, xpEvent, xpKeys } from './xp';
 
 export interface QuestWeekLine {
@@ -32,7 +31,7 @@ export interface WeekResult {
   balancedWeek: boolean;
   innerBalance: boolean;
   outerBalance: boolean;
-  /** Chisel tier pieces (0, 1, 2 or 5). */
+  /** Banked pieces that drop at week close — one per counted weekly-quota completion. */
   pieces: number;
   /** Lines for every quest unlocked during this week. */
   quests: QuestWeekLine[];
@@ -135,7 +134,8 @@ export function computeWeekResult(env: EngineEnv, week: LocalDate, completions: 
     balancedWeek,
     innerBalance,
     outerBalance,
-    pieces: chiselPieces(done, due),
+    // Daily quests chip live at check-in; only quota completions bank for Sunday.
+    pieces: lines.reduce((a, l, i) => a + (scheduled[i]!.daily ? 0 : l.counted), 0),
     quests: lines,
     fullSetDays,
     bonusXp,

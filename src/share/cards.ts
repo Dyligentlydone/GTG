@@ -334,9 +334,9 @@ function achievementBody(model: ShareCardModel, t: Theme): string {
 const MILESTONE_SUB: Record<string, (m: Extract<ShareItem, { type: 'milestone' }>) => string> = {
   book_finished: (m) => (m.bookTitle ? `"${m.bookTitle}"` : 'Another book') + ' — cover to cover.',
   chisel_day: (m) => `${m.piecesThisWeek ?? 0} ${m.piecesThisWeek === 1 ? 'piece' : 'pieces'} fell this week.`,
-  sculpture_halfway: () => '60 of 120 pieces revealed.',
+  sculpture_halfway: () => `${Math.ceil(STATUE_PIECES / 2)} of ${STATUE_PIECES} pieces revealed.`,
   face_reveal: () => 'The last pieces fell — the face is free.',
-  sculpture_complete: () => 'All 120 pieces revealed.',
+  sculpture_complete: () => `All ${STATUE_PIECES} pieces revealed.`,
 };
 
 function milestoneBody(model: ShareCardModel, id: string, t: Theme): string {

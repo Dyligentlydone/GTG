@@ -4,9 +4,11 @@ import type { Point } from './geometry';
 import { pointInPolygon } from './geometry';
 import type { Shard } from './shards';
 import { rngFor } from './rng';
-import { MAX_PIECES_PER_WEEK, STATUE_PIECES } from '../core/chisel';
+import { STATUE_PIECES } from '../core/chisel';
 
 export const MAX_CRACKS_PER_SHARD = 4;
+/** Shards highlighted as next-to-fall, in draw order. */
+export const ON_DECK_SHARDS = 5;
 
 export function clampPieces(pieces: number): number {
   if (!Number.isFinite(pieces)) return 0;
@@ -21,8 +23,8 @@ export function crackIntensity(weekProgressPct: number): number {
 
 /** The next (up to) 5 shard indices after the revealed ones. */
 export function onDeckShards(order: readonly number[], piecesRevealed: number): number[] {
-  const start = clampPieces(piecesRevealed);
-  return order.slice(start, start + MAX_PIECES_PER_WEEK);
+  const start = Math.min(order.length, Math.max(0, Math.floor(piecesRevealed)));
+  return order.slice(start, start + ON_DECK_SHARDS);
 }
 
 /** Number of crack lines drawn per on-deck shard at this intensity. */
