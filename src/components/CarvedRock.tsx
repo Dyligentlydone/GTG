@@ -12,9 +12,15 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { rngFor } from '../sculpture/rng';
+import { DEFAULT_ARCHETYPE, type Archetype } from '../sculpture/placeholderStatue';
 
 const ROCK_URL = '/models/rock_carve.glb';
-const STATUE_URL = '/models/statue_1m.glb';
+const STATUE_URLS: Record<Archetype, string> = {
+  philosopher: '/models/statue_philosopher.glb',
+  athlete: '/models/statue_athlete.glb',
+  warrior: '/models/statue_warrior.glb',
+  orator: '/models/statue_orator.glb',
+};
 const TOTAL = 875;
 const OCC = 96;                 // occupancy texture resolution per axis
 const ON_DECK = 5;              // pending glow markers
@@ -83,13 +89,15 @@ export interface CarvedRockProps {
   onStrike?: () => void;
   withStatue?: boolean;
   seed?: number;
+  /** Which statue GLB stands inside the rock — the player's chosen archetype. */
+  archetype?: Archetype;
   position?: [number, number, number];
   rotationY?: number;
 }
 
 export function CarvedRock({
   height = 3.2, revealed, pending = 0, onStrike, withStatue = true, seed = 7,
-  position = [0, 0, 0], rotationY = 0,
+  archetype = DEFAULT_ARCHETYPE, position = [0, 0, 0], rotationY = 0,
 }: CarvedRockProps) {
   const { scene } = useGLTF(ROCK_URL);
 
@@ -282,7 +290,7 @@ export function CarvedRock({
         </instancedMesh>
         <group ref={glowRef} />
       </group>
-      {withStatue && <InnerStatue height={height} visible={revealed > 0} />}
+      {withStatue && <InnerStatue height={height} visible={revealed > 0} url={STATUE_URLS[archetype]} />}
       {/* strike surface — invisible proxy so clicks never raycast the rock */}
       {onStrike && (
         <mesh position={[0, height / 2, 0]} onClick={(e) => { e.stopPropagation(); onStrike(); }}>
@@ -295,8 +303,8 @@ export function CarvedRock({
 }
 
 /** The real statue GLB standing inside the rock, scaled to fit the cavity. */
-function InnerStatue({ height, visible }: { height: number; visible: boolean }) {
-  const { scene } = useGLTF(STATUE_URL);
+function InnerStatue({ height, visible, url }: { height: number; visible: boolean; url: string }) {
+  const { scene } = useGLTF(url);
   const statue = useMemo(() => {
     const clone = scene.clone(true);
     // statue front faces the rock's +Z authored front as-is; no rotation
@@ -313,4 +321,4 @@ function InnerStatue({ height, visible }: { height: number; visible: boolean }) 
 }
 
 useGLTF.preload(ROCK_URL);
-useGLTF.preload(STATUE_URL);
+// statues stay lazy: only the player's archetype loads, inside the shell anyway

@@ -18,7 +18,7 @@ export function SculptureHero({
   decorations,
   weekPct,
   autoChisel,
-}: Omit<SculptureCanvasProps, 'seed' | 'piecesRevealed'> & { sculpture: SculptureRow | null; decorations: DecorationInput[] }) {
+}: Omit<SculptureCanvasProps, 'seed' | 'piecesRevealed' | 'archetype'> & { sculpture: SculptureRow | null; decorations: DecorationInput[] }) {
   return (
     <div className="relative h-full w-full">
       {sculpture && (
@@ -30,6 +30,7 @@ export function SculptureHero({
         {sculpture && (
           <Canvas
             seed={sculpture.seed}
+            archetype={sculpture.archetype}
             piecesRevealed={sculpture.pieces_revealed}
             weekPct={weekPct}
             autoChisel={autoChisel}

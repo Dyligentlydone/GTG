@@ -8,9 +8,11 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { Suspense } from 'react';
 import { CarvedRock } from './CarvedRock';
+import type { SculptureRow } from '../lib/repos/types';
 
 export interface SculptureCanvasProps {
   seed: number;
+  archetype: SculptureRow['archetype'];
   piecesRevealed: number;
   weekPct: number;
   /**
@@ -21,7 +23,7 @@ export interface SculptureCanvasProps {
   autoChisel?: number;
 }
 
-export function SculptureCanvas({ seed, piecesRevealed, weekPct, autoChisel = 0 }: SculptureCanvasProps) {
+export function SculptureCanvas({ seed, archetype, piecesRevealed, weekPct, autoChisel = 0 }: SculptureCanvasProps) {
   const replay = Math.min(Math.max(0, autoChisel), piecesRevealed);
   const [revealed, setRevealed] = useState(piecesRevealed - replay);
 
@@ -48,7 +50,7 @@ export function SculptureCanvas({ seed, piecesRevealed, weekPct, autoChisel = 0 
       <directionalLight position={[4, 8, 5]} intensity={1.6} castShadow shadow-mapSize={[1024, 1024]} />
       <spotLight position={[-4, 6, -4]} intensity={70} angle={0.5} penumbra={0.6} color={0xffe0b0} />
       <Suspense fallback={null}>
-        <CarvedRock seed={seed} revealed={revealed} pending={pending} position={[0, 0, 0]} />
+        <CarvedRock seed={seed} archetype={archetype} revealed={revealed} pending={pending} position={[0, 0, 0]} />
       </Suspense>
       <OrbitControls enablePan={false} enableZoom={false} target={[0, 1.5, 0]}
         minPolarAngle={0.9} maxPolarAngle={1.55} autoRotate autoRotateSpeed={0.5} />

@@ -6,11 +6,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
 import { Suspense } from 'react';
 import { CarvedRock } from '../CarvedRock';
+import { DEFAULT_ARCHETYPE, type Archetype } from '../../sculpture/placeholderStatue';
 import type { DoorDestination } from './types';
 
 const FLOOR = 0.75;
 
-interface ScState { revealed: number; pending: number; complete: boolean; seed: number }
+interface ScState { revealed: number; pending: number; complete: boolean; seed: number; archetype: Archetype }
 
 export function HallSculpture({ destination, onDoorChange }: {
   destination: DoorDestination;
@@ -28,6 +29,7 @@ export function HallSculpture({ destination, onDoorChange }: {
         setSt({
           revealed: data.sculpture.revealed, pending: data.sculpture.pending,
           complete: data.sculpture.status === 'complete', seed: data.sculpture.seed,
+          archetype: data.sculpture.archetype as Archetype,
         });
       }
     } catch { /* world renders without the marble */ }
@@ -46,7 +48,8 @@ export function HallSculpture({ destination, onDoorChange }: {
       const res = await fetch('/api/sculpture/chisel', { method: 'POST' });
       const data = await res.json();
       if (data?.ok) setSt((s) => (!s || data.revealed >= s.revealed
-        ? { revealed: data.revealed, pending: data.pending, complete: data.complete, seed: s?.seed ?? 7 }
+        ? { revealed: data.revealed, pending: data.pending, complete: data.complete,
+            seed: s?.seed ?? 7, archetype: s?.archetype ?? DEFAULT_ARCHETYPE }
         : s));
     } catch { /* next strike reconciles */ }
   }, []);
@@ -61,7 +64,7 @@ export function HallSculpture({ destination, onDoorChange }: {
       {entered && st && (
         <group visible={inside}>
           <Suspense fallback={null}>
-            <CarvedRock height={2.45} seed={st.seed} revealed={st.revealed} pending={st.pending}
+            <CarvedRock height={2.45} seed={st.seed} archetype={st.archetype} revealed={st.revealed} pending={st.pending}
               onStrike={strike} position={[0, 0, 0]} rotationY={Math.PI} />
           </Suspense>
         </group>
