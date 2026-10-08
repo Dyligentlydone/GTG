@@ -301,7 +301,7 @@ function InnerStatue({ height, visible }: { height: number; visible: boolean }) 
     const clone = scene.clone(true);
     // statue front faces the rock's +Z authored front as-is; no rotation
     const s0 = new THREE.Box3().setFromObject(clone).getSize(new THREE.Vector3());
-    clone.scale.setScalar((height * 0.66) / s0.y);
+    clone.scale.setScalar((height * 0.82) / s0.y);
     clone.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(clone);
     const center = box.getCenter(new THREE.Vector3());
