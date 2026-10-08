@@ -6,7 +6,7 @@ import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 
-const H = 3.8;
+const H = 5.5;
 
 export function GlbStatue({ position = [0, 0, 0] as [number, number, number] }) {
   const { scene } = useGLTF('/models/gtg-logo.glb');

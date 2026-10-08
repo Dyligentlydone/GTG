@@ -286,15 +286,12 @@ export function Courtyard({ destinations, onDoorChange, onQuest, boardVersion }:
       {/* central statue on a grand plinth */}
       <RigidBody type="fixed" colliders={false}>
         <CuboidCollider args={[1.9, 0.6, 1.5]} position={[0, 0.6, 0]} />
-        <CuboidCollider args={[1.3, 2.4, 1.1]} position={[0, 2.9, 0]} />
+        <CuboidCollider args={[1.6, 2.9, 1.3]} position={[0, 3.5, 0]} />
       </RigidBody>
       <mesh material={marbleTrim} position={[0, 0.35, 0]} castShadow receiveShadow>
         <boxGeometry args={[3.6, 0.7, 2.8]} />
       </mesh>
-      <mesh material={marbleTrim} position={[0, 1.0, 0]} castShadow receiveShadow>
-        <boxGeometry args={[3.0, 0.6, 2.2]} />
-      </mesh>
-      <GlbStatue position={[0, 1.3, 0]} />
+      <GlbStatue position={[0, 0.7, 0]} />
 
       {/* temples */}
       {destinations.slice(0, placements.length).map((d, i) => (
