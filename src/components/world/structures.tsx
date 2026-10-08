@@ -6,6 +6,7 @@ import { useFrame } from '@react-three/fiber';
 import { RigidBody, CuboidCollider, CylinderCollider } from '@react-three/rapier';
 import { marbleMaterial } from '../../lib/three/materials';
 import { HallBoard } from './HallBoard';
+import { HallSculpture } from './HallSculpture';
 import type { DoorDestination, QuestTarget } from './types';
 
 /** Fluted column geometry (shared): lathe profile + sinusoidal fluting. */
@@ -264,6 +265,10 @@ export function Temple({ destination, position, rotationY, onDoorChange, onQuest
       {destination.gameSlug && (
         <HallBoard gameSlug={destination.gameSlug} destination={destination} onDoorChange={onDoorChange}
           onQuest={onQuest} version={boardVersion} />
+      )}
+      {/* the player's marble waits in the self-development hall to be struck */}
+      {destination.sculptureHall && (
+        <HallSculpture destination={destination} onDoorChange={onDoorChange} />
       )}
 
       {/* temple name — carved onto the pediment face */}

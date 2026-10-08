@@ -24,6 +24,8 @@ export type DoorDestination = {
   prompt?: string;
   /** When set, the hall interior renders this game's live quest board. */
   gameSlug?: string;
+  /** When set, the hall also displays the player's clickable marble sculpture. */
+  sculptureHall?: boolean;
   /** When set, E opens the in-world check-in modal instead of navigating. */
   quest?: QuestTarget;
 };

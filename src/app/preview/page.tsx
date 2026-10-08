@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 const MOCK_SCULPTURE: SculptureRow = {
   id: 'preview', user_id: 'preview', archetype: 'philosopher', seed: 7,
-  pieces_total: 875, pieces_revealed: 340, status: 'carving',
+  pieces_total: 875, pieces_revealed: 340, pieces_earned: 345, status: 'carving',
   final_image_path: null, rough_image_path: null, completed_at: null,
 };
 

@@ -112,6 +112,7 @@ export interface SculptureRow {
   seed: number;
   pieces_total: number;
   pieces_revealed: number;
+  pieces_earned: number;
   status: 'sealed' | 'carving' | 'complete';
   final_image_path: string | null;
   rough_image_path: string | null;
