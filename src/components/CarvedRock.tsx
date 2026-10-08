@@ -12,10 +12,9 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { rngFor } from '../sculpture/rng';
-import { buildStatue } from '../lib/three/statue';
-import { marbleMaterial } from '../lib/three/materials';
 
 const ROCK_URL = '/models/rock_carve.glb';
+const STATUE_URL = '/models/gtg-logo.glb';
 const TOTAL = 875;
 const OCC = 96;                 // occupancy texture resolution per axis
 const ON_DECK = 5;              // pending glow markers
@@ -125,7 +124,7 @@ export function CarvedRock({
 
     // patch the rock's own material — keep its textures and PBR lighting
     const srcMat = (Array.isArray(src.material) ? src.material[0] : src.material) as THREE.MeshStandardMaterial;
-    const mat = (srcMat ?? marbleMaterial([232, 228, 219], [168, 162, 152], 13, 0.5)).clone() as THREE.MeshStandardMaterial;
+    const mat = srcMat.clone();
     mat.side = THREE.DoubleSide;
     mat.onBeforeCompile = (shader) => {
       shader.uniforms.uOcc = { value: occ };
@@ -165,27 +164,19 @@ export function CarvedRock({
 
     const bites = makeBites(seed);
 
-    const statue = withStatue ? buildStatue(marbleMaterial([238, 234, 226], [150, 146, 140], 11, 0.42)) : null;
-    if (statue) {
-      statue.scale.setScalar((height * 0.68) / 3.9);
-      statue.position.y = height * 0.06;
-      statue.visible = revealed > 0;
-    }
-
-    return { rock, occ, occData, bites, statue };
-  }, [scene, height, seed, withStatue]); // eslint-disable-line react-hooks/exhaustive-deps
+    return { rock, occ, occData, bites };
+  }, [scene, height, seed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---------- carve state → occupancy texture (incremental) ----------
   const applied = useRef(0);
   useEffect(() => {
     if (!built) return;
-    const { occData, occ, bites, statue } = built;
+    const { occData, occ, bites } = built;
     const clamp = Math.min(revealed, TOTAL);
     for (let k = applied.current; k < clamp; k++) bakeBite(occData, bites[k]!);
     applied.current = clamp;
     occ.needsUpdate = true;
     built.rock.visible = clamp < TOTAL;
-    if (statue) statue.visible = clamp > 0;
   }, [revealed, built]);
 
   // ---------- debris: instanced chips, recycled ----------
@@ -250,9 +241,12 @@ export function CarvedRock({
     inst.instanceMatrix.needsUpdate = true;
   });
 
-  // place glow markers for the next ON_DECK bites
+  // place glow markers for the next ON_DECK bites — pinned to the shell
+  // surface along the bite's direction so they're never buried in stone
   const glowGeo = useMemo(() => new THREE.SphereGeometry(1, 10, 8), []);
-  const glowMat = useMemo(() => new THREE.MeshBasicMaterial({ color: 0xc9a227, transparent: true, opacity: 0.85 }), []);
+  const glowMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: 0xc9a227, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false,
+  }), []);
   useEffect(() => {
     const grp = glowRef.current;
     if (!grp || !built) return;
@@ -260,16 +254,20 @@ export function CarvedRock({
     const glow = Math.min(ON_DECK, pending, TOTAL - revealed);
     for (let k = revealed; k < revealed + glow; k++) {
       const b = built.bites[k]!;
+      const dir = new THREE.Vector3(b.pos.x - 0.5, b.pos.y - 0.5, b.pos.z - 0.5);
+      const surf = dir.lengthSq() > 1e-6
+        ? dir.normalize().multiplyScalar(0.5).addScalar(0) // push to the unit-shell surface
+        : new THREE.Vector3(0, 0.5, 0);
       const m = new THREE.Mesh(glowGeo, glowMat);
-      m.userData.base = height * 0.02;
-      m.scale.setScalar(height * 0.02);
-      m.position.set(b.pos.x * height, b.pos.y * height, b.pos.z * height);
+      m.userData.base = height * 0.035;
+      m.scale.setScalar(height * 0.035);
+      m.position.set((0.5 + surf.x) * height, (0.5 + surf.y) * height, (0.5 + surf.z) * height);
       grp.add(m);
     }
   }, [revealed, pending, built, height, glowGeo, glowMat]);
 
   if (!built) return null;
-  const { rock, statue } = built;
+  const { rock } = built;
 
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
@@ -282,7 +280,7 @@ export function CarvedRock({
         </instancedMesh>
         <group ref={glowRef} />
       </group>
-      {statue && <primitive object={statue} />}
+      {withStatue && <InnerStatue height={height} visible={revealed > 0} />}
       {/* strike surface — invisible proxy so clicks never raycast the rock */}
       {onStrike && (
         <mesh position={[0, height / 2, 0]} onClick={(e) => { e.stopPropagation(); onStrike(); }}>
@@ -294,4 +292,22 @@ export function CarvedRock({
   );
 }
 
+/** The real statue GLB standing inside the rock, scaled to fit the cavity. */
+function InnerStatue({ height, visible }: { height: number; visible: boolean }) {
+  const { scene } = useGLTF(STATUE_URL);
+  const statue = useMemo(() => {
+    const clone = scene.clone(true);
+    const box = new THREE.Box3().setFromObject(clone);
+    const size = box.getSize(new THREE.Vector3());
+    const s = (height * 0.66) / size.y;
+    const center = box.getCenter(new THREE.Vector3());
+    clone.scale.setScalar(s);
+    clone.position.set(-center.x * s, -box.min.y * s + height * 0.05, -center.z * s);
+    clone.traverse((o) => { if ((o as THREE.Mesh).isMesh) (o as THREE.Mesh).castShadow = true; });
+    return clone;
+  }, [scene, height]);
+  return <primitive object={statue} visible={visible} />;
+}
+
 useGLTF.preload(ROCK_URL);
+useGLTF.preload(STATUE_URL);

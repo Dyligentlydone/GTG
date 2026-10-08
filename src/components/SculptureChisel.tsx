@@ -24,7 +24,7 @@ function Plinth() {
   );
 }
 
-export function SculptureChisel({ revealed, pending, total }: { revealed: number; pending: number; total: number }) {
+export function SculptureChisel({ revealed, pending, total, seed }: { revealed: number; pending: number; total: number; seed: number }) {
   const [st, setSt] = useState({ revealed, pending, complete: revealed >= total });
 
   const strike = useCallback(async () => {
@@ -47,7 +47,7 @@ export function SculptureChisel({ revealed, pending, total }: { revealed: number
           <spotLight position={[-4, 6, -4]} intensity={60} angle={0.5} penumbra={0.6} color={0xffe0b0} />
           <Suspense fallback={null}>
             <Plinth />
-            <CarvedRock revealed={st.revealed} pending={st.pending} onStrike={strike} position={[0, 0.5, 0]} />
+            <CarvedRock seed={seed} revealed={st.revealed} pending={st.pending} onStrike={strike} position={[0, 0.5, 0]} />
           </Suspense>
           <OrbitControls enablePan={false} enableZoom={false} target={[0, 1.9, 0]}
             minPolarAngle={0.9} maxPolarAngle={1.55} autoRotate autoRotateSpeed={0.5} />

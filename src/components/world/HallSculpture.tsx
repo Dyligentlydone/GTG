@@ -11,7 +11,7 @@ import type { DoorDestination } from './types';
 
 const FLOOR = 0.75;
 
-interface ScState { revealed: number; pending: number; complete: boolean }
+interface ScState { revealed: number; pending: number; complete: boolean; seed: number }
 
 export function HallSculpture({ destination, onDoorChange }: {
   destination: DoorDestination;
@@ -27,7 +27,10 @@ export function HallSculpture({ destination, onDoorChange }: {
       const res = await fetch('/api/sculpture', { cache: 'no-store' });
       const data = await res.json();
       if (data?.ok && data.sculpture) {
-        setSt({ revealed: data.sculpture.revealed, pending: data.sculpture.pending, complete: data.sculpture.status === 'complete' });
+        setSt({
+          revealed: data.sculpture.revealed, pending: data.sculpture.pending,
+          complete: data.sculpture.status === 'complete', seed: data.sculpture.seed,
+        });
       }
     } catch { /* world renders without the marble */ }
   }, []);
@@ -45,7 +48,7 @@ export function HallSculpture({ destination, onDoorChange }: {
       const res = await fetch('/api/sculpture/chisel', { method: 'POST' });
       const data = await res.json();
       if (data?.ok) setSt((s) => (!s || data.revealed >= s.revealed
-        ? { revealed: data.revealed, pending: data.pending, complete: data.complete }
+        ? { revealed: data.revealed, pending: data.pending, complete: data.complete, seed: s?.seed ?? 7 }
         : s));
     } catch { /* next strike reconciles */ }
   }, []);
@@ -68,7 +71,7 @@ export function HallSculpture({ destination, onDoorChange }: {
       {entered && st && (
         <group visible={inside}>
           <Suspense fallback={null}>
-            <CarvedRock height={1.9} revealed={st.revealed} pending={st.pending}
+            <CarvedRock height={1.9} seed={st.seed} revealed={st.revealed} pending={st.pending}
               onStrike={strike} position={[0, 0.64, 0]} rotationY={Math.PI} />
           </Suspense>
         </group>

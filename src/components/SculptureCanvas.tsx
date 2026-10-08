@@ -1,8 +1,13 @@
 'use client';
-// Canvas host for the 3D sculpture stage. Owns the SculptureScene lifecycle and
-// forwards prop changes. Loaded only client-side via next/dynamic in SculptureHero.
-import { useEffect, useRef, useState } from 'react';
-import { SculptureScene } from '../lib/three/sculptureScene';
+// Canvas host for the lobby's 3D sculpture stage — the same real carved rock
+// as /sculpture and the agora hall (one rock everywhere). Display-only: the
+// lobby links to the hall for striking. autoChisel replays recent pieces
+// falling shortly after mount so returning players watch their week land.
+import { useEffect, useState } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls } from '@react-three/drei';
+import { Suspense } from 'react';
+import { CarvedRock } from './CarvedRock';
 
 export interface SculptureCanvasProps {
   seed: number;
@@ -10,47 +15,43 @@ export interface SculptureCanvasProps {
   weekPct: number;
   /**
    * Pieces to animate falling shortly after mount — the lobby passes a recent
-   * Chisel Day's count so returning players watch their week land for real.
+   * chisel count so returning players watch their strikes land for real.
    * The scene starts at piecesRevealed - autoChisel and carves the rest live.
    */
   autoChisel?: number;
 }
 
 export function SculptureCanvas({ seed, piecesRevealed, weekPct, autoChisel = 0 }: SculptureCanvasProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const sceneRef = useRef<SculptureScene | null>(null);
-  const [webglFailed, setWebglFailed] = useState(false);
+  const replay = Math.min(Math.max(0, autoChisel), piecesRevealed);
+  const [revealed, setRevealed] = useState(piecesRevealed - replay);
 
   useEffect(() => {
-    if (!canvasRef.current) return;
-    const pending = Math.min(Math.max(0, autoChisel), piecesRevealed);
-    let scene: SculptureScene;
-    try {
-      scene = new SculptureScene(canvasRef.current, {
-        seed,
-        piecesRevealed: piecesRevealed - pending,
-        weekPct,
-      });
-    } catch {
-      // No WebGL (old GPU, blocked context) — the SVG statue underneath stays as the fallback.
-      setWebglFailed(true);
+    if (replay <= 0) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setRevealed(piecesRevealed);
       return;
     }
-    sceneRef.current = scene;
-    const timer = pending > 0 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      ? window.setTimeout(() => scene.chisel(pending), 1400)
-      : (pending > 0 ? (scene.chisel(pending), 0) : 0);
-    return () => {
-      window.clearTimeout(timer);
-      scene.dispose();
-      sceneRef.current = null;
-    };
-  }, [seed]); // eslint-disable-line react-hooks/exhaustive-deps -- scene is built once per seed
+    // stagger the replayed strikes so a big week reads as a crumbling wave
+    const timers: number[] = [];
+    for (let i = 1; i <= replay; i++) {
+      timers.push(window.setTimeout(() => setRevealed(piecesRevealed - replay + i), 1400 + i * 260));
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [replay, piecesRevealed]);
 
-  useEffect(() => {
-    sceneRef.current?.setWeekPct(weekPct);
-  }, [weekPct]);
+  // on-deck glow count scales with week progress, mirroring the old stage
+  const pending = Math.max(1, Math.round(weekPct * 5));
 
-  if (webglFailed) return null;
-  return <canvas ref={canvasRef} className="block h-full w-full" aria-label="3D view of your marble statue being carved. Drag to rotate." />;
+  return (
+    <Canvas shadows camera={{ position: [0, 2.3, 6.2], fov: 38 }}>
+      <ambientLight intensity={0.45} />
+      <directionalLight position={[4, 8, 5]} intensity={1.6} castShadow shadow-mapSize={[1024, 1024]} />
+      <spotLight position={[-4, 6, -4]} intensity={70} angle={0.5} penumbra={0.6} color={0xffe0b0} />
+      <Suspense fallback={null}>
+        <CarvedRock seed={seed} revealed={revealed} pending={pending} position={[0, 0, 0]} />
+      </Suspense>
+      <OrbitControls enablePan={false} enableZoom={false} target={[0, 1.5, 0]}
+        minPolarAngle={0.9} maxPolarAngle={1.55} autoRotate autoRotateSpeed={0.5} />
+    </Canvas>
+  );
 }

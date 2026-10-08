@@ -35,7 +35,8 @@ export default async function SculpturePage() {
                 <SculptureChisel
                   revealed={sculpture.pieces_revealed}
                   pending={Math.max(0, sculpture.pieces_earned - sculpture.pieces_revealed)}
-                  total={sculpture.pieces_total} />
+                  total={sculpture.pieces_total}
+                  seed={sculpture.seed} />
                 <p className="mt-2 text-sm text-shadow">{sculpture.archetype} · {sculpture.status}</p>
                 <div className="mt-2 flex items-baseline gap-2">
                   <span className="label mb-0">Chisel Day in</span>
