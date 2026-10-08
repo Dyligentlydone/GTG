@@ -33,15 +33,19 @@ function makeBites(seed: number): Bite[] {
     const a = rng.next() * Math.PI * 2;
     const s = Math.sqrt(1 - u * u);
     const dir = new THREE.Vector3(s * Math.cos(a), u, s * Math.sin(a));
-    const rr = 0.9 + rng.next() * 0.18; // 0.90–1.08 — biased to break the surface
+    // depth spread 0.55–1.08: surface bites open craters, deeper bites open
+    // as their neighbours erode — the carve tunnels inward toward the statue
+    const rr = 0.55 + rng.next() * 0.53;
     const pos = new THREE.Vector3(0.5 + dir.x * 0.5 * rr, 0.5 + dir.y * 0.5 * rr, 0.5 + dir.z * 0.5 * rr);
-    bites.push({ pos, r: 0.052 * (0.8 + rng.next() * 0.45) });
+    bites.push({ pos, r: 0.075 * (0.8 + rng.next() * 0.45) });
   }
-  // bottom first with jitter; the top-center band (the face) is struck last
+  // bottom first with jitter; the top-center band (the face) is struck last.
+  // shallow (outer-shell) bites sort earlier so early strikes are visible
   const order = bites
     .map((b, i) => {
+      const depth = Math.hypot(b.pos.x - 0.5, b.pos.y - 0.5, b.pos.z - 0.5);
       const faceish = b.pos.y > 0.72 && Math.hypot(b.pos.x - 0.5, b.pos.z - 0.5) < 0.28;
-      return { i, key: b.pos.y + (rng.next() - 0.5) * 0.4 + (faceish ? 100 : 0) };
+      return { i, key: b.pos.y + (rng.next() - 0.5) * 0.4 + depth * -0.35 + (faceish ? 100 : 0) };
     })
     .sort((a, b) => a.key - b.key);
   return order.map((o) => bites[o.i]!);
@@ -64,7 +68,7 @@ function bakeBite(data: Uint8Array, bite: Bite) {
     const f = 1.18 - c.distanceTo(pos) / r; // 1 inside core, ~0 at feather edge
     if (f <= 0) continue;
     const idx = x + OCC * (y + OCC * z);
-    const v = Math.round(f * 255);
+    const v = Math.min(255, Math.round(f * 255)); // Uint8Array wraps mod 256 — clamp!
     if (v > data[idx]!) data[idx] = v;
   }
 }
