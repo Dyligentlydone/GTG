@@ -1,6 +1,11 @@
 # fracture-rock.py — split a rock GLB into exactly 120 separate mesh chunks.
 #
-#   blender --background --python scripts/fracture-rock.py -- <in.glb> <out.glb> [pieces] [seed]
+#   blender --background --python scripts/fracture-rock.py -- <in.glb> <out.glb> [pieces] [seed] [statue.glb]
+#
+# Optional 5th arg: a statue GLB in the SAME coordinate frame (figure standing
+# inside the rock). The statue — inflated a few percent — is boolean-subtracted
+# from the rock before fracturing, so the 120 chunks form a hollow shell around
+# it and a falling chunk can never clip through the figure.
 #
 # Method: voxel-remesh the input (guarantees a watertight, evenly-dense solid),
 # scatter `pieces` seed points inside it on a jittered grid (roughly equal
@@ -18,6 +23,7 @@ argv = sys.argv[sys.argv.index('--') + 1:]
 IN_PATH, OUT_PATH = argv[0], argv[1]
 N_PIECES = int(argv[2]) if len(argv) > 2 else 120
 SEED = int(argv[3]) if len(argv) > 3 else 7
+STATUE_PATH = argv[4] if len(argv) > 4 else None
 random.seed(SEED)
 
 # ---------- import ----------
@@ -37,6 +43,34 @@ mod.voxel_size = voxel
 bpy.context.view_layer.objects.active = rock
 bpy.ops.object.modifier_apply(modifier=mod.name)
 rock.data.update()
+
+# ---------- carve the statue cavity so chunks never intersect the figure ----------
+if STATUE_PATH:
+    before = set(bpy.context.scene.objects)
+    bpy.ops.import_scene.gltf(filepath=STATUE_PATH)
+    statue = max((o for o in set(bpy.context.scene.objects) - before if o.type == 'MESH'),
+                 key=lambda o: o.dimensions.length)
+    # inflate ~3.5% so the shell has clearance around the figure
+    statue.scale = (statue.scale.x * 1.035, statue.scale.y * 1.035, statue.scale.z * 1.035)
+    bpy.ops.object.select_all(action='DESELECT')
+    statue.select_set(True)
+    bpy.context.view_layer.objects.active = statue
+    bpy.ops.object.transform_apply(scale=True)
+    # watertight for a reliable boolean
+    sm = statue.modifiers.new('voxel', 'REMESH')
+    sm.mode = 'VOXEL'
+    sm.voxel_size = voxel
+    bpy.ops.object.modifier_apply(modifier=sm.name)
+
+    bpy.context.view_layer.objects.active = rock
+    diff = rock.modifiers.new('cavity', 'BOOLEAN')
+    diff.operation = 'DIFFERENCE'
+    diff.solver = 'EXACT'
+    diff.object = statue
+    bpy.ops.object.modifier_apply(modifier=diff.name)
+    rock.data.update()
+    bpy.data.objects.remove(statue)
+    print('CAVITY: statue subtracted (3.5% clearance)')
 
 bbox = [rock.matrix_world @ Vector(c) for c in rock.bound_box]
 lo = Vector((min(v.x for v in bbox), min(v.y for v in bbox), min(v.z for v in bbox)))
