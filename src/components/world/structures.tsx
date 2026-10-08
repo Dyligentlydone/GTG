@@ -294,7 +294,7 @@ export function NorthGate({ position = [0, 0, -23] }: { position?: [number, numb
   useEffect(() => { document.fonts?.ready.then(() => setFontReady(true)); }, []);
   const nameTex = useMemo(() => namePlateTexture('Gamifying the Grind'), [fontReady]);
   useEffect(() => () => nameTex.dispose(), [nameTex]);
-  const logoTex = useLoader(THREE.TextureLoader, '/logo.png');
+  const logoTex = useLoader(THREE.TextureLoader, '/gtg-mark.png');
   useMemo(() => { logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4; }, [logoTex]);
   const pedimentGeo = useMemo(() => {
     const g = new THREE.ExtrudeGeometry(TRI, { depth: 1.4, bevelEnabled: false });
@@ -431,7 +431,7 @@ export function NorthGate({ position = [0, 0, -23] }: { position?: [number, numb
       <pointLight position={[0, FLOOR + 4.2, -0.5]} color={0xffd9a0} intensity={12} distance={20} decay={2} />
 
       {/* name carved over the gate + GTG mark above it on the pediment */}
-      <mesh position={[0, FLOOR + WALL_H + 1.45, D / 2 + 1.42]}>
+      <mesh position={[0, FLOOR + WALL_H + 1.25, D / 2 + 1.42]}>
         <planeGeometry args={[9.4, 1.15]} />
         <meshBasicMaterial map={nameTex} transparent depthWrite={false} />
       </mesh>
