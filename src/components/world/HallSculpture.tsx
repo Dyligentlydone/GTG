@@ -1,10 +1,9 @@
 'use client';
-// The player's own marble on a pedestal inside the self-development hall.
+// The player's own marble standing on the floor of the self-development hall.
 // Deeds bank chisels (the next chunks glow gold); aiming and clicking knocks
 // one loose — the statue is carved in the agora, one piece at a time.
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
-import { marbleMaterial } from '../../lib/three/materials';
 import { Suspense } from 'react';
 import { CarvedRock } from '../CarvedRock';
 import type { DoorDestination } from './types';
@@ -20,7 +19,6 @@ export function HallSculpture({ destination, onDoorChange }: {
   const [st, setSt] = useState<ScState | null>(null);
   const [inside, setInside] = useState(false);
   const [entered, setEntered] = useState(false); // latches — merge once, then toggle visibility
-  const marble = useMemo(() => marbleMaterial([206, 199, 186], [130, 122, 110], 9, 0.5), []);
 
   const load = useCallback(async () => {
     try {
@@ -55,16 +53,8 @@ export function HallSculpture({ destination, onDoorChange }: {
 
   return (
     <group position={[0, FLOOR, 4.35]}>
-      {/* pedestal */}
-      <mesh material={marble} position={[0, 0.3, 0]} castShadow receiveShadow>
-        <boxGeometry args={[1.4, 0.6, 1.4]} />
-      </mesh>
-      <mesh material={marble} position={[0, 0.65, 0]} castShadow receiveShadow>
-        <boxGeometry args={[1.15, 0.1, 1.15]} />
-      </mesh>
-
       {/* museum light — the marble is the hall's centerpiece */}
-      <pointLight position={[0, 3.6, 1.0]} intensity={8} distance={7} decay={2} color={0xffe2b8} />
+      <pointLight position={[0, 3.4, 1.0]} intensity={8} distance={7} decay={2} color={0xffe2b8} />
 
       {/* the rock mounts on first entry (decode+merge once) and hides when
           you leave — 1.5M tris never render from the courtyard */}
@@ -72,7 +62,7 @@ export function HallSculpture({ destination, onDoorChange }: {
         <group visible={inside}>
           <Suspense fallback={null}>
             <CarvedRock height={2.45} seed={st.seed} revealed={st.revealed} pending={st.pending}
-              onStrike={strike} position={[0, 0.7, 0]} rotationY={Math.PI} />
+              onStrike={strike} position={[0, 0, 0]} rotationY={Math.PI} />
           </Suspense>
         </group>
       )}
@@ -88,7 +78,7 @@ export function HallSculpture({ destination, onDoorChange }: {
           onIntersectionExit={() => setInside(false)}
         />
         {/* you can't walk through the marble */}
-        <CuboidCollider args={[0.8, 1.9, 0.8]} position={[0, 1.9, 0]} />
+        <CuboidCollider args={[0.8, 1.3, 0.8]} position={[0, 1.3, 0]} />
         {/* standing close → prompt; E opens the full view, click strikes */}
         <CuboidCollider
           sensor
