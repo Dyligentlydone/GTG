@@ -299,7 +299,7 @@ function InnerStatue({ height, visible }: { height: number; visible: boolean }) 
   const { scene } = useGLTF(STATUE_URL);
   const statue = useMemo(() => {
     const clone = scene.clone(true);
-    clone.rotation.y = Math.PI; // statue front is authored -Z; rock front is +Z
+    // statue front faces the rock's +Z authored front as-is; no rotation
     const s0 = new THREE.Box3().setFromObject(clone).getSize(new THREE.Vector3());
     clone.scale.setScalar((height * 0.66) / s0.y);
     clone.updateMatrixWorld(true);
