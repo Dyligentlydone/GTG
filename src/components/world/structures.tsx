@@ -2,7 +2,7 @@
 // Parametric Greek structures for the agora: columns, temples, braziers.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useLoader } from '@react-three/fiber';
 import { RigidBody, CuboidCollider, CylinderCollider } from '@react-three/rapier';
 import { marbleMaterial } from '../../lib/three/materials';
 import { HallBoard } from './HallBoard';
@@ -292,8 +292,10 @@ export function NorthGate({ position = [0, 0, -23] }: { position?: [number, numb
   const bronze = useMemo(() => new THREE.MeshStandardMaterial({ color: 0x3d2c14, metalness: 0.85, roughness: 0.42 }), []);
   const [fontReady, setFontReady] = useState(false);
   useEffect(() => { document.fonts?.ready.then(() => setFontReady(true)); }, []);
-  const nameTex = useMemo(() => namePlateTexture('The Agora'), [fontReady]);
+  const nameTex = useMemo(() => namePlateTexture('Gamifying the Grind'), [fontReady]);
   useEffect(() => () => nameTex.dispose(), [nameTex]);
+  const logoTex = useLoader(THREE.TextureLoader, '/logo.png');
+  useMemo(() => { logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4; }, [logoTex]);
   const pedimentGeo = useMemo(() => {
     const g = new THREE.ExtrudeGeometry(TRI, { depth: 1.4, bevelEnabled: false });
     g.translate(0, 0, -0.7);
@@ -428,10 +430,14 @@ export function NorthGate({ position = [0, 0, -23] }: { position?: [number, numb
       <Brazier position={[7.6, FLOOR, -4.6]} />
       <pointLight position={[0, FLOOR + 4.2, -0.5]} color={0xffd9a0} intensity={12} distance={20} decay={2} />
 
-      {/* name carved over the gate */}
-      <mesh position={[0, FLOOR + WALL_H + 1.6, D / 2 + 1.42]}>
-        <planeGeometry args={[4.6, 0.72]} />
+      {/* name carved over the gate + GTG mark above it on the pediment */}
+      <mesh position={[0, FLOOR + WALL_H + 1.45, D / 2 + 1.42]}>
+        <planeGeometry args={[9.4, 1.15]} />
         <meshBasicMaterial map={nameTex} transparent depthWrite={false} />
+      </mesh>
+      <mesh position={[0, FLOOR + WALL_H + 1.95, D / 2 + 1.42]}>
+        <planeGeometry args={[1.2, 1.2]} />
+        <meshBasicMaterial map={logoTex} transparent depthWrite={false} />
       </mesh>
     </group>
   );
