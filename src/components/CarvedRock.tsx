@@ -40,12 +40,14 @@ function makeBites(seed: number): Bite[] {
     bites.push({ pos, r: 0.075 * (0.8 + rng.next() * 0.45) });
   }
   // bottom first with jitter; the top-center band (the face) is struck last.
-  // shallow (outer-shell) bites sort earlier so early strikes are visible
+  // shallow (outer-shell) bites sort earlier so early strikes are visible,
+  // with a mild bias toward the -Z face — that's the side you approach from
+  // in the hall, so the first strikes land where you can see them.
   const order = bites
     .map((b, i) => {
       const depth = Math.hypot(b.pos.x - 0.5, b.pos.y - 0.5, b.pos.z - 0.5);
       const faceish = b.pos.y > 0.72 && Math.hypot(b.pos.x - 0.5, b.pos.z - 0.5) < 0.28;
-      return { i, key: b.pos.y + (rng.next() - 0.5) * 0.4 + depth * -0.35 + (faceish ? 100 : 0) };
+      return { i, key: b.pos.y + (rng.next() - 0.5) * 0.4 + depth * -0.35 + (0.5 - b.pos.z) * 0.22 + (faceish ? 100 : 0) };
     })
     .sort((a, b) => a.key - b.key);
   return order.map((o) => bites[o.i]!);

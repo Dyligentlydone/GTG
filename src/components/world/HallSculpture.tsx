@@ -69,7 +69,7 @@ export function HallSculpture({ destination, onDoorChange }: {
         <group visible={inside}>
           <Suspense fallback={null}>
             <CarvedRock height={1.9} revealed={st.revealed} pending={st.pending}
-              onStrike={strike} position={[0, 0.64, 0]} />
+              onStrike={strike} position={[0, 0.64, 0]} rotationY={Math.PI} />
           </Suspense>
         </group>
       )}
