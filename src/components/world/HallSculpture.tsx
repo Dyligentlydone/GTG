@@ -57,6 +57,9 @@ export function HallSculpture({ destination, onDoorChange }: {
         <boxGeometry args={[0.95, 0.08, 0.95]} />
       </mesh>
 
+      {/* museum light — the marble is the hall's centerpiece */}
+      <pointLight position={[0, 3.1, 0.9]} intensity={7} distance={6} decay={2} color={0xffe2b8} />
+
       {st && (
         <FracturedRock height={1.9} revealed={st.revealed} pending={st.pending}
           onStrike={strike} position={[0, 0.64, 0]} />
