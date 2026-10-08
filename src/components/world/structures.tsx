@@ -281,8 +281,8 @@ export function Temple({ destination, position, rotationY, onDoorChange, onQuest
 }
 
 /** Monumental gate-hall at the plaza's north end — a propylaea: steps up to a
- *  columned porch, bronze doors swung open, and a full-depth hall behind them.
- *  Interior is the whole footprint, not just the doorway. */
+ *  columned porch, bronze doors shut (a future game unlocks them), and a
+ *  full-depth hall behind them. */
 export function NorthGate({ position = [0, 0, -23] }: { position?: [number, number, number] }) {
   const W = 20, D = 13, FLOOR = 0.75;
   const COL_H = 6.2;          // porch columns, taller than the temples'
@@ -307,7 +307,7 @@ export function NorthGate({ position = [0, 0, -23] }: { position?: [number, numb
   const stepRise = STAIR.rise / STAIR.steps;
   const stepRun = (STAIR.z0 - STAIR.z1) / STAIR.steps;
   const colXs = [-8.8, -6.0, -3.6, 3.6, 6.0, 8.8];     // porch columns, clear of the entry
-  const DOOR_SWING = 1.9;                              // ~109° — leaves swung into the hall
+  const DOOR_SWING = 0;                                // sealed — unlock when a game moves in
   const leafOff = DOOR_W / 4 - 0.03;                   // leaf center offset from its hinge
   // leaf world position: hinge at ±DOOR_W/2, offset rotated by the group's swing
   const doorLeaf = (s: 1 | -1): [number, number, number] => [
@@ -397,7 +397,7 @@ export function NorthGate({ position = [0, 0, -23] }: { position?: [number, numb
         <boxGeometry args={[DOOR_W + 0.8, WALL_H - DOOR_H, 0.5]} />
       </mesh>
 
-      {/* bronze doors swung open into the hall, ring handles facing the plaza */}
+      {/* bronze doors shut across the entry, ring handles facing the plaza */}
       {([-1, 1] as const).map(s => (
         <group key={`door${s}`} position={[s * DOOR_W / 2, 0, D / 2 - 0.6]} rotation={[0, s * -DOOR_SWING, 0]}>
           <mesh material={bronze} position={[s * -(DOOR_W / 4 - 0.03), FLOOR + DOOR_H / 2, 0]} castShadow>
