@@ -96,7 +96,7 @@ export function Brazier({ position }: { position: [number, number, number] }) {
 
 /** Temple name painted on canvas — carved-stone look, and no extra React
  *  root (drei <Html> sync-unmounts warn under React 19). */
-function namePlateTexture(name: string): THREE.CanvasTexture {
+function namePlateTexture(name: string, fill = '#efe9dc'): THREE.CanvasTexture {
   const w = 1024, h = 160;
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
@@ -113,7 +113,7 @@ function namePlateTexture(name: string): THREE.CanvasTexture {
   }
   ctx.fillStyle = 'rgba(15, 12, 9, 0.6)';
   ctx.fillText(label, w / 2 + 3, h / 2 + 4);
-  ctx.fillStyle = '#efe9dc';
+  ctx.fillStyle = fill;
   ctx.fillText(label, w / 2, h / 2);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -292,7 +292,7 @@ export function NorthGate({ position = [0, 0, -23] }: { position?: [number, numb
   const bronze = useMemo(() => new THREE.MeshStandardMaterial({ color: 0x3d2c14, metalness: 0.85, roughness: 0.42 }), []);
   const [fontReady, setFontReady] = useState(false);
   useEffect(() => { document.fonts?.ready.then(() => setFontReady(true)); }, []);
-  const nameTex = useMemo(() => namePlateTexture('Gamifying the Grind'), [fontReady]);
+  const nameTex = useMemo(() => namePlateTexture('Gamifying the Grind', '#d4af37'), [fontReady]);
   useEffect(() => () => nameTex.dispose(), [nameTex]);
   const logoTex = useLoader(THREE.TextureLoader, '/gtg-mark.png');
   useMemo(() => { logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4; }, [logoTex]);
