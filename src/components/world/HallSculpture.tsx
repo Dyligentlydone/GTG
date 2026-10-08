@@ -76,8 +76,8 @@ export function HallSculpture({ destination, onDoorChange }: {
       <RigidBody type="fixed" colliders={false}>
         <CuboidCollider
           sensor
-          args={[5.0, 3.0, 5.5]}
-          position={[0, 2.0, 0.5]}
+          args={[5.0, 3.0, 8.5]}
+          position={[0, 2.0, -2.0]}
           onIntersectionEnter={() => { setInside(true); setEntered(true); }}
           onIntersectionExit={() => setInside(false)}
         />
