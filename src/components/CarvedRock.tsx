@@ -20,33 +20,33 @@ const OCC = 96;                 // occupancy texture resolution per axis
 const ON_DECK = 5;              // pending glow markers
 const DEBRIS_POOL = 48;         // instanced chips, recycled
 
-interface Bite { pos: THREE.Vector3; r: number } // carve space: bbox-normalized [0,1]³
+// carve space: bbox-normalized [0,1]³. `surf` is the true rock-surface
+// anchor (a sampled mesh vertex); `pos` is the carve center, pulled inward
+// from it — shallow bites crater the skin, deep bites excavate the interior.
+interface Bite { pos: THREE.Vector3; surf: THREE.Vector3; r: number }
 
-/** 875 seeded bite spheres on the rock's shell, ordered bottom-first. */
-function makeBites(seed: number): Bite[] {
+/** 875 bites anchored to actual surface vertices of the normalized rock mesh. */
+function makeBites(seed: number, geo: THREE.BufferGeometry): Bite[] {
   const rng = rngFor(seed, 'bites');
+  const posAttr = geo.attributes.position as THREE.BufferAttribute;
+  const C = new THREE.Vector3(0.5, 0.5, 0.5);
   const bites: Bite[] = [];
   for (let i = 0; i < TOTAL; i++) {
-    // random direction on the unit sphere, pushed onto the ellipsoid shell band
-    const u = rng.next() * 2 - 1;
-    const a = rng.next() * Math.PI * 2;
-    const s = Math.sqrt(1 - u * u);
-    const dir = new THREE.Vector3(s * Math.cos(a), u, s * Math.sin(a));
-    // depth spread 0.55–1.08: surface bites open craters, deeper bites open
-    // as their neighbours erode — the carve tunnels inward toward the statue
-    const rr = 0.55 + rng.next() * 0.53;
-    const pos = new THREE.Vector3(0.5 + dir.x * 0.5 * rr, 0.5 + dir.y * 0.5 * rr, 0.5 + dir.z * 0.5 * rr);
-    bites.push({ pos, r: 0.075 * (0.8 + rng.next() * 0.45) });
+    const surf = new THREE.Vector3().fromBufferAttribute(posAttr, rng.int(0, posAttr.count - 1));
+    // inward pull: 0 = crater centered on the skin, 0.55 = deep excavation
+    const inward = rng.next() * 0.55;
+    const pos = surf.clone().lerp(C, inward);
+    bites.push({ pos, surf, r: 0.075 * (0.8 + rng.next() * 0.45) });
   }
-  // bottom first with jitter; the top-center band (the face) is struck last.
-  // shallow (outer-shell) bites sort earlier so early strikes are visible,
-  // with a mild bias toward the -Z face — that's the side you approach from
-  // in the hall, so the first strikes land where you can see them.
+  // strike order: shallow before deep (every early strike visibly craters
+  // the skin; later strikes hollow toward the statue), bottom before top,
+  // slight bias toward the hall-door side (-Z after the pedestal's PI turn),
+  // and the top-center band — the face — is always last.
   const order = bites
     .map((b, i) => {
-      const depth = Math.hypot(b.pos.x - 0.5, b.pos.y - 0.5, b.pos.z - 0.5);
-      const faceish = b.pos.y > 0.72 && Math.hypot(b.pos.x - 0.5, b.pos.z - 0.5) < 0.28;
-      return { i, key: b.pos.y + (rng.next() - 0.5) * 0.4 + depth * -0.35 + (0.5 - b.pos.z) * 0.22 + (faceish ? 100 : 0) };
+      const inward = b.surf.distanceTo(b.pos);
+      const faceish = b.surf.y > 0.72 && Math.hypot(b.surf.x - 0.5, b.surf.z - 0.5) < 0.28;
+      return { i, key: b.surf.y * 0.7 + inward * 1.9 + (rng.next() - 0.5) * 0.25 + (0.5 - b.surf.z) * 0.18 + (faceish ? 100 : 0) };
     })
     .sort((a, b) => a.key - b.key);
   return order.map((o) => bites[o.i]!);
@@ -162,19 +162,23 @@ export function CarvedRock({
     const s = height / 1.0; // carve space is already 0..1 — scale it to world height
     rock.scale.setScalar(s);
 
-    const bites = makeBites(seed);
+    const bites = makeBites(seed, geo);
 
     return { rock, occ, occData, bites };
   }, [scene, height, seed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---------- carve state → occupancy texture (incremental) ----------
-  const applied = useRef(0);
+  // `applied` is tracked PER build: if `built` rebuilds (seed arrives async,
+  // height changes), the occupancy data is fresh zeros and must re-bake from
+  // 0 — a plain counter here once silently skipped the bake entirely.
+  const applied = useRef<{ built: unknown; n: number }>({ built: null, n: 0 });
   useEffect(() => {
     if (!built) return;
+    if (applied.current.built !== built) applied.current = { built, n: 0 };
     const { occData, occ, bites } = built;
     const clamp = Math.min(revealed, TOTAL);
-    for (let k = applied.current; k < clamp; k++) bakeBite(occData, bites[k]!);
-    applied.current = clamp;
+    for (let k = applied.current.n; k < clamp; k++) bakeBite(occData, bites[k]!);
+    applied.current.n = Math.max(applied.current.n, clamp);
     occ.needsUpdate = true;
     built.rock.visible = clamp < TOTAL;
   }, [revealed, built]);
@@ -184,7 +188,7 @@ export function CarvedRock({
   const debris = useRef<{ pos: THREE.Vector3; v: THREE.Vector3; axis: THREE.Vector3; spin: number; life: number; size: number }[]>([]);
   const debrisMat = useMemo(() => new THREE.MeshStandardMaterial({ color: 0xd9d4cb, roughness: 0.85 }), []);
   const spawn = (at: THREE.Vector3) => {
-    const rng = rngFor(seed * 1009 + applied.current, 'debris');
+    const rng = rngFor(seed * 1009 + applied.current.n, 'debris');
     for (let i = 0; i < 7; i++) {
       if (debris.current.length >= DEBRIS_POOL) debris.current.shift();
       const dir = new THREE.Vector3(at.x - 0.5, 0, at.z - 0.5).normalize();
@@ -202,7 +206,7 @@ export function CarvedRock({
   useEffect(() => {
     // only animate strikes that happened while mounted — not the replay bake
     if (prevRevealed.current !== null && revealed > prevRevealed.current && built) {
-      for (let k = prevRevealed.current; k < Math.min(revealed, TOTAL); k++) spawn(built.bites[k]!.pos);
+      for (let k = prevRevealed.current; k < Math.min(revealed, TOTAL); k++) spawn(built.bites[k]!.surf);
     }
     prevRevealed.current = revealed;
   }, [revealed, built]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -254,14 +258,12 @@ export function CarvedRock({
     const glow = Math.min(ON_DECK, pending, TOTAL - revealed);
     for (let k = revealed; k < revealed + glow; k++) {
       const b = built.bites[k]!;
-      const dir = new THREE.Vector3(b.pos.x - 0.5, b.pos.y - 0.5, b.pos.z - 0.5);
-      const surf = dir.lengthSq() > 1e-6
-        ? dir.normalize().multiplyScalar(0.5).addScalar(0) // push to the unit-shell surface
-        : new THREE.Vector3(0, 0.5, 0);
+      // sit on the true surface vertex, nudged outward so it never z-fights
+      const out = b.surf.clone().sub(new THREE.Vector3(0.5, 0.5, 0.5)).normalize().multiplyScalar(0.012);
       const m = new THREE.Mesh(glowGeo, glowMat);
       m.userData.base = height * 0.035;
       m.scale.setScalar(height * 0.035);
-      m.position.set((0.5 + surf.x) * height, (0.5 + surf.y) * height, (0.5 + surf.z) * height);
+      m.position.set((b.surf.x + out.x) * height, (b.surf.y + out.y) * height, (b.surf.z + out.z) * height);
       grp.add(m);
     }
   }, [revealed, pending, built, height, glowGeo, glowMat]);
