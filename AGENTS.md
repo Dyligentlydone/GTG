@@ -29,3 +29,7 @@
 
 - Remote: `git@github.com:Dyligentlydone/GTG.git`, branch `master`.
 - `uploaded images/` is gitignored (large source assets, e.g. the Meshy `.mov`).
+
+## Gotchas
+
+- NEVER run `npm run build` while `npm run dev` is running — they share `.next/` and the production build corrupts dev chunks (`Cannot find module './NNNN.js'`). Kill the dev server first, or check `lsof -ti :3000`.
